@@ -3,11 +3,16 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @using IOWebApplication.Infrastructure.Constants
 @using IOWebApplication.Core.Helper.GlobalConstants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
 @inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @{
     if (Model.Id > 0)
     {
-        ViewData["Title"] = "Съдебно дело " + Model.RegNumber;
+        ViewData["Title"] = "Съдебно дело " + Model.RegNumberText;
+        if (Model.CourtId != userContext.CourtId)
+        {
+            ViewData["Title"] = $"Съдебно дело {Model.RegNumberText}, {Model.CourtLabel}";
+        }
     }
     else
     {
@@ -16,12 +21,82 @@
 
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
     bool IsCurrentCourt = Model.CourtId == userContext.CourtId;
+    bool isMediationFeature = ViewBag.isMediationFeature ?? false;
+    ElectronicDocumentInfoVM elDocInfo = (ElectronicDocumentInfoVM)ViewBag.elDocInfo;
+    //ViewData["ShowMenuCounts"] = true;
 }
 
-@section breadcrumb{
+@section titleAdd {
+
+    @if (Model.IsSecret)
+    {
+        <span class="text-black">
+            <i class="fa fa-exclamation-triangle fa-lg" title="Секретно"></i>
+        </span>
+    }
+    @if (Model.IsRestriction)
+    {
+        <span class="text-red">
+            <i class="fa fa-exclamation-triangle fa-lg" title="Ограничен достъп"></i>
+        </span>
+    }
+    @if (Model.IsSpecial)
+    {
+        <span class="text-maroon">
+            <i class="fa fa-exclamation-triangle fa-lg" title="Специален достъп"></i>
+        </span>
+    }
+    @if (Model.IsUnderAge)
+    {
+        <span class="text-yellow">
+            <i class="fa fa-exclamation-triangle fa-lg" title="Малолетни/непълнолетни"></i>
+        </span>
+    }
+    @if (Model.IsDeceased)
+    {
+        <span class="text-black">
+            <i class="fa fa-user-times fa-lg" title="Починало лице"></i>
+        </span>
+    }
+    @if (Model.IsExistsSignedExecList)
+    {
+        <span class="text-orange">
+            <i class="fa fa-money fa-lg" title="Подписан изпълнителен лист"></i>
+        </span>
+    }
+    @if (Model.IsFirsInstantsFastProcessCase)
+    {
+        <span class="text-orange">
+            <i class="fa fa-angle-double-right fa-lg" title="Въз основа на електронно заповедно производство"></i>
+        </span>
+    }
+    @if (!string.IsNullOrEmpty(Model.IsExsistCaseWithSamePeople))
+    {
+        <a href="@Url.Action("IndexExsistCaseWithSamePeople", "Case")?caseId=@Model.Id" title="Има дело със същите страни @Model.IsExsistCaseWithSamePeople"><i class="fa fa-users" style="color:red"></i></a>
+    }
+    @if (Model.IsMediation)
+    {
+        <span class="text-orange">
+            <i class="fa fa-comments" title="Дело подлежащо на медиация"></i>
+        </span>
+    }
+    @if (access.CanChange)
+    {
+        <a asp-controller="CaseSession" asp-action="AddSessionAndAct" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави акт в ЗЗ
+        </a>
+    }
+}
+
+@section titleInfo {
+    @await Component.InvokeAsync(nameof(IOWebApplication.Components.CaseWarningComponent), new { caseId = Model.Id })
+}
+
+@section breadcrumb {
     <ol class="breadcrumb">
-        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
-        <li><a href="@Url.Action("Index","Case")">Съдебни делa</a></li>
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index", "Case")">Съдебни делa</a></li>
     </ol>
 }
 <div class="row">
@@ -60,6 +135,13 @@
                                     <fieldset class="is-fieldset">
                                         <legend class="legend_1">Данни</legend>
 
+                                        @if (Model.IsCaseCode_0602_0604)
+                                        {
+                                            <div class="form-group">
+                                                <label class="control-label text-red" style="font-size: 14px"><i class="fa fa-exclamation-triangle"></i> Моля, свържете исковото производство, със заповедното производство!</label>
+                                            </div>
+                                        }
+
                                         <div class="form-group">
                                             <label class="control-label">Иницииращ документ</label>
                                             <div>
@@ -70,8 +152,15 @@
                                         <div class="row">
                                             <div class="col-lg-6">@Html.EditorFor(x => x.CaseGroupLabel)</div>
                                             <div class="col-lg-6">@Html.EditorFor(x => x.CaseTypeLabel)</div>
-
                                         </div>
+
+                                        @if (!string.IsNullOrEmpty(Model.CasePersonMain))
+                                        {
+                                            <div class="row">
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.CasePersonMain, "TextArea")</div>
+                                            </div>
+                                        }
+
                                         <div class="row">
                                             @if (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
                                             {
@@ -128,10 +217,20 @@
                                         }
                                         @if ((bool)ViewBag.isFastProcess)
                                         {
-                                            <text>&nbsp;</text>
-                                            <a href="@Url.Action("Index", "CaseFastProcess")?caseId=@Model.Id" class="btn btn-def btn-sm" title="410"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Въведи данни в заповедта</span></a>
+                                            if (Model.IsFastProcess)
+                                            {
+                                                <text>&nbsp;</text>
+                                                <a href="@Url.Action("Index", "DocumentRequest", new { caseId = Model.Id })" class="btn btn-def btn-sm" title="410"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Данни Заповедно производство</span></a>
+                                            }
+                                            else
+                                            {
+                                                <text>&nbsp;</text>
+                                                <a href="@Url.Action("Index", "CaseFastProcess")?caseId=@Model.Id" class="btn btn-def btn-sm" title="410"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Въведи данни в заповедта</span></a>
+                                            }
                                         }
-                                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.Case, SourceId = Model.Id })" />
+                                        <div class="pull-right">
+                                            <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.Case, SourceId = Model.Id })" />
+                                        </div>
                                     </fieldset>
                                 </div>
 
@@ -154,6 +253,15 @@
                                                 <a href="@Url.Action("IndexCaseCrime", "CasePersonSentence")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Престъпления"><i class="fa fa-bug"></i><span class="hidden-sm hidden-xs"> Престъпления</span></a>
                                                 <a href="@Url.Action("Index", "Eispp", new { caseId = Model.Id })" class="btn btn-def btn-sm m-b-5" title="ЕИСПП събития"><i class="fa fa-paper-plane-o"></i><span class="hidden-sm hidden-xs"> ЕИСПП</span></a>
                                             }
+                                        }
+                                        <a href="@Url.Action("CaseProceedingsView", "Case")?id=@Model.Id" target="_blank" class="btn btn-def btn-sm m-b-5" title="Ход на дело"><i class="fa fa-calendar"></i><span class="hidden-sm hidden-xs"> Ход на дело</span></a>
+                                        @if (isMediationFeature)
+                                        {
+                                            <a href="@Url.Action("EditMediationCase", "Mediation")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Медиация"><i class="fa fa-comments"></i><span class="hidden-sm hidden-xs"> Медиация</span></a>
+                                        }
+                                        @if (IsCurrentCourt && isMediationFeature)
+                                        {
+                                            <a href="@Url.Action("WorkNotificationCaseFatsProcess", "Report")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Нотификации по дело"><i class="fa fa-bell"></i><span class="hidden-sm hidden-xs"> Нотификации</span></a>
                                         }
                                     </fieldset>
                                     @if (IsCurrentCourt)
@@ -186,7 +294,7 @@
                                             }
                                         </fieldset>
                                     </div>
-                                    @if (Model.CaseStateId == NomenclatureConstants.CaseState.Archive)
+                                    @if (Model.HasArchive == true)
                                     {
                                         <fieldset class="is-fieldset">
                                             <legend class="legend_1">Архив</legend>
@@ -205,9 +313,29 @@
                                             </div>
                                         </fieldset>
                                     }
+                                    @if (Model.IsFastProcess == true && (Model.AssignmentDocumentId ?? 0) > 0)
+                                    {
+                                        <fieldset class="is-fieldset">
+                                            @if (Model.ExistsPayToAssignmentDocument)
+                                            {
+                                                <legend class="legend_1">Задължения по иницииращ документ <span class="text-green"><i class="fa fa-money fa-lg" title="Има плащане по иницииращ документ"></i></span></legend>
+                                            }
+                                            else
+                                            {
+                                                <legend class="legend_1">Задължения по иницииращ документ</legend>
+                                            }
+                                            <a href="@Url.Action("Obligation", "Money")?documentId=@Model.DocumentId&&assignmentDocumentId=@Model.AssignmentDocumentId" target="_blank" class="btn btn-def btn-sm m-b-5" title="Суми към документа"><i class="fa fa-paypal"></i><span class="hidden-sm hidden-xs"> Суми към документа</span></a>
+                                            <a href="@Url.Action("BankFilePaymentReference", "Money")" target="_blank" class="btn btn-def btn-sm m-b-5" title="Плащания от банков файл"><i class="fa fa-paypal"></i><span class="hidden-sm hidden-xs"> Плащания от банков файл</span></a>
+
+                                        </fieldset>
+                                        @await Component.InvokeAsync(nameof(IOWebApplication.Components.ObligationComponent), new { caseId = Model.Id })
+                                    }
+                                    @if (elDocInfo != null)
+                                    {
+                                        <partial name="../Document/_ElectronicDocumentInfo" model="@elDocInfo" />
+                                    }
                                 </div>
                             </div>
-
                         </div>
 
                         <div class="tab-pane dt-lazy-loading" id="tabLawUnit">
@@ -215,7 +343,7 @@
                                 <legend>Съдебен състав</legend>
                                 <div class="row">
                                     <div class="col-lg-12">
-                                        <partial name="../CaseLawUnit/_CaseLawUnit.cshtml" model="@new CaseMainDataVM { Id = Model.Id, CaseSessionId = null, CaseStateId = Model.CaseStateId, IsND = (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)} " />
+                                        <partial name="../CaseLawUnit/_CaseLawUnit.cshtml" model="@new CaseMainDataVM { Id = Model.Id, CaseSessionId = null, CaseStateId = Model.CaseStateId, IsND = (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo) }" />
                                     </div>
                                 </div>
                             </fieldset>
@@ -223,42 +351,42 @@
                                 <legend>Други</legend>
                                 <div class="row">
                                     <div class="col-lg-12">
-                                        <partial name="../CaseLawUnit/_CaseLawUnitManualRoles.cshtml" model="@new CaseMainDataVM { Id = Model.Id } " />
+                                        <partial name="../CaseLawUnit/_CaseLawUnitManualRoles.cshtml" model="@new CaseMainDataVM { Id = Model.Id }" />
                                     </div>
                                 </div>
                             </fieldset>
                         </div>
 
                         <div class="tab-pane dt-lazy-loading" id="tabPerson">
-                            <partial name="../CasePerson/_CasePerson.cshtml" model="@new CaseMainDataVM { Id = Model.Id, IsND = (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo), CaseTypeId = Model.CaseTypeId} " />
+                            <partial name="../CasePerson/_CasePerson.cshtml" model="@new CaseMainDataVM { Id = Model.Id, IsND = (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo), CaseTypeId = Model.CaseTypeId }" />
                         </div>
 
                         @*<div class="tab-pane" id="tabPersonLink">
-                                <partial name="../CasePersonLink/_CasePersonLink.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
-                            </div>*@
+                        <partial name="../CasePersonLink/_CasePersonLink.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>*@
 
                         <div class="tab-pane dt-lazy-loading" id="tabSession">
-                            <partial name="../CaseSession/_CaseSession.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            <partial name="../CaseSession/_CaseSession.cshtml" model="@new CaseMainDataVM { Id = Model.Id }" />
                         </div>
 
                         @*<div class="tab-pane" id="tabLifecycle">
-                                <partial name="../CaseLifecycle/_CaseLifecycle.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
-                            </div>*@
+                        <partial name="../CaseLifecycle/_CaseLifecycle.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>*@
 
                         @*<div class="tab-pane" id="tabNotification">
-                                <partial name="../CaseNotification/_CaseNotification.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
-                            </div>*@
+                        <partial name="../CaseNotification/_CaseNotification.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>*@
 
                         @*<div class="tab-pane" id="tabMoney">
-                                <partial name="../CaseMoney/_CaseMoney.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
-                            </div>*@
+                        <partial name="../CaseMoney/_CaseMoney.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>*@
 
                         <div class="tab-pane dt-lazy-loading" id="tabEvidence">
-                            <partial name="../CaseEvidence/_CaseEvidence.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            <partial name="../CaseEvidence/_CaseEvidence.cshtml" model="@new CaseMainDataVM { Id = Model.Id }" />
                         </div>
 
                         <div class="tab-pane dt-lazy-loading" id="tabHronologia">
-                            <partial name="../Case/_CaseHronologia.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            <partial name="../Case/_CaseHronologia.cshtml" model="@new CaseMainDataVM { Id = Model.Id }" />
                         </div>
 
                         <div class="tab-pane" id="tabWorkTask">
@@ -275,18 +403,21 @@
                 @if (Model.Id > 0)
                 {
                     @*<div class="pull-right">
-                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
-                        </div>*@
+                @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                </div>*@
                 }
             </div>
         </form>
     </div>
 </div>
 
+@* <h3 class="text-danger">@Model.DebugInfo</h3> *@
+
 <script>
 
     $(document).ready(function () {
         $('#CaseGroupLabel').attr("disabled", true);
+        $('#CasePersonMain').attr("disabled", true);
         $('#CaseTypeLabel').attr("disabled", true);
         $('#CaseCodeLabel').attr("disabled", true);
         $('#EISSPNumber').attr("disabled", true);

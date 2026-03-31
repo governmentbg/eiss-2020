@@ -41,10 +41,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     public class HeritageFilterReportVM
     {
         [Display(Name = "От дата на акт")]
-        public DateTime? DateFrom { get; set; }
+        public DateTime DateFrom { get; set; }
 
         [Display(Name = "До дата на акт")]
-        public DateTime? DateTo { get; set; }
+        public DateTime DateTo { get; set; }
 
         [Display(Name = "От дата на влизане в законна сила")]
         public DateTime? FromActInforcedDate { get; set; }
@@ -54,6 +54,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Номер на акт")]
         public string NumberAct { get; set; }
+
+        [Display(Name = "От дата на създаване")]
+        public DateTime DateCreateFrom { get; set; }
+
+        [Display(Name = "До дата на създаване")]
+        public DateTime DateCreateTo { get; set; }
+
+        [Display(Name = "От дата на акт")]
+        public DateTime? DateActFrom { get; set; }
+
+        [Display(Name = "До дата на акт")]
+        public DateTime? DateActTo { get; set; }
 
     }
 }

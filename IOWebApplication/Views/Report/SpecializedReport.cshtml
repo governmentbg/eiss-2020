@@ -1,0 +1,317 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model SpecializedReportIndexVM
+
+@{
+    ViewData["Title"] = "Специализирана справка";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<form name="formFilter" id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.FilterTemplatesId, "GenericSelect2")</div>
+        <div class="col-md-1 text-lefy pb-15" style="bottom: -26px;">
+            <button type="button" class="btn btn-info btn-sm" id="btnFilter" onclick="RedirectIndex()" value="Зареди шаблон" title="Зареди шаблон">
+                Зареди шаблон
+                <i class="fa fa-search-plus" title="Зареди шаблон"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.CourtId, "GenericSelect2")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.InstanceId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.CaseClassificationIds, "GenericDropDownMultipleArray")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.ActComplainResultId, "GenericSelect2")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.CaseStateId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.CaseGroupIds, "GenericDropDownMultipleArray")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.CaseTypeIds, "GenericDropDownMultipleArray")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.Filter.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.Filter.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.Filter.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.Filter.ActInforcedDateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.Filter.ActInforcedDateTo, "DateTime")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-11 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="ValidateData()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+    <div class="col-md-1 text-right pb-15">
+        <a asp-controller="Common" asp-action="IndexFilterTemplatesSpecializedReport" asp-route-id="" class="btn btn-success btn-sm m-b-5">
+            Шаблони
+            <i class="fa fa-filter" title="Шаблони"></i>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#FilterTemplatesId').select2({ language: "bg" });
+            $('#Filter_CaseGroupIds').select2({ language: "bg" });
+            $('#Filter_CaseTypeIds').select2({ language: "bg" });
+            $('#Filter_CaseCodeIds').select2({ language: "bg" });
+            $('#Filter_CourtId').select2({ language: "bg" });
+            $('#Filter_CaseClassificationIds').select2({ language: "bg" });
+            $('#Filter_ActComplainResultId').select2({ language: "bg" });
+
+            cgStr = '@Model.Filter.StringCaseGroupIds';
+            var cgSelectedValues = cgStr.split(",");
+            $('#Filter_CaseGroupIds').val(cgSelectedValues).trigger('change');
+
+            cStr = '@Model.Filter.StringCaseClassificationIds';
+            var cSelectedValues = cStr.split(",");
+            $('#Filter_CaseClassificationIds').val(cSelectedValues).trigger('change');
+        });
+
+        $('#Filter_CaseGroupIds').change(function () {
+            var str = '';
+            if ($('#Filter_CaseGroupIds').val() !== null && $('#Filter_CaseGroupIds').val().length > 0) {
+                str = $('#Filter_CaseGroupIds').val().join(',');
+            }
+            requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#Filter_CaseTypeIds', '@(Model.Filter.StringCaseTypeIds)', function () { $('#Filter_CaseTypeIds').trigger('change') });
+        });
+
+        $('#Filter_CaseTypeIds').change(function () {
+            var str = '';
+            if ($('#Filter_CaseTypeIds').val() !== null && $('#Filter_CaseTypeIds').val().length > 0) {
+                str = $('#Filter_CaseTypeIds').val().join(',');
+            }
+            requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: str }, '#Filter_CaseCodeIds', '@(Model.Filter.StringCaseCodeIds)', function () { $('#Filter_CaseCodeIds').trigger('change') });
+        });
+
+    </script>
+}
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpecializedReport")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            CourtId: $("#Filter_CourtId").val(),
+                            InstanceId: $("#Filter_InstanceId").val(),
+                            CaseGroupIds: $("#Filter_CaseGroupIds").val(),
+                            CaseTypeIds: $("#Filter_CaseTypeIds").val(),
+                            CaseCodeIds: $("#Filter_CaseCodeIds").val(),
+                            DateFrom: $("#Filter_DateFrom").val(),
+                            DateTo: $("#Filter_DateTo").val(),
+                            ActInforcedDateFrom: $("#Filter_ActInforcedDateFrom").val(),
+                            ActInforcedDateTo: $("#Filter_ActInforcedDateTo").val(),
+                            CaseStateId: $("#Filter_CaseStateId").val(),
+                            CaseClassificationIds: $("#Filter_CaseClassificationIds").val(),
+                            ActComplainResultId: $('#Filter_ActComplainResultId').val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'courtLabel',
+                        data: 'courtLabel',
+                        title: 'Съд на образуване',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseInstanceLabel',
+                        data: 'caseInstanceLabel',
+                        title: 'Инстанция',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            if (data)
+                                return moment(data).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'eisspNumber',
+                        data: 'eisspNumber',
+                        title: 'ЕИСПП номер',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseGroupLabel',
+                        data: 'caseGroupLabel',
+                        title: 'Основен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифър',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseClassificationLabel',
+                        data: 'caseClassificationLabel',
+                        title: 'Индикатори по дело',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseMigrationRegNumber',
+                        data: 'caseMigrationRegNumber',
+                        title: 'Номер на свързани дела',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'actInforcedDate',
+                        data: 'actInforcedDate',
+                        title: 'Дата на влизане в сила на акта',
+                        sortable: false,
+                        searchable: false,
+                        render: function (data) {
+                            if (data)
+                                return moment(data).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actComplainResultLabel',
+                        data: 'actComplainResultLabel',
+                        title: 'Резултат/степен на уважаване на иска',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseSessionActs',
+                        data: 'caseSessionActs',
+                        title: 'Финализиращи актове',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+        
+    let createTbl = true;
+    function ValidateData() {
+        var datefrom = $("#Filter_DateFrom").val();
+        var dateto = $("#Filter_DateTo").val();
+        postContent('@Url.Action("IsValidateDate", "Report")'
+            , { dateFrom: datefrom, dateTo: dateto }
+            , function (data) {
+                if (!data.result)
+                {
+                    if (createTbl) {
+                        LoadTable();
+                        createTbl = false;
+                    } else {
+                        $('#mainTable').DataTable().ajax.reload(
+                            function () {
+                        });
+                    }
+                }
+                else
+                {
+                    return messageHelper.ShowErrorMessage('Периодът е по-голям от година.', messageContainer);
+                }
+            });
+    }
+
+    $(function () {
+        $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+            let url = '@Url.Action("FileListView","Files")';
+            if ($(this).data('url')) {
+                url = $(this).data('url');
+            }
+            let lnk = $(this);
+            requestContent(url,
+                { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                function (html) {
+                    $(lnk).parent().html(html);
+                });
+            return false;
+        });
+    });
+
+    function RedirectIndex() {
+        debugger;
+        var filterTemplatesId = $('#FilterTemplatesId').val()
+        window.location.href = '@Url.Action("SpecializedReport", "Report")?filterTemplatesId=' + filterTemplatesId;
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("SpecializedReportMigrations", "Report")?caseId={{this}}" class="btn btn-def btn-sm" title="Движения" target="_blank"><i class="fa fa-exchange"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>

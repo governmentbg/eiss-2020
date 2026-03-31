@@ -1,38 +1,41 @@
-﻿using AutoMapper.QueryableExtensions;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
+using IOWebApplication.Core.Models.BreadcrumbsModels;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Account;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
+using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels.Report;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using IOWebApplication.Infrastructure.Contracts;
-using IOWebApplication.Core.Extensions;
-using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
-using Microsoft.AspNetCore.Mvc;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
-using static IOWebApplication.Infrastructure.Constants.AccountConstants;
 using System.Reflection;
-using System.ComponentModel.DataAnnotations;
-using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
-using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
-using Newtonsoft.Json;
-using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using System.Threading.Tasks;
-using IOWebApplication.Infrastructure.Data.Models;
+using static IOWebApplication.Infrastructure.Constants.AccountConstants;
 
 namespace IOWebApplication.Core.Services
 {
@@ -41,18 +44,18 @@ namespace IOWebApplication.Core.Services
 
         private readonly INomenclatureService nomService;
         private readonly IUrlHelper urlHelper;
-
-        public CommonService(
-            ILogger<CommonService> _logger,
-            IUserContext _userContext,
-            AutoMapper.IMapper _mapper,
-            IUrlHelper _url,
-            INomenclatureService _nomService,
-            IRepository _repo)
+        private readonly IDBUserContext dBUserContext;
+        public CommonService(ILogger<CommonService> _logger,
+                             IUserContext _userContext,
+                             IDBUserContext dBUserContext,
+                             IUrlHelper _url,
+                             INomenclatureService _nomService,
+                             IRepository _repo)
         {
             logger = _logger;
             userContext = _userContext;
-            mapper = _mapper;
+            this.dBUserContext = dBUserContext;
+            //mapper = _mapper;
             nomService = _nomService;
             urlHelper = _url;
             repo = _repo;
@@ -86,12 +89,29 @@ namespace IOWebApplication.Core.Services
                 whereInstitutionTypeIds = x => true;
             }
 
-            return repo.All<Institution>()
+            if (institutionType < 1 &&
+                string.IsNullOrEmpty(institutionTypeIds) &&
+                string.IsNullOrEmpty(name) &&
+                (id == null || id < 0))
+            {
+                whereSelect = x => false;
+            }
+
+            return repo.AllReadonly<Institution>()
                         .Where(whereId)
                         .Where(whereSelect)
                         .Where(whereInstitutionType)
                         .Where(whereInstitutionTypeIds)
-                        .ProjectTo<InstitutionVM>(InstitutionVM.GetMapping())
+                        .Select(x => new InstitutionVM
+                        {
+                            Id = x.Id,
+                            FullName = x.FullName,
+                            Code = x.Code,
+                            DateFrom = x.DateFrom,
+                            DateTo = x.DateTo,
+                            EISPPCode = x.EISPPCode
+                        })
+
                         .AsQueryable();
         }
 
@@ -108,13 +128,14 @@ namespace IOWebApplication.Core.Services
                     saved.EISPPCode = model.EISPPCode;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
-                    PersonNamesBase_SaveData(saved);
-                    repo.Update(saved);
+                    PersonNamesBase_SaveData(saved, true);
+                    //repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
                 {
-                    PersonNamesBase_SaveData(model);
+                    model.Person = null;
+                    PersonNamesBase_SaveData(model, false);
                     repo.Add(model);
                     repo.SaveChanges();
                 }
@@ -122,7 +143,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Institution Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Institution Id={model.Id}");
                 return false;
             }
         }
@@ -132,7 +153,7 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<Person>(x => x.Uic == uic && x.UicTypeId == uicType).FirstOrDefault();
         }
 
-        public IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId, bool showFree)
+        public IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId, bool showFree, int? courtId)
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
 
@@ -156,7 +177,7 @@ namespace IOWebApplication.Core.Services
                                                   .Where(s => s.LawUnitId == x.Id && (s.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
                                                   .Any() == false;
             }
-
+            DateTime dtNow = DateTime.Now;
             DateTime endDate = DateTime.Now.AddYears(100);
             DateTime fromDateNull = (fromDate == null ? DateTime.Now.AddYears(-100) : (DateTime)fromDate).Date;
             DateTime toDateNull = (toDate == null ? endDate : (DateTime)toDate).Date;
@@ -184,44 +205,38 @@ namespace IOWebApplication.Core.Services
                 }
             }
 
-            var result = repo.All<LawUnit>()
-                    .Include(x => x.Courts)
-                    .ThenInclude(x => x.Court)
-                    .Include(x => x.Courts)
-                    .ThenInclude(x => x.PeriodType)
+            Expression<Func<LawUnit, bool>> whereCourt = x => true;
+            if (courtId > 0)
+            {
+                whereCourt = x => x.Courts.Where(c => c.CourtId == courtId.Value)
+                                          .Where(c => NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended.Contains(c.PeriodTypeId))
+                                          .Where(c => c.DateFrom <= dtNow && (c.DateTo ?? DateTime.MaxValue) >= dtNow).Any();
+            }
+            var result = repo.AllReadonly<LawUnit>()
                     .Where(x => x.LawUnitTypeId == lawUnitType)
                     .Where(nameWhere)
                     .Where(dateWhere)
                     .Where(specialityWhere)
                     .Where(filterByCourtWhere)
-                    .ProjectTo<LawUnitVM>(LawUnitVM.GetMapping())
+                    .Where(whereCourt)
+                    .Select(x => new LawUnitVM
+                    {
+                        Id = x.Id,
+                        FullName = x.FullName,
+                        Department = x.Department,
+                        DateFrom = x.DateFrom,
+                        DateTo = x.DateTo,
+                        CourtList = x.Courts
+                            .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended.Contains(x.PeriodTypeId))
+                            .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow)
+                            .Select(x => $"{x.Court.Label} ({x.PeriodType.Code}{((x.PeriodTypeId == NomenclatureConstants.PeriodTypes.ActAs) ? " " + x.LawUnitType.Label : "")})")
+                            .ToArray()
+                    })
                     .AsQueryable();
 
             //string sql = result.ToSql();
             return result;
         }
-        public IQueryable<LawUnitVM> LawUnitForDate_Select(int lawUnitType, DateTime? date)
-        {
-            DateTime dateSelect = date ?? DateTime.Now;
-            return repo.All<LawUnit>(x => x.LawUnitTypeId == lawUnitType &&
-                                          x.DateFrom.Date <= dateSelect.Date &&
-                                          dateSelect.Date <= (x.DateTo ?? DateTime.Now).Date)
-                    .ProjectTo<LawUnitVM>(LawUnitVM.GetMapping())
-                    .AsQueryable();
-        }
-        public List<SelectListItem> LawUnitForDate_SelectDDL(int lawUnitType, DateTime? date)
-        {
-            var result = LawUnitForDate_Select(lawUnitType, date)
-                       .OrderBy(x => x.FullName)
-                       .Select(x => new SelectListItem()
-                       {
-                           Text = x.FullName,
-                           Value = x.Id.ToString()
-                       }).ToList() ?? new List<SelectListItem>();
-            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
-            return result;
-        }
-
 
         public bool LawUnit_SaveData(LawUnit model)
         {
@@ -230,7 +245,6 @@ namespace IOWebApplication.Core.Services
                 if (model.Id > 0)
                 {
                     var saved = repo.GetById<LawUnit>(model.Id);
-                    saved.CopyFrom(model);
                     saved.Code = model.Code;
                     saved.Department = model.Department;
                     saved.DateFrom = model.DateFrom;
@@ -238,16 +252,16 @@ namespace IOWebApplication.Core.Services
                     saved.JudgeSeniorityId = model.JudgeSeniorityId;
                     saved.UserId = userContext.UserId;
                     saved.DateWrt = DateTime.Now;
-                    PersonNamesBase_SaveData(saved);
+                    saved.CopyFrom(model);
+                    PersonNamesBase_SaveData(saved, true);
                     CreateHistory<LawUnit, LawUnitH>(saved);
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
                 {
                     model.UserId = userContext.UserId;
                     model.DateWrt = DateTime.Now;
-                    PersonNamesBase_SaveData(model);
+                    PersonNamesBase_SaveData(model, false);
                     CreateHistory<LawUnit, LawUnitH>(model);
                     repo.Add(model);
                     repo.SaveChanges();
@@ -256,8 +270,27 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Institution Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Institution Id={model.Id}");
                 return false;
+            }
+        }
+
+        public SaveResultVM LawUnit_ChangeLawunitType(int id, int lawunitTypeId)
+        {
+            try
+            {
+                var saved = repo.GetById<LawUnit>(id);
+                saved.LawUnitTypeId = lawunitTypeId;
+                saved.DateWrt = DateTime.Now;
+                saved.UserId = userContext.UserId;
+                CreateHistory<LawUnit, LawUnitH>(saved);
+                repo.SaveChanges();
+                return new SaveResultVM(true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на ChangeLawunitType Id={id}");
+                return new SaveResultVM(false);
             }
         }
 
@@ -300,7 +333,6 @@ namespace IOWebApplication.Core.Services
             }
 
             var result = repo.AllReadonly<LawUnit>()
-                            .Include(x => x.LawUnitType)
                             .Where(lawUnitTypeSearch)
                             .Where(lawUnitFilter)
                             .Where(lawUnitCourtSearch)
@@ -362,13 +394,12 @@ namespace IOWebApplication.Core.Services
             //}
 
             var result = data
-                            .Include(x => x.LawUnitType)
                             .Where(lawUnitFilter)
                             .OrderBy(x => x.FullName)
                             .Select(x => new LabelValueVM
                             {
                                 Value = x.Id.ToString(),
-                                Label = $"{x.FullName} {x.Code} ({x.LawUnitType.Label})"
+                                Label = $"{x.FullName} {x.Code} ({x.LawUnitType.Label}){((x.DateTo != null) ? " *Н" : "")}"
                             }).ToList();
 
             return result;
@@ -388,14 +419,13 @@ namespace IOWebApplication.Core.Services
         public LabelValueVM GetLawUnitById(int id)
         {
             return repo.AllReadonly<LawUnit>()
-                        .Include(x => x.LawUnitType)
                         .Where(x => x.Id == id)
                         .OrderBy(x => x.FullName)
                         .Select(x => new LabelValueVM
                         {
                             Value = x.Id.ToString(),
                             Label = $"{x.FullName} {x.Code} ({x.LawUnitType.Label})"
-                        }).ToList().DefaultIfEmpty(null).FirstOrDefault();
+                        }).FirstOrDefault();
         }
 
 
@@ -412,7 +442,17 @@ namespace IOWebApplication.Core.Services
         }
 
 
+        public IQueryable<LawUnit> LawUnit_JudgeAndUserByCourtDate(int court, DateTime? date)
+        {
+            DateTime dateSelect = date ?? DateTime.Now;
+            DateTime enddatenull = dateSelect.AddDays(1);
 
+            List<int> plus = NomenclatureConstants.PeriodTypes.CurrentlyAvailable.ToList();
+            return repo.AllReadonly<LawUnit>().Where(x => NomenclatureConstants.LawUnitTypes.SpecialAccess.Contains(x.LawUnitTypeId) && ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date)
+                                   && repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == court && c.DateExpired == null &&
+                                          plus.Contains(c.PeriodTypeId) && c.DateFrom <= dateSelect && (c.DateTo ?? enddatenull) >= dateSelect).Any()
+                                                          ).AsQueryable();
+        }
 
 
 
@@ -429,8 +469,6 @@ namespace IOWebApplication.Core.Services
         public IQueryable<WorkingDaysVM> WorkingDay_GetList(DateTime? dateFrom, DateTime? dateTo, int dayType = 0)
         {
             return repo.AllReadonly<WorkingDay>()
-                       .Include(i => i.Court)
-                       .Include(i => i.DayType)
                        .Where(s => s.DayTypeId == dayType || dayType == 0)
                        .Where(s => s.Day >= dateFrom || dateFrom == DateTime.MinValue)
                        .Where(s => s.Day <= dateTo || dateTo == DateTime.MinValue)
@@ -453,7 +491,7 @@ namespace IOWebApplication.Core.Services
         /// Записва/Променя данните за работен ден
         /// </summary>
         /// <param name="model">Модел as WorkingDays</param>
-        /// <returns> >0 - Успешен запис/промяна; <=0 - Неуспешен запис/редакция</returns>
+        /// <returns> >0 - Успешен запис/промяна; по малко от 0 - Неуспешен запис/редакция</returns>
         public int WorkingDay_SaveData(WorkingDay model)
         {
             int res = -1;
@@ -471,6 +509,8 @@ namespace IOWebApplication.Core.Services
                 {
                     repo.Add<WorkingDay>(model);
                 }
+                model.UserId = userContext.UserId;
+                model.DateWrt = DateTime.Now;
                 repo.SaveChanges();
                 res = model.Id;
             }
@@ -526,56 +566,194 @@ namespace IOWebApplication.Core.Services
                                                  .Any();
         }
 
+        /// <summary>
+        /// Метод връщащ работен ден от дата
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="workingDaysDayOff">Списък с почивни дни</param>
+        /// <returns></returns>
+        public async Task<DateTime> GetWorkDayFromDate(DateTime date, IEnumerable<WorkingDay> workingDaysDayOff = null)
+        {
+            IEnumerable<WorkingDay> workingDays = null;
 
+            if (workingDaysDayOff != null)
+                workingDays = workingDaysDayOff.Where(x => x.Day.Date >= date.Date);
+            else
+                workingDays = await repo.AllReadonly<WorkingDay>()
+                                        .Where(x => x.CourtId == userContext.CourtId &&
+                                                    x.Day.Date >= date.Date &&
+                                                    x.DayTypeId == NomenclatureConstants.DayTypeConstants.DayOff)
+                                        .ToListAsync()
+                                        .ConfigureAwait(false);
+
+            while (workingDays.Any(w => w.Day.Date == date.Date))
+                date = date.AddDays(1);
+
+            return date;
+        }
+
+        /// <summary>
+        /// Метод връщащ месеци между 2 дати за актовете
+        /// </summary>
+        /// <param name="dateFrom">От дата</param>
+        /// <param name="dateTo">До дата</param>
+        /// <param name="workingDaysDayOff">Списък с почивни дни</param>
+        /// <returns></returns>
+        public async Task<int> GetMonthsBetweenTwoDatesForActs(DateTime dateFrom, DateTime dateTo, IEnumerable<WorkingDay> workingDaysDayOff = null)
+        {
+            DateTime dateToCalc = await GetWorkDayFromDate(dateTo, workingDaysDayOff).ConfigureAwait(false);
+            int monthsApart = (12 * (dateToCalc.Year - dateFrom.Year) + dateToCalc.Month - dateFrom.Month) + (dateToCalc.Day > dateFrom.Day ? 1 : 0);
+            monthsApart = monthsApart == 0 ? 1 : monthsApart;
+            return Math.Abs(monthsApart);
+        }
+
+        /// <summary>
+        /// Пакетно сетване на срок в който е постановен акта
+        /// </summary>
+        /// <param name="takeRow">Брой записи които да вземе</param>
+        /// <returns></returns>
+        public async Task<bool> SetDeclaredMonthCountForActs(int takeRow)
+        {
+            try
+            {
+                DateTime dateNow = DateTime.Now;
+
+                List<ActDeclaredMonthVM> caseSessionActs = await repo.AllReadonly<CaseSessionAct>()
+                                                                     .Where(x => x.DateExpired == null &&
+                                                                                 x.ActDeclaredDate != null &&
+                                                                                 x.DeclaredMonthCount == null)
+                                                                     .OrderByDescending(x => x.Id)
+                                                                     .Select(x => new ActDeclaredMonthVM()
+                                                                     {
+                                                                         CourtId = x.CourtId ?? 0,
+                                                                         ActId = x.Id,
+                                                                         ActDeclaredDate = x.ActDeclaredDate ?? dateNow,
+                                                                         SessionDateFrom = x.CaseSession.DateFrom
+                                                                     })
+                                                                     .Take(takeRow)
+                                                                     .ToListAsync()
+                                                                     .ConfigureAwait(false);
+
+                if (caseSessionActs.Count == 0)
+                {
+                    return false;
+                }
+
+                IEnumerable<WorkingDay> workingDaysDayOff = await repo.AllReadonly<WorkingDay>()
+                                                                      .Where(x => x.DayTypeId == NomenclatureConstants.DayTypeConstants.DayOff)
+                                                                      .ToListAsync()
+                                                                      .ConfigureAwait(false);
+
+
+                foreach (var act in caseSessionActs)
+                {
+                    CaseSessionAct modelSave = await repo.All<CaseSessionAct>()
+                                                         .Where(x => x.Id == act.ActId)
+                                                         .FirstOrDefaultAsync()
+                                                         .ConfigureAwait(false);
+
+                    modelSave.DeclaredMonthCount = await GetMonthsBetweenTwoDatesForActs(act.SessionDateFrom, act.ActDeclaredDate, workingDaysDayOff.Where(x => x.CourtId == act.CourtId)).ConfigureAwait(false);
+                }
+
+                await repo.SaveChangesAsync().ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при пакетно сетване на срок в който е постановен акта");
+                return false;
+            }
+        }
 
         #endregion
 
+        /// <summary>
+        /// Извличане на данни за потребители
+        /// </summary>
+        /// <param name="filter">Филтър попълнен от потребител</param>
+        /// <param name="forList"></param>
+        /// <returns></returns>
         public IQueryable<UserProfileVM> Users_Select(UserFilterVM filter, bool forList = false)
         {
             filter.UpdateNullables();
             Expression<Func<ApplicationUser, bool>> whereCourt = x => x.LawUnit.Courts.Any(c => c.CourtId == userContext.CourtId && c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId));
             if (forList && userContext.IsUserInRole(Roles.GlobalAdministrator))
-            {
                 whereCourt = x => true;
-            }
+
             Expression<Func<ApplicationUser, bool>> activeUserOnly = x => true;
             if (!forList)
-            {
                 activeUserOnly = x => x.IsActive;
-            }
+
+            Expression<Func<ApplicationUser, bool>> userRolesWhere = x => true;
+            if (filter.UserRoles != null && filter.UserRoles.Any())
+                userRolesWhere = x => x.UserRoles.Any(r => filter.UserRoles.Contains(r.RoleId));
+
             return repo.AllReadonly<ApplicationUser>()
-                            .Include(x => x.LawUnit)
-                            .ThenInclude(x => x.LawUnitType)
-                            .Include(x => x.LawUnit)
-                            .ThenInclude(x => x.Courts)
-                            .Include(x => x.Court)
-                            .Where(whereCourt)
-                            .Where(activeUserOnly)
+                       .Where(whereCourt)
+                       .Where(activeUserOnly)
+                       .Where(userRolesWhere)
+                       .Where(x => EF.Functions.ILike(x.LawUnit.FullName, filter.FullName.ToPaternSearch()))
+                       .Where(x => EF.Functions.ILike(x.Email, filter.Email.ToPaternSearch()))
+                       .Where(x => x.Id == (filter.UserId ?? x.Id))
+                       .Select(x => new UserProfileVM
+                       {
+                           Id = x.Id,
+                           CourtId = x.CourtId,
+                           CourtName = x.Court.Label,
+                           Email = x.Email,
+                           Uic = x.LawUnit.Uic,
+                           FullName = x.LawUnit.FullName,
+                           LawUnitId = x.LawUnitId,
+                           LawUnitTypeName = x.LawUnit.LawUnitType.Label,
+                           IsActive = x.IsActive,
+                           RolesLabel = string.Join(", ", x.UserRoles.Select(r => r.Role.Label))
+                       })
+                       .AsQueryable();
+        }
+
+        public IQueryable<UserProfileVM> Users_SelectForAutocomplete(UserFilterVM filter, string selectMode = NomenclatureConstants.LawUnitSelectMode.Current)
+        {
+            filter.UpdateNullables();
+            Expression<Func<ApplicationUser, bool>> whereFilter = x => x.IsActive && x.LawUnit.Courts.Any(c => c.CourtId == userContext.CourtId && c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId));
+
+            switch (selectMode)
+            {
+                case NomenclatureConstants.LawUnitSelectMode.CurrentWithHistory:
+                    whereFilter = x => x.LawUnit.Courts.Any(c => c.CourtId == userContext.CourtId && c.DateFrom <= DateTime.Now && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId));
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(filter.UserId))
+            {
+                whereFilter = x => x.Id == filter.UserId;
+            }
+
+            return repo.AllReadonly<ApplicationUser>()
+                            .Where(whereFilter)
                             .Where(x => EF.Functions.ILike(x.LawUnit.FullName, filter.FullName.ToPaternSearch()))
                             .Where(x => EF.Functions.ILike(x.Email, filter.Email.ToPaternSearch()))
                             .Where(x => x.Id == (filter.UserId ?? x.Id))
                             .Select(x => new UserProfileVM
                             {
                                 Id = x.Id,
-                                CourtId = x.CourtId,
-                                CourtName = x.Court.Label,
                                 Email = x.Email,
-                                Uic = x.LawUnit.Uic,
                                 FullName = x.LawUnit.FullName,
-                                LawUnitId = x.LawUnitId,
-                                LawUnitTypeName = x.LawUnit.LawUnitType.Label
-                            }).ToList().AsQueryable();
+                                LawUnitTypeName = x.LawUnit.LawUnitType.Label,
+                                IsActive = x.IsActive && x.LawUnit.Courts.Any(c => c.CourtId == userContext.CourtId && c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId))
+                            }).AsQueryable();
 
         }
 
-        public List<SelectListItem> GetDropDownList_CourtHall(int courtId, bool addDefaultElement = false, bool addAllElement = false)
+        public async Task<List<SelectListItem>> GetDropDownList_CourtHall(int courtId, bool addDefaultElement = true, bool addAllElement = false)
         {
-            var result = repo.All<CourtHall>().Where(x => x.CourtId == courtId)
-                .Select(x => new SelectListItem()
-                {
-                    Text = x.Name + (!string.IsNullOrEmpty(x.Location) ? "  " + x.Location : string.Empty),
-                    Value = x.Id.ToString()
-                }).ToList() ?? new List<SelectListItem>();
+            var result = (await repo.AllReadonly<CourtHall>()
+                                   .Where(x => x.CourtId == courtId)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Text = x.Name + (!string.IsNullOrEmpty(x.Location) ? "  " + x.Location : string.Empty),
+                                       Value = x.Id.ToString()
+                                   })
+                                   .ToListAsync()) ?? new List<SelectListItem>();
 
             if (addDefaultElement)
             {
@@ -624,6 +802,7 @@ namespace IOWebApplication.Core.Services
             CheckListViewVM checkListViewVM = new CheckListViewVM
             {
                 CourtId = lawUnitId,
+                ObjectId = lawUnitId,
                 Label = "Специалности",
                 checkListVMs = FillCheckListVMs(lawUnitId)
             };
@@ -751,6 +930,20 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        public async Task<List<SelectListItem>> CourtForDelivery_SelectDDLAsync(int courtId)
+        {
+            var result = await repo.AllReadonly<Court>()
+                             .Where(x => x.Id != courtId && x.IsActive)
+                             .OrderBy(x => x.Label)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Text = x.Label,
+                                 Value = x.Id.ToString()
+                             }).ToListAsync() ?? new List<SelectListItem>();
+            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+            return result;
+        }
+
         public IQueryable<CourtBankAccount> CourtBankAccountForCourt_Select(int courtId)
         {
             return repo.AllReadonly<CourtBankAccount>()
@@ -787,7 +980,6 @@ namespace IOWebApplication.Core.Services
                     saved.MoneyGroupId = model.MoneyGroupId;
                     saved.IsActive = model.IsActive;
                     saved.ComPortPos = model.ComPortPos;
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -800,7 +992,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtBankAccount Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtBankAccount Id={model.Id}");
                 return false;
             }
         }
@@ -809,7 +1001,6 @@ namespace IOWebApplication.Core.Services
         {
             DateTime today = DateTime.Now.Date;
             var result = repo.AllReadonly<CourtBankAccount>()
-                       .Include(x => x.MoneyGroup)
                        .Where(x => x.CourtId == courtId && x.IsActive == true)
                        .Where(x => (x.MoneyGroupId == moneyGroupId || moneyGroupId == 0))
                        .Where(x => x.DateStart.Date <= today.Date && today.Date <= (x.DateEnd ?? DateTime.Now).Date)
@@ -872,15 +1063,18 @@ namespace IOWebApplication.Core.Services
 
                     break;
                 case SourceTypeSelectVM.Instutution:
+                    Expression<Func<Institution, bool>> whereActive = x => true;
+                    if ((searchId ?? 0) <= 0)
+                        whereActive = x => (x.DateTo ?? dtNow) >= dtNow;
+
                     result = repo.AllReadonly<Institution>()
-                                .Include(x => x.InstitutionType)
                                 .Where(x => x.InstitutionTypeId == (objectTypeId ?? x.InstitutionTypeId))
-                                .Where(x => (x.DateTo ?? dtNow) >= dtNow)
                                 .Where(x => EF.Functions.ILike(x.FullName, search.ToPaternSearch())
                                 || EF.Functions.ILike(x.Code, search.ToPaternSearch())
                                 || EF.Functions.ILike(x.DepartmentName, search.ToPaternSearch())
                                 )
                                 .Where(x => x.Id == (searchId ?? x.Id))
+                                .Where(whereActive)
                                 .OrderBy(x => x.FullName)
                                 .Select(x => new SelectEntityItemVM()
                                 {
@@ -895,7 +1089,6 @@ namespace IOWebApplication.Core.Services
                     break;
                 case SourceTypeSelectVM.LawUnit:
                     result = repo.AllReadonly<LawUnit>()
-                                .Include(x => x.LawUnitType)
                                 .Where(x => x.LawUnitTypeId == (objectTypeId ?? x.LawUnitTypeId))
                                 .Where(x => (x.DateTo ?? dtNow) >= dtNow)
                                 .Where(x => EF.Functions.ILike(x.FullName, search.ToPaternSearch())
@@ -928,25 +1121,70 @@ namespace IOWebApplication.Core.Services
             //                    ).AsQueryable();
         }
 
-        public string Users_GetByLawUnitUIC(string uic)
+        public async Task<string> Users_GetByLawUnitUIC(string uic)
         {
             DateTime dtNow = DateTime.Now;
-            return repo.AllReadonly<ApplicationUser>()
-                                .Include(x => x.LawUnit)
+            var userInfo = await repo.AllReadonly<ApplicationUser>()
                                 .Where(x => x.LawUnit.Uic == uic)
                                 .Where(x => (x.LawUnit.DateTo ?? dtNow) >= (dtNow))
                                 .Where(x => x.IsActive)
-                                .Select(x => x.Id)
-                                .FirstOrDefault();
+                                .Select(x => new
+                                {
+                                    x.Id,
+                                    x.LawUnitId,
+                                    x.CourtId,
+                                    IsGlobalAdmin = x.UserRoles.Any(r => r.Role.Name == AccountConstants.Roles.GlobalAdministrator)
+                                })
+                                .FirstOrDefaultAsync();
+            if (userInfo == null)
+            {
+                return null;
+            }
+
+            int[] courtListIds = await repo.AllReadonly<CourtLawUnit>()
+                                        .Where(x => x.LawUnitId == userInfo.LawUnitId && x.DateExpired == null)
+                                        .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
+                                        .Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
+                                        .Select(x => x.CourtId)
+                                        .ToArrayAsync();
+
+            if (!userInfo.IsGlobalAdmin)
+            {
+                if (courtListIds.Length == 0)
+                {
+                    return null;
+                }
+
+                if (!courtListIds.Contains(userInfo.CourtId))
+                {
+                    var user = await repo.GetByIdAsync<ApplicationUser>(userInfo.Id);
+                    user.CourtId = courtListIds.First();
+                    await repo.SaveChangesAsync();
+                }
+            }
+
+            if (userInfo != null)
+            {
+                return userInfo.Id;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public IEnumerable<LabelValueVM> Get_Courts(string term, int? id)
         {
             term = term.SafeLower();
-            Expression<Func<Court, bool>> filter = x => EF.Functions.ILike(x.Label, term.ToPaternSearch());
+            Expression<Func<Court, bool>> filter = x => false;
             if (id > 0)
             {
                 filter = x => x.Id == id;
+            }
+            else
+            {
+                //При търсене по име да не излиза съда за случайно разпределение
+                filter = x => EF.Functions.ILike(x.Label, term.ToPaternSearch()) && x.Id != NomenclatureConstants.Courts.RandomAssignment;
             }
             return repo.AllReadonly<Court>()
                             .Where(filter)
@@ -982,6 +1220,32 @@ namespace IOWebApplication.Core.Services
 
             return result;
         }
+
+        public async Task<List<SelectListItem>> LawUnitAddress_SelectDDL_ByCaseLawUnitIdAsync(int caseLawUnitId, bool addDefaultElement = true, bool addAllElement = false)
+        {
+            var caseLawUnit = await repo.AllReadonly<CaseLawUnit>()
+                                        .Where(x => x.Id == caseLawUnitId)
+                                        .FirstOrDefaultAsync();
+
+            int lawUnitId = caseLawUnit?.LawUnitId ?? 0;
+            var result = await repo.AllReadonly<LawUnitAddress>()
+                                   .Where(x => x.LawUnitId == lawUnitId)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Text = x.Address.FullAddressNotification(),
+                                       Value = x.AddressId.ToString()
+                                   })
+                                   .ToListAsync() ?? new List<SelectListItem>();
+
+            if (addDefaultElement)
+                result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+
+            if (addAllElement)
+                result.Insert(0, new SelectListItem() { Text = "Всички", Value = "-2" });
+
+            return result;
+        }
+
         public IQueryable<CourtVM> CourtsByType(int courtTypeId)
         {
             return repo.AllReadonly<Court>()
@@ -1017,13 +1281,14 @@ namespace IOWebApplication.Core.Services
                     saved.CourtRegionId = model.CourtRegionId;
                     saved.PhoneNumber = model.PhoneNumber;
                     saved.Email = model.Email;
+                    saved.JudgeCount = model.JudgeCount;
                     if (!String.IsNullOrEmpty(model.CourtLogo))
                         saved.CourtLogo = model.CourtLogo;
 
                     if (saved.AddressId == null)
                         saved.CourtAddress = new Address();
                     saved.CourtAddress.CopyFrom(model.CourtAddress);
-                    repo.Update(saved);
+                    //repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -1035,7 +1300,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на съд Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на съд Id={model.Id}");
                 return false;
             }
 
@@ -1044,16 +1309,14 @@ namespace IOWebApplication.Core.Services
         public IQueryable<LawUnitAddressListVM> LawUnitAddress_Select(int lawUnitId)
         {
             return repo.AllReadonly<LawUnitAddress>()
-                .Include(x => x.Address)
-                .Include(x => x.Address.AddressType)
-                            .Where(x => x.LawUnitId == lawUnitId)
-                            .Select(x => new LawUnitAddressListVM
-                            {
-                                LawUnitId = x.LawUnitId,
-                                AddressId = x.AddressId,
-                                FullAddress = x.Address.FullAddress,
-                                AddressTypeName = x.Address.AddressType.Label
-                            }).AsQueryable();
+                .Where(x => x.LawUnitId == lawUnitId)
+                .Select(x => new LawUnitAddressListVM
+                {
+                    LawUnitId = x.LawUnitId,
+                    AddressId = x.AddressId,
+                    FullAddress = x.Address.FullAddress,
+                    AddressTypeName = x.Address.AddressType.Label
+                }).AsQueryable();
         }
 
         public (bool result, string errorMessage) LawUnitAddress_SaveData(LawUnitAddress model)
@@ -1079,7 +1342,7 @@ namespace IOWebApplication.Core.Services
                     saved.Address.CopyFrom(model.Address);
                     nomService.SetFullAddress(saved.Address);
 
-                    repo.Update(saved);
+                    //repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -1094,7 +1357,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на LawUnitAddress Id={ model.AddressId }");
+                logger.LogError(ex, $"Грешка при запис на LawUnitAddress Id={model.AddressId}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }
@@ -1116,9 +1379,15 @@ namespace IOWebApplication.Core.Services
         public List<BreadcrumbsVM> Breadcrumbs_GetForCase(int CaseId)
         {
             var caseInfo = repo.AllReadonly<Case>()
-                                        .Include(x => x.CaseType)
-                                        .Where(x => x.Id == CaseId)
-                                        .FirstOrDefault();
+                               .Where(x => x.Id == CaseId)
+                               .Select(x => new BCCaseModel
+                               {
+                                   CaseStateId = x.CaseStateId,
+                                   CaseTypeCode = x.CaseType.Code,
+                                   RegDate = x.RegDate,
+                                   ShortNumber = x.ShortNumber
+                               })
+                               .FirstOrDefault();
 
             List<BreadcrumbsVM> result = new List<BreadcrumbsVM>();
             result.Add(FillBreadcrumbs("Съдебни дела", urlHelper.Action("Index", "Case")));
@@ -1129,19 +1398,33 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCaseSession(int CaseSessionId, bool IsViewRowSession = true)
         {
+
             var sessionInfo = repo.AllReadonly<CaseSession>()
-                                  .Include(x => x.SessionType)
-                                  .Include(x => x.Case)
-                                  .ThenInclude(x => x.CaseType)
-                                  .Where(x => x.Id == CaseSessionId)
-                                  .FirstOrDefault();
+                             .Where(x => x.Id == CaseSessionId)
+                             .Select(x => new
+                             {
+                                 x.CaseId,
+                                 CaseTypeCode = x.Case.CaseType.Code,
+                                 x.Case.CaseStateId,
+                                 CaseShortNumber = x.Case.ShortNumber,
+                                 CaseRegDate = x.Case.RegDate,
+                                 SessionTypeLabel = x.SessionType.Label,
+                                 CaseSessionDateFrom = x.DateFrom
+                             })
+                             .FirstOrDefault();
 
             List<BreadcrumbsVM> result = new List<BreadcrumbsVM>();
             result.Add(FillBreadcrumbs("Съдебни дела", urlHelper.Action("Index", "Case")));
-            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseNameBreadcrumbs(sessionInfo.Case), urlHelper.Action("CasePreview", "Case", new { id = sessionInfo.CaseId })));
+            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseNameBreadcrumbs(new BCCaseModel()
+            {
+                CaseStateId = sessionInfo.CaseStateId,
+                CaseTypeCode = sessionInfo.CaseTypeCode,
+                RegDate = sessionInfo.CaseRegDate,
+                ShortNumber = sessionInfo.CaseShortNumber
+            }), urlHelper.Action("CasePreview", "Case", new { id = sessionInfo.CaseId })));
 
             if (IsViewRowSession)
-                result.Add(FillBreadcrumbs(CaseExtensions.GetCaseSessionNameBreadcrumbs(sessionInfo), urlHelper.Action("Preview", "CaseSession", new { id = CaseSessionId })));
+                result.Add(FillBreadcrumbs(CaseExtensions.GetCaseSessionNameBreadcrumbs(new BCCaseSessionModel() { SessionType = sessionInfo.SessionTypeLabel, DateFrom = sessionInfo.CaseSessionDateFrom }), urlHelper.Action("Preview", "CaseSession", new { id = CaseSessionId })));
 
             return result;
         }
@@ -1155,21 +1438,40 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCaseSessionAct(int CaseSessionActId)
         {
-            var actInfo = repo.AllReadonly<CaseSessionAct>()
-                                            .Include(x => x.ActType)
-                                            .Include(x => x.CaseSession)
-                                            .ThenInclude(x => x.SessionType)
-                                            .Include(x => x.CaseSession)
-                                            .ThenInclude(x => x.Case)
-                                            .ThenInclude(x => x.CaseType)
-                                            .Where(x => x.Id == CaseSessionActId)
-                                            .FirstOrDefault();
+            return Breadcrumbs_GetForCaseSessionActAsync(CaseSessionActId).Result;
+        }
+        public async Task<List<BreadcrumbsVM>> Breadcrumbs_GetForCaseSessionActAsync(int CaseSessionActId)
+        {
+            var actInfo = await repo.AllReadonly<CaseSessionAct>()
+                              .Where(x => x.Id == CaseSessionActId)
+                              .AsSplitQuery()
+                              .Select(x => new
+                              {
+                                  x.CaseSession.CaseId,
+                                  CaseTypeCode = x.Case.CaseType.Code,
+                                  x.Case.CaseStateId,
+                                  CaseShortNumber = x.Case.ShortNumber,
+                                  CaseRegDate = x.Case.RegDate,
+                                  x.CaseSessionId,
+                                  SessionTypeLabel = x.CaseSession.SessionType.Label,
+                                  CaseSessionDateFrom = x.CaseSession.DateFrom,
+                                  ActTypeLabel = x.ActType.Label,
+                                  ActRegNumber = x.RegNumber,
+                                  ActRegDate = x.RegDate,
+                              })
+                              .FirstOrDefaultAsync();
 
             List<BreadcrumbsVM> result = new List<BreadcrumbsVM>();
             result.Add(FillBreadcrumbs("Съдебни дела", urlHelper.Action("Index", "Case")));
-            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseNameBreadcrumbs(actInfo.CaseSession.Case), urlHelper.Action("CasePreview", "Case", new { id = actInfo.CaseSession.CaseId })));
-            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseSessionNameBreadcrumbs(actInfo.CaseSession), urlHelper.Action("Preview", "CaseSession", new { id = actInfo.CaseSessionId })));
-            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseSessionActNameBreadcrumbs(actInfo), urlHelper.Action("Edit", "CaseSessionAct", new { id = CaseSessionActId })));
+            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseNameBreadcrumbs(new BCCaseModel()
+            {
+                CaseStateId = actInfo.CaseStateId,
+                CaseTypeCode = actInfo.CaseTypeCode,
+                RegDate = actInfo.CaseRegDate,
+                ShortNumber = actInfo.CaseShortNumber
+            }), urlHelper.Action("CasePreview", "Case", new { id = actInfo.CaseId })));
+            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseSessionNameBreadcrumbs(new BCCaseSessionModel() { SessionType = actInfo.SessionTypeLabel, DateFrom = actInfo.CaseSessionDateFrom }), urlHelper.Action("Preview", "CaseSession", new { id = actInfo.CaseSessionId })));
+            result.Add(FillBreadcrumbs(CaseExtensions.GetCaseSessionActNameBreadcrumbs(new BCCaseSessionActModel() { ActTypeLabel = actInfo.ActTypeLabel, RegNumber = actInfo.ActRegNumber, RegDate = actInfo.ActRegDate }), urlHelper.Action("Edit", "CaseSessionAct", new { id = CaseSessionActId })));
 
             return result;
         }
@@ -1263,7 +1565,11 @@ namespace IOWebApplication.Core.Services
         }
         public List<BreadcrumbsVM> Breadcrumbs_ForCaseNotificationEdit(int notificationId)
         {
-            var notification = repo.AllReadonly<CaseNotification>().Where(x => x.Id == notificationId).FirstOrDefault();
+            var notification = GetReadonly<CaseNotification>(notificationId);
+            if (notification == null)
+            {
+                return new List<BreadcrumbsVM>();
+            }
             return Breadcrumbs_ForCaseNotificationEdit(notification, 0);
         }
         public List<BreadcrumbsVM> Breadcrumbs_ForCaseNotificationEdit(CaseNotification notification, int notificationListTypeId)
@@ -1386,7 +1692,6 @@ namespace IOWebApplication.Core.Services
                     saved.Description = model.Description;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -1398,7 +1703,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtHall Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtHall Id={model.Id}");
                 return false;
             }
         }
@@ -1411,7 +1716,9 @@ namespace IOWebApplication.Core.Services
                             {
                                 Id = x.Id,
                                 HourFee = x.HourFee,
+                                HourFeeEUR = x.HourFeeEUR,
                                 MinDayFee = x.MinDayFee,
+                                MinDayFeeEUR = x.MinDayFeeEUR,
                                 DateFrom = x.DateFrom,
                                 DateTo = x.DateTo
                             }).AsQueryable();
@@ -1439,12 +1746,13 @@ namespace IOWebApplication.Core.Services
                 {
                     var saved = repo.GetById<CourtJuryFee>(model.Id);
                     saved.HourFee = model.HourFee;
+                    saved.HourFeeEUR = model.HourFeeEUR;
                     saved.MinDayFee = model.MinDayFee;
+                    saved.MinDayFeeEUR = model.MinDayFeeEUR;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
                     saved.UserId = userContext.UserId;
                     saved.DateWrt = DateTime.Now;
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -1458,7 +1766,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtJuryFee Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtJuryFee Id={model.Id}");
                 return false;
             }
         }
@@ -1466,7 +1774,6 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CourtPosDeviceListVM> CourtPosDevice_Select(int courtId)
         {
             return repo.AllReadonly<CourtPosDevice>()
-                .Include(x => x.CourtBankAccount)
                             .Where(x => x.CourtId == courtId)
                             .Select(x => new CourtPosDeviceListVM
                             {
@@ -1491,7 +1798,6 @@ namespace IOWebApplication.Core.Services
                     saved.IsActive = model.IsActive;
                     saved.BIC = model.BIC;
                     saved.BankName = model.BankName;
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -1504,21 +1810,21 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtPosDevice Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtPosDevice Id={model.Id}");
                 return false;
             }
         }
 
-        public List<SelectListItem> CourtPosDevice_SelectDDL(int courtId, bool addDefaultElement = false, bool addAllElement = false)
+        public async Task<List<SelectListItem>> CourtPosDevice_SelectDDL(int courtId, bool addDefaultElement = false, bool addAllElement = false)
         {
             DateTime today = DateTime.Now.Date;
-            var result = repo.AllReadonly<CourtPosDevice>()
-                       .Where(x => x.CourtId == courtId)
-                       .Select(x => new SelectListItem()
-                       {
-                           Text = x.Label + " - " + x.Tid,
-                           Value = x.Tid
-                       }).ToList() ?? new List<SelectListItem>();
+            var result = await repo.AllReadonly<CourtPosDevice>()
+                                   .Where(x => x.CourtId == courtId)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Text = x.Label + " - " + x.Tid,
+                                       Value = x.Tid
+                                   }).ToListAsync() ?? new List<SelectListItem>();
 
             if (addDefaultElement)
                 result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
@@ -1714,8 +2020,8 @@ namespace IOWebApplication.Core.Services
         public List<BreadcrumbsVM> Breadcrumbs_ForLawUnit(int lawUnitTypeId)
         {
             List<BreadcrumbsVM> result = new List<BreadcrumbsVM>();
-            var lawUnitType = GetById<LawUnitType>(lawUnitTypeId);
-            result.Add(FillBreadcrumbs(lawUnitType.Description, urlHelper.Action("Index", "LawUnit", new { lawUnitType = lawUnitTypeId })));
+            var lawUnitTypeDescription = GetPropById<LawUnitType, string>(x => x.Id == lawUnitTypeId, x => x.Description);
+            result.Add(FillBreadcrumbs(lawUnitTypeDescription, urlHelper.Action("Index", "LawUnit", new { lawUnitType = lawUnitTypeId })));
             return result;
         }
 
@@ -1806,10 +2112,10 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnit(int periodTypeId, int lawUnitTypeId)
         {
-            var lawUnitType = GetById<LawUnitType>(lawUnitTypeId);
-            var periodType = GetById<PeriodType>(periodTypeId);
+            var lawUnitTypeDescription = GetPropById<LawUnitType, string>(x => x.Id == lawUnitTypeId, x => x.Description);
+            var periodTypeLabel = GetPropById<PeriodType, string>(x => x.Id == periodTypeId, x => x.Label);
             List<BreadcrumbsVM> result = Breadcrumbs_ForLawUnit(lawUnitTypeId);
-            result.Add(FillBreadcrumbs(lawUnitType.Description + " " + periodType.Label, urlHelper.Action("Index", "CourtLawUnit", new { periodType = periodTypeId, lawUnitType = lawUnitTypeId })));
+            result.Add(FillBreadcrumbs(lawUnitTypeDescription + " " + periodTypeLabel, urlHelper.Action("Index", "CourtLawUnit", new { periodType = periodTypeId, lawUnitType = lawUnitTypeId })));
             return result;
         }
 
@@ -1826,32 +2132,77 @@ namespace IOWebApplication.Core.Services
             result.Add(FillBreadcrumbs("Редакция", urlHelper.Action("Edit", "CourtLawUnit", new { id = id })));
             return result;
         }
+
+        /// <summary>
+        /// Breadcrumbs за редактиране на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="periodTypeId">Тип на периода</param>
+        /// <param name="lawUnitTypeId">Тип на служител</param>
+        /// <param name="courtLawUnitId">Идентификатор на служител</param>
+        /// <returns></returns>
+        public List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitAssistantAdd(int periodTypeId, int lawUnitTypeId, int courtLawUnitId)
+        {
+            List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnit(periodTypeId, lawUnitTypeId);
+            result.Add(FillBreadcrumbs("Редакция на служител", urlHelper.Action("Edit", "CourtLawUnit", new { id = courtLawUnitId })));
+            result.Add(FillBreadcrumbs("Редакция на секретар", urlHelper.Action("AddCourtLawUnitAssistant", "CourtLawUnit", new { courtLawUnitId = courtLawUnitId })));
+            return result;
+        }
+
+        /// <summary>
+        /// Breadcrumbs за редактиране на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="periodTypeId">Тип на периода</param>
+        /// <param name="lawUnitTypeId">Тип на служител</param>
+        /// <param name="courtLawUnitId">Идентификатор на служител</param>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitAssistantEdit(int periodTypeId, int lawUnitTypeId, int courtLawUnitId, int id)
+        {
+            List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnit(periodTypeId, lawUnitTypeId);
+            result.Add(FillBreadcrumbs("Редакция на служител", urlHelper.Action("Edit", "CourtLawUnit", new { id = courtLawUnitId })));
+            result.Add(FillBreadcrumbs("Редакция на секретар", urlHelper.Action("EditCourtLawUnitAssistant", "CourtLawUnit", new { id = id })));
+            return result;
+        }
+
         public List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitGroup(int courtLawUnitId)
         {
-            var courtLawUnit = GetById<CourtLawUnit>(courtLawUnitId);
-            var lawUnit = GetById<LawUnit>(courtLawUnit.LawUnitId);
+            var courtLawUnitInfo = repo.AllReadonly<CourtLawUnit>().Where(x => x.Id == courtLawUnitId)
+                                                .Select(x => new
+                                                {
+                                                    x.PeriodTypeId,
+                                                    x.LawUnit.FullName,
+                                                    LawUnitTypeId = x.LawUnitTypeId ?? 0
+                                                })
+                                                .FirstOrDefault();
 
-            List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnit(courtLawUnit.PeriodTypeId, lawUnit.LawUnitTypeId);
-            result.Add(FillBreadcrumbs("Групи към съдия - " + lawUnit.FullName, urlHelper.Action("EditCourtLawUnitGroup", "CourtLawUnit", new { id = courtLawUnitId })));
+            List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnit(courtLawUnitInfo.PeriodTypeId, courtLawUnitInfo.LawUnitTypeId);
+            result.Add(FillBreadcrumbs("Групи към съдия - " + courtLawUnitInfo.FullName, urlHelper.Action("EditCourtLawUnitGroup", "CourtLawUnit", new { id = courtLawUnitId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitCompartment(int courtLawUnitId)
         {
-            var courtLawUnit = GetById<CourtLawUnit>(courtLawUnitId);
-            var lawUnit = GetById<LawUnit>(courtLawUnit.LawUnitId);
+            var info = repo.AllReadonly<CourtLawUnit>()
+                             .Where(x => x.Id == courtLawUnitId)
+                             .Select(x =>
+                             new
+                             {
+                                 x.LawUnit.FullName,
+                                 x.PeriodTypeId,
+                                 x.LawUnit.LawUnitTypeId
+                             }).FirstOrDefault();
 
-            List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnit(courtLawUnit.PeriodTypeId, lawUnit.LawUnitTypeId);
-            result.Add(FillBreadcrumbs("Състави към съдия - " + lawUnit.FullName, urlHelper.Action("CompartmentList", "CourtLawUnit", new { id = courtLawUnitId })));
+            List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnit(info.PeriodTypeId, info.LawUnitTypeId);
+            result.Add(FillBreadcrumbs("Състави към съдия - " + info.FullName, urlHelper.Action("CompartmentList", "CourtLawUnit", new { id = courtLawUnitId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitCompartmentAdd(int courtLawUnitId)
         {
-            var courtLawUnit = GetById<CourtLawUnit>(courtLawUnitId);
+            var lawUnitId = GetPropById<CourtLawUnit, int>(x => x.Id == courtLawUnitId, x => x.LawUnitId);
 
             List<BreadcrumbsVM> result = Breadcrumbs_ForCourtLawUnitCompartment(courtLawUnitId);
-            result.Add(FillBreadcrumbs("Добавяне", urlHelper.Action("AddCompartment", "CourtLawUnit", new { lawUnitId = courtLawUnit.LawUnitId, courtLawUnitId = courtLawUnitId })));
+            result.Add(FillBreadcrumbs("Добавяне", urlHelper.Action("AddCompartment", "CourtLawUnit", new { lawUnitId = lawUnitId, courtLawUnitId = courtLawUnitId })));
             return result;
         }
 
@@ -1934,10 +2285,9 @@ namespace IOWebApplication.Core.Services
         public List<BreadcrumbsVM> Breadcrumbs_AccountMobileToken(string userId)
         {
             List<BreadcrumbsVM> result = Breadcrumbs_Account();
-            var user = repo.AllReadonly<ApplicationUser>()
-                           .Where(x => x.Id == userId)
-                           .FirstOrDefault();
-            result.Add(FillBreadcrumbs("Мобилни токени за " + user?.Email, urlHelper.Action("Index", "DeliveryAccount", new { userId })));
+            var userEmail = GetPropById<ApplicationUser, string>(x => x.Id == userId, x => x.Email);
+
+            result.Add(FillBreadcrumbs("Мобилни токени за " + userEmail, urlHelper.Action("Index", "DeliveryAccount", new { userId })));
             return result;
         }
         public List<BreadcrumbsVM> Breadcrumbs_AccountMobileTokenRegister(string userId)
@@ -1953,16 +2303,16 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_Institution(int institutionTypeId)
         {
-            var institutionType = GetById<InstitutionType>(institutionTypeId);
+            var institutionTypeLabel = GetPropById<InstitutionType, string>(x => x.Id == institutionTypeId, x => x.Label);
             List<BreadcrumbsVM> result = new List<BreadcrumbsVM>();
-            result.Add(FillBreadcrumbs(institutionType.Label, urlHelper.Action("Index", "Institution", new { institutionType = institutionTypeId })));
+            result.Add(FillBreadcrumbs(institutionTypeLabel, urlHelper.Action("Index", "Institution", new { institutionType = institutionTypeId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_InstitutionEdit(int id)
         {
-            var model = GetById<Institution>(id);
-            List<BreadcrumbsVM> result = Breadcrumbs_Institution(model.InstitutionTypeId);
+            var institutionTypeId = GetPropById<Institution, int>(x => x.Id == id, x => x.InstitutionTypeId);
+            List<BreadcrumbsVM> result = Breadcrumbs_Institution(institutionTypeId);
             result.Add(FillBreadcrumbs("Редакция", urlHelper.Action("Edit", "Institution", new { id = id })));
             return result;
         }
@@ -2088,11 +2438,9 @@ namespace IOWebApplication.Core.Services
         }
         public List<BreadcrumbsVM> Breadcrumbs_HtmlTemplateLink(int htmlTemplateId)
         {
-            var htmlTemplate = repo.AllReadonly<HtmlTemplate>()
-                            .Where(x => x.Id == htmlTemplateId)
-                            .FirstOrDefault();
+            var htmlTemplateLabel = GetPropById<HtmlTemplate, string>(x => x.Id == htmlTemplateId, x => x.Label);
             List<BreadcrumbsVM> result = Breadcrumbs_HtmlTemplate();
-            result.Add(FillBreadcrumbs("Връзки по вид съд/дело " + htmlTemplate?.Label, "postToFilterHtmlTemplateLink()"));
+            result.Add(FillBreadcrumbs("Връзки по вид съд/дело " + htmlTemplateLabel, "postToFilterHtmlTemplateLink()"));
             return result;
         }
         public List<BreadcrumbsVM> Breadcrumbs_HtmlTemplateLinkEdit(int htmlTemplateId, int id)
@@ -2103,11 +2451,9 @@ namespace IOWebApplication.Core.Services
         }
         public List<BreadcrumbsVM> Breadcrumbs_HtmlTemplateParam(int htmlTemplateId)
         {
-            var htmlTemplate = repo.AllReadonly<HtmlTemplate>()
-                            .Where(x => x.Id == htmlTemplateId)
-                            .FirstOrDefault();
+            var htmlTemplateDescription = GetPropById<HtmlTemplate, string>(x => x.Id == htmlTemplateId, x => x.Description);
             List<BreadcrumbsVM> result = Breadcrumbs_HtmlTemplate();
-            result.Add(FillBreadcrumbs("Параметри в бланка " + htmlTemplate?.Description, "postToFilterHtmlTemplateParam()"));
+            result.Add(FillBreadcrumbs("Параметри в бланка " + htmlTemplateDescription, "postToFilterHtmlTemplateParam()"));
             return result;
         }
         public List<BreadcrumbsVM> Breadcrumbs_HtmlTemplateParamEdit(int htmlTemplateId, int id)
@@ -2146,7 +2492,7 @@ namespace IOWebApplication.Core.Services
         public List<BreadcrumbsVM> Breadcrumbs_DocumentEdit(long id)
         {
             List<BreadcrumbsVM> result = Breadcrumbs_Document();
-            var document = GetById<Document>(id);
+            var document = GetReadonly<Document>(id);
             result.Add(FillBreadcrumbs("Документ " + document.DocumentNumber + "/" + document.DocumentDate.ToString("dd.MM.yyyy"), urlHelper.Action("Edit", "Document", new { id = id })));
             return result;
         }
@@ -2160,7 +2506,7 @@ namespace IOWebApplication.Core.Services
 
         public CourtBankAccount GetCourtBankAccountForMoneyType(int moneyTypeId)
         {
-            var moneyType = GetById<MoneyType>(moneyTypeId);
+            var moneyType = GetById<Infrastructure.Data.Models.Nomenclatures.MoneyType>(moneyTypeId);
 
             return repo.AllReadonly<CourtBankAccount>()
                 .Where(x => x.MoneyGroupId == moneyType.MoneyGroupId)
@@ -2189,7 +2535,7 @@ namespace IOWebApplication.Core.Services
                     select new MultiSelectTransferVM()
                     {
                         Id = item.Id,
-                        Order = 0,
+                        OrderInt = 0,
                         Text = item.FullName + " - " + item.LawUnitType.Label
                     }).AsQueryable();
         }
@@ -2239,16 +2585,14 @@ namespace IOWebApplication.Core.Services
         public IQueryable<InstitutionAddressListVM> InstitutionAddress_Select(int institutionId)
         {
             return repo.AllReadonly<InstitutionAddress>()
-                .Include(x => x.Address)
-                .Include(x => x.Address.AddressType)
-                            .Where(x => x.InstitutionId == institutionId)
-                            .Select(x => new InstitutionAddressListVM
-                            {
-                                InstitutionId = x.InstitutionId,
-                                AddressId = x.AddressId,
-                                FullAddress = x.Address.FullAddress,
-                                AddressTypeName = x.Address.AddressType.Label
-                            }).AsQueryable();
+                       .Where(x => x.InstitutionId == institutionId)
+                       .Select(x => new InstitutionAddressListVM
+                       {
+                           InstitutionId = x.InstitutionId,
+                           AddressId = x.AddressId,
+                           FullAddress = x.Address.FullAddress,
+                           AddressTypeName = x.Address.AddressType.Label
+                       }).AsQueryable();
         }
 
         public (bool result, string errorMessage) InstitutionAddress_SaveData(InstitutionAddress model)
@@ -2274,7 +2618,6 @@ namespace IOWebApplication.Core.Services
                     saved.Address.CopyFrom(model.Address);
                     nomService.SetFullAddress(saved.Address);
 
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -2289,7 +2632,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на InstitutionAddress Id={ model.AddressId }");
+                logger.LogError(ex, $"Грешка при запис на InstitutionAddress Id={model.AddressId}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }
@@ -2301,7 +2644,7 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_ForInstitutionAddress(int institutionId)
         {
-            var institution = GetById<Institution>(institutionId);
+            var institution = GetReadonly<Institution>(institutionId);
             List<BreadcrumbsVM> result = Breadcrumbs_Institution(institution.InstitutionTypeId);
             result.Add(FillBreadcrumbs("Адреси за " + institution.FullName, urlHelper.Action("Edit", "Institution", new { id = institutionId })));
             return result;
@@ -2424,15 +2767,15 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCaseLawyerHelpEdit(int CaseLawyerHelpId)
         {
-            var caseLawyerHelp = repo.GetById<CaseLawyerHelp>(CaseLawyerHelpId);
-            List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseLawyerHelp(caseLawyerHelp.CaseId);
+            var caseLawyerHelpCaseId = GetPropById<CaseLawyerHelp, int>(CaseLawyerHelpId, x => x.CaseId);
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseLawyerHelp(caseLawyerHelpCaseId);
             result.Add(FillBreadcrumbs("Данни за служебен защитник", urlHelper.Action("Edit", "CaseLawyerHelp", new { id = CaseLawyerHelpId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonCrime(int CaseCrimeId)
         {
-            var caseCrime = repo.GetById<CaseCrime>(CaseCrimeId);
+            var caseCrime = GetReadonly<CaseCrime>(CaseCrimeId);
             var caseCrimeVM = new CaseCrimeVM()
             {
                 Id = caseCrime.Id,
@@ -2449,20 +2792,23 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentencePunishment(int CasePersonSentenceId)
         {
-            var personSentence = repo.AllReadonly<CasePersonSentence>()
-                                     .Include(x => x.CasePerson)
+            var info = repo.AllReadonly<CasePersonSentence>()
                                      .Where(x => x.Id == CasePersonSentenceId)
+                                     .Select(x => new
+                                     {
+                                         x.CasePersonId,
+                                         x.CasePerson.FullName
+                                     })
                                      .FirstOrDefault();
 
-            List<BreadcrumbsVM> result = Breadcrumbs_GetForCasePersonSentence(personSentence.CasePersonId);
-            result.Add(FillBreadcrumbs("Наказания на " + personSentence.CasePerson.FullName, urlHelper.Action("IndexCasePersonSentencePunishment", "CasePersonSentence", new { casePersonSentenceId = CasePersonSentenceId })));
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForCasePersonSentence(info.CasePersonId);
+            result.Add(FillBreadcrumbs("Наказания на " + info.FullName, urlHelper.Action("IndexCasePersonSentencePunishment", "CasePersonSentence", new { casePersonSentenceId = CasePersonSentenceId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
         {
             var casePersonSentencePunishment = repo.AllReadonly<CasePersonSentencePunishment>()
-                                                   .Include(x => x.SentenceType)
                                                    .Where(x => x.Id == CasePersonSentencePunishmentId)
                                                    .Select(x => new CasePersonSentencePunishmentVM()
                                                    {
@@ -2482,16 +2828,16 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCaseSessionActComplain(int CaseSessionActId)
         {
-            var caseSessionAct = repo.GetById<CaseSessionAct>(CaseSessionActId);
-            List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseSession(caseSessionAct.CaseSessionId);
+            var caseSessionActCaseSessionId = GetPropById<CaseSessionAct, int>(CaseSessionActId, x => x.CaseSessionId);
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseSession(caseSessionActCaseSessionId);
             result.Add(FillBreadcrumbs("Обжалвания към съдебен акт", urlHelper.Action("Index", "CaseSessionActComplain", new { caseSessionActId = CaseSessionActId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCaseSessionActComplainEdit(int CaseSessionActComplainId)
         {
-            var caseSessionActComplain = repo.GetById<CaseSessionActComplain>(CaseSessionActComplainId);
-            List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseSessionActComplain(caseSessionActComplain.CaseSessionActId);
+            var caseSessionActComplainCaseSessionActId = GetPropById<CaseSessionActComplain, int>(CaseSessionActComplainId, c => c.CaseSessionActId);
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseSessionActComplain(caseSessionActComplainCaseSessionActId);
             result.Add(FillBreadcrumbs("Редакция на обжалване", urlHelper.Action("Edit", "CaseSessionActComplain", new { id = CaseSessionActComplainId })));
             return result;
         }
@@ -2500,40 +2846,48 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
-                var model = await userContext.Settings().ConfigureAwait(false);
+                UserSettingsModel model = await dBUserContext.Settings();
                 var user = repo.GetById<ApplicationUser>(userContext.UserId);
+
                 switch (setting)
                 {
                     case UserSettingsModel.Set.CalendarStyle:
                         model.CalendarStyle = value;
                         break;
+                    case UserSettingsModel.Set.LastSelectedScaner:
+                        model.LastSelectedScaner = value;
+                        break;
                 }
                 user.UserSettings = JsonConvert.SerializeObject(model);
-                repo.Update(user);
                 repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "Грешка в CommonService.Users_UpdateSetting");
                 return false;
             }
         }
 
-        public bool Users_UpdateSetting(UserSettingsModel model)
+        public async Task<bool> Users_UpdateSetting(UserSettingsModel model)
         {
             try
             {
+                var savedModel = await dBUserContext.Settings();
                 var user = repo.GetById<ApplicationUser>(userContext.UserId);
+                model.LastSelectedScaner = savedModel.LastSelectedScaner;
                 user.UserSettings = JsonConvert.SerializeObject(model);
-                repo.Update(user);
                 repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "Грешка в CommonService.Users_UpdateSetting");
                 return false;
             }
         }
+
+
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonInheritance(int casePersonId)
         {
@@ -2551,8 +2905,8 @@ namespace IOWebApplication.Core.Services
         public List<BreadcrumbsVM> Breadcrumbs_CourtRegionEdit(int courtRegionId)
         {
             var result = Breadcrumbs_CourtRegion();
-            var courtRegion = repo.GetById<CourtRegion>(courtRegionId);
-            result.Add(FillBreadcrumbs(courtRegionId <= 0 ? "Добавяне съдебeн район" : "Съдебeн район на " + courtRegion?.Label, urlHelper.Action("Edit", "CourtRegion", new { id = courtRegionId })));
+            var courtRegionLabel = GetPropById<CourtRegion, string>(courtRegionId, x => x.Label);
+            result.Add(FillBreadcrumbs(courtRegionId <= 0 ? "Добавяне съдебeн район" : "Съдебeн район на " + courtRegionLabel, urlHelper.Action("Edit", "CourtRegion", new { id = courtRegionId })));
             return result;
         }
         public List<BreadcrumbsVM> Breadcrumbs_CourtRegionIndexArea(int courtRegionId)
@@ -2573,28 +2927,16 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<Court>().Include(x => x.CourtAddress).Where(x => x.Id == id).FirstOrDefault();
         }
 
-        public void FillCourtAddress()
-        {
-            var courts = repo.All<Court>().ToList();
-            foreach (var item in courts)
-            {
-                if (item.AddressId != null) continue;
-
-                item.CourtAddress = new Address();
-                item.CourtAddress.Id = item.Id;
-                item.CourtAddress.AddressTypeId = 4;
-                item.CourtAddress.CountryCode = "BG";
-                item.CourtAddress.CityCode = item.CityCode;
-                nomService.SetFullAddress(item.CourtAddress);
-
-                repo.Update(item);
-                repo.SaveChanges();
-            }
-        }
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonMeasure(int casePersonId)
         {
-            var casePerson = repo.GetById<CasePerson>(casePersonId);
+            var casePerson = repo.AllReadonly<CasePerson>()
+                                 .Where(x => x.Id == casePersonId)
+                                 .Select(x => new
+                                 {
+                                     x.CaseId,
+                                     x.FullName
+                                 }).FirstOrDefault();
             List<BreadcrumbsVM> result = Breadcrumbs_GetForCase(casePerson.CaseId);
             result.Add(FillBreadcrumbs("Мерки към " + casePerson.FullName, urlHelper.Action("IndexCasePersonMeasure", "CasePerson", new { casePersonId = casePersonId })));
             return result;
@@ -2602,7 +2944,13 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonDocument(int casePersonId)
         {
-            var casePerson = repo.GetById<CasePerson>(casePersonId);
+            var casePerson = repo.AllReadonly<CasePerson>()
+                                 .Where(x => x.Id == casePersonId)
+                                 .Select(x => new
+                                 {
+                                     x.CaseId,
+                                     x.FullName
+                                 }).FirstOrDefault();
             List<BreadcrumbsVM> result = Breadcrumbs_GetForCase(casePerson.CaseId);
             result.Add(FillBreadcrumbs("Лични документи на " + casePerson.FullName, urlHelper.Action("IndexCasePersonDocument", "CasePerson", new { casePersonId = casePersonId })));
             return result;
@@ -2633,6 +2981,28 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        public List<BreadcrumbsVM> Breadcrumbs_GetForMediation(int mediationSessionId)
+        {
+            List<BreadcrumbsVM> result = new();
+            var mediationSession = repo.GetById<MediationCaseSession>(mediationSessionId);
+            result.Add(FillBreadcrumbs("Връзки", urlHelper.Action("IndexCaseMediation", "Mediation")));
+            result.Add(FillBreadcrumbs("Съдебно дело-медиация", urlHelper.Action("CasePreviewMediation", "Mediation", new { id = mediationSession.CaseId })));
+            result.Add(FillBreadcrumbs("Среща за медиация", urlHelper.Action("SessionPreviewMediation", "Mediation", new { id = mediationSessionId })));
+            return result;
+        }
+        public List<BreadcrumbsVM> Breadcrumbs_GetForMediationNotificationEdit(int mediationSessionId, int notificationId)
+        {
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForMediation(mediationSessionId);
+            result.Add(FillBreadcrumbs("Призовка", urlHelper.Action("Edit", "MediationNotification", new {id= notificationId })));
+            return result;
+        }
+
+        public List<BreadcrumbsVM> Breadcrumbs_GetForMediationNotificationEditTinyMCE(MediationNotification notification)
+        {
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForMediationNotificationEdit(notification.MediationCaseSessionId, notification.Id);
+            result.Add(FillBreadcrumbs("Редакция бланка " + notification.RegNumber, urlHelper.Action("EditTinyMCE", "MediationNotification", new { id = notification.Id })));
+            return result;
+        }
         public bool IsExistLawUnit_ByUicUicType(string uic, int? id = null)
         {
             return repo.AllReadonly<LawUnit>()
@@ -2684,7 +3054,6 @@ namespace IOWebApplication.Core.Services
 
                 var userModel = repo.GetById<ApplicationUser>(userId);
                 userModel.EissId = eissId;
-                repo.Update(userModel);
                 repo.SaveChanges();
                 return true;
             }
@@ -2708,7 +3077,6 @@ namespace IOWebApplication.Core.Services
         public IQueryable<AddressVM> Address_Select(AddressFilterVM model)
         {
             return repo.AllReadonly<Address>()
-                       .Include(x => x.AddressType)
                        .Where(x => (model.AddressTypeId > 0 ? x.AddressTypeId == model.AddressTypeId : true) &&
                                    (!string.IsNullOrEmpty(model.CountryCode) ? x.CountryCode == model.CountryCode : true) &&
                                    (!string.IsNullOrEmpty(model.CityCode) ? x.CityCode == model.CityCode : true))
@@ -2757,7 +3125,6 @@ namespace IOWebApplication.Core.Services
                     saved.FullAddress = model.FullAddress;
                     saved.SubBlock = model.SubBlock;
 
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -2770,7 +3137,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на адрес Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на адрес Id={model.Id}");
                 return false;
             }
         }
@@ -2878,11 +3245,11 @@ namespace IOWebApplication.Core.Services
                 {
                     if (repo.AllReadonly<LawUnit>()
                                .Where(x => x.Uic == model.Uic && x.UicTypeId == model.UicTypeId && NomenclatureConstants.LawUnitTypes.EissUserTypes.Contains(x.LawUnitTypeId))
-                               .Where(x => (x.DateTo ?? DateTime.MaxValue) >= dtNow)
+                               //.Where(x => (x.DateTo ?? DateTime.MaxValue) >= dtNow)
                                .Where(x => x.Id != model.Id)
                                .Any())
                     {
-                        return $"Вече съществува лице с идентификатор {model.Code}";
+                        return $"Съществува създаден профил с посочения идентификатор {model.Uic}";
                     }
                 }
                 else
@@ -2933,18 +3300,15 @@ namespace IOWebApplication.Core.Services
             if (documentResolutionId > 0)
             {
                 var info = repo.AllReadonly<DocumentResolution>()
-                                           .Include(x => x.ResolutionType)
-                                           .Include(x => x.Document)
-                                           .ThenInclude(x => x.Cases)
-                                           .Where(x => x.Id == documentResolutionId)
-                                           .Select(x =>
-                                           new
-                                           {
-                                               x.DocumentId,
-                                               label = (x.RegDate != null) ? $"{x.ResolutionType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}" : $"{x.ResolutionType.Label}",
-                                               caseId = (x.Document.Cases != null) ? x.Document.Cases.Select(s => s.Id).FirstOrDefault() : 0
-                                           })
-                                           .FirstOrDefault();
+                               .Where(x => x.Id == documentResolutionId)
+                               .Select(x =>
+                               new
+                               {
+                                   x.DocumentId,
+                                   label = (x.RegDate != null) ? $"{x.ResolutionType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}" : $"{x.ResolutionType.Label}",
+                                   caseId = (x.Document.Cases != null) ? x.Document.Cases.Select(s => s.Id).FirstOrDefault() : 0
+                               })
+                               .FirstOrDefault();
 
                 result.Add(Breadcrumbs_Document(info.DocumentId).Last());
                 if (info.caseId > 0)
@@ -2990,16 +3354,16 @@ namespace IOWebApplication.Core.Services
         public IQueryable<BankAccountVM> BankAccount_Select(int sourceType, long sourceId)
         {
             return repo.AllReadonly<BankAccount>()
-                            .Where(x => x.SourceType == sourceType && x.SourceId == sourceId)
-                            .OrderByDescending(x => x.DateWrt)
-                            .Select(x => new BankAccountVM()
-                            {
-                                Id = x.Id,
-                                BIC = x.BIC,
-                                IBAN = x.IBAN,
-                                BankName = x.BankName,
-                                IsMainAccount = x.IsMainAccount,
-                            }).AsQueryable();
+                       .Where(x => x.SourceType == sourceType && x.SourceId == sourceId)
+                       .OrderByDescending(x => x.DateWrt)
+                       .Select(x => new BankAccountVM()
+                       {
+                           Id = x.Id,
+                           BIC = x.BIC,
+                           IBAN = x.IBAN,
+                           BankName = x.BankName,
+                           IsMainAccount = x.IsMainAccount,
+                       }).AsQueryable();
         }
 
         /// <summary>
@@ -3010,17 +3374,17 @@ namespace IOWebApplication.Core.Services
         public BankAccountEditVM BankAccount_GetById(int id)
         {
             return repo.AllReadonly<BankAccount>()
-                            .Where(x => x.Id == id)
-                            .Select(x => new BankAccountEditVM()
-                            {
-                                Id = x.Id,
-                                SourceId = x.SourceId,
-                                SourceType = x.SourceType,
-                                BIC = x.BIC,
-                                IBAN = x.IBAN,
-                                BankName = x.BankName,
-                                IsMainAccount = x.IsMainAccount,
-                            }).FirstOrDefault();
+                       .Where(x => x.Id == id)
+                       .Select(x => new BankAccountEditVM()
+                       {
+                           Id = x.Id,
+                           SourceId = x.SourceId,
+                           SourceType = x.SourceType,
+                           BIC = x.BIC,
+                           IBAN = x.IBAN,
+                           BankName = x.BankName,
+                           IsMainAccount = x.IsMainAccount,
+                       }).FirstOrDefault();
         }
 
         /// <summary>
@@ -3056,7 +3420,7 @@ namespace IOWebApplication.Core.Services
                     foreach (var item in mainAccounts)
                     {
                         item.IsMainAccount = false;
-                        repo.Update(item);
+                        //repo.Update(item);
                     }
                 }
 
@@ -3065,11 +3429,7 @@ namespace IOWebApplication.Core.Services
                 saved.IBAN = model.IBAN;
                 saved.IsMainAccount = model.IsMainAccount;
 
-                if (model.Id > 0)
-                {
-                    repo.Update(saved);
-                }
-                else
+                if (model.Id == 0)
                 {
                     repo.Add(saved);
                 }
@@ -3081,7 +3441,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при BankAccount_SaveData Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при BankAccount_SaveData Id={model.Id}");
             }
             return false;
         }
@@ -3093,7 +3453,13 @@ namespace IOWebApplication.Core.Services
             {
                 case SourceTypeSelectVM.Instutution:
 
-                    var model = GetById<Institution>((int)sourceId);
+                    var model = repo.AllReadonly<Institution>()
+                                    .Where(x => x.Id == ((int)sourceId))
+                                    .Select(x => new
+                                    {
+                                        x.InstitutionTypeId,
+                                        x.FullName
+                                    }).FirstOrDefault();
                     result = Breadcrumbs_Institution(model.InstitutionTypeId);
                     result.Add(FillBreadcrumbs(model.FullName, urlHelper.Action("Edit", "Institution", new { id = (int)sourceId })));
                     break;
@@ -3129,6 +3495,38 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        private (int? number, string subNumber) GetNumberSubNumber(string text)
+        {
+            if (string.IsNullOrEmpty(text) == true)
+                return (null, null);
+
+            int resultNumber = 0;
+            if (int.TryParse(text, out resultNumber))
+            {
+                return (resultNumber, null);
+            }
+            else
+            {
+                string numberFromText = "";
+                string textFromText = null;
+                for (int i = 0; i < text.Length; i++)
+                {
+                    if (Char.IsDigit(text[i]))
+                        numberFromText += text[i];
+                    else
+                    {
+                        textFromText = i == 0 ? text : text.Replace(numberFromText, "");
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(numberFromText) == false && int.TryParse(numberFromText, out resultNumber))
+                    return (resultNumber, textFromText);
+                else
+                    return (null, text);
+            }
+        }
+
         public void Address_LocationCorrection(Address model)
         {
             var location = repo.AllReadonly<EkStreet>()
@@ -3143,8 +3541,9 @@ namespace IOWebApplication.Core.Services
 
                     try
                     {
-                        model.StreetNumber = int.Parse(model.SubNumber);
-                        model.SubNumber = null;
+                        (model.StreetNumber, model.SubNumber) = GetNumberSubNumber(model.SubNumber);
+                        //model.StreetNumber = int.Parse(model.SubNumber);
+                        //model.SubNumber = null;
                     }
                     catch { }
 
@@ -3156,8 +3555,10 @@ namespace IOWebApplication.Core.Services
                 {
                     try
                     {
-                        model.Block = int.Parse(model.SubBlock);
-                        model.SubBlock = null;
+                        (model.Block, model.SubBlock) = GetNumberSubNumber(model.SubBlock);
+
+                        //model.Block = int.Parse(model.SubBlock);
+                        //model.SubBlock = null;
                     }
                     catch { }
                 }
@@ -3184,17 +3585,14 @@ namespace IOWebApplication.Core.Services
         /// <param name="lawunit_id"></param>
         /// <param name="dtNow"></param>
         /// <returns></returns>
-        public CourtDepartmentVM Read_LawUnitOtdelenieSystav(int lawunit_id, DateTime? dtNow = null,int? court_id=0)
+        public CourtDepartmentVM Read_LawUnitOtdelenieSystav(int lawunit_id, DateTime? dtNow = null, int? court_id = 0)
         {
             dtNow = dtNow ?? DateTime.Now;
             var result = repo.AllReadonly<CourtDepartmentLawUnit>()
-                            .Include(x => x.CourtDepartment)
-                            .ThenInclude(x => x.ParentDepartment)
-                            .Include(x => x.CourtDepartment.DepartmentType)
                             .Where(x => x.LawUnitId == lawunit_id)
                             .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow)
                             .Where(x => NomenclatureConstants.DepartmentType.RealJudgeDepartments.Contains(x.CourtDepartment.DepartmentTypeId))
-                            .Where(x=>((x.CourtDepartment.CourtId==court_id)||(court_id==0)))
+                            .Where(x => ((x.CourtDepartment.CourtId == court_id) || (court_id == 0)))
                             .Select(x => x.CourtDepartment)
                             //Първо да извади съставите, отделенията и колегията
                             .OrderByDescending(x => x.DepartmentTypeId)
@@ -3246,14 +3644,14 @@ namespace IOWebApplication.Core.Services
                                             .Where(x => (x.Id == judgeRep.CourtDepartmentId) &&
                                                   ((x.DateFrom.Date <= dateNow.Date) && ((x.DateTo ?? dateNow.AddYears(100)) >= dateNow.Date)))
                                             //За да взема структура само от съда на делото
-                                            .Where(x=>x.CourtId==caseModel.CourtId)
+                                            .Where(x => x.CourtId == caseModel.CourtId)
 
                                             .FirstOrDefault();
                 if (courtDepartment != null)
                 {
                     systavId = judgeRep.CourtDepartmentId;
                     if (courtDepartment.DepartmentTypeId == NomenclatureConstants.DepartmentType.Systav)
-                    {                        
+                    {
                         if (courtDepartment.ParentId > 0)
                         {
                             otdelenieId = courtDepartment.ParentId;
@@ -3263,33 +3661,36 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
-                //Във ВКС НД, няма състави, а отделението се взема от първото насрочване през графика
-                //Състава и отделението може да се вземат от съдебната структура ако:
-                // Не е във ВКС или не е НД или е от точните видове дела, невлизащи в графика на ВКС
-                var excluded_case_types = SystemParam_SelectIntValues(NomenclatureConstants.SystemParamName.VKS_CaseType_CalendarExclude);
-                if (excluded_case_types.Contains(caseModel.CaseTypeId)
-                    || caseModel.CaseGroupId != NomenclatureConstants.CaseGroups.NakazatelnoDelo
-                    )
+                if (caseModel.CourtId == NomenclatureConstants.VKScourtId)
                 {
-                    var courtDepartment = Read_LawUnitOtdelenieSystav(judgeRep.LawUnitId,null,caseModel.CourtId);
-                    if (courtDepartment != null && userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                    //Във ВКС НД, няма състави, а отделението се взема от първото насрочване през графика
+                    //Състава и отделението може да се вземат от съдебната структура ако:
+                    // Не е във ВКС или не е НД или е от точните видове дела, невлизащи в графика на ВКС
+                    var excluded_case_types = SystemParam_SelectIntValues(NomenclatureConstants.SystemParamName.VKS_CaseType_CalendarExclude);
+                    if (excluded_case_types.Contains(caseModel.CaseTypeId)
+                        || caseModel.CaseGroupId != NomenclatureConstants.CaseGroups.NakazatelnoDelo
+                        )
                     {
-                        otdelenieId = courtDepartment.ParentId;
-                        //if (courtDepartment.Id > 0)
-                        //{
-                        //    systavId = courtDepartment.Id;
-                        //    judgeRep.CourtDepartmentId = systavId;
-                        //}
-                        //else
-                        //{
-                        //    judgeRep.CourtDepartmentId = otdelenieId;
-                        //}
-                        //repo.Update(judgeRep);
+                        var courtDepartment = Read_LawUnitOtdelenieSystav(judgeRep.LawUnitId, null, caseModel.CourtId);
+                        if (courtDepartment != null && userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                        {
+                            otdelenieId = courtDepartment.ParentId;
+                            //if (courtDepartment.Id > 0)
+                            //{
+                            //    systavId = courtDepartment.Id;
+                            //    judgeRep.CourtDepartmentId = systavId;
+                            //}
+                            //else
+                            //{
+                            //    judgeRep.CourtDepartmentId = otdelenieId;
+                            //}
+                            //repo.Update(judgeRep);
+                        }
                     }
                 }
             }
 
-            if (systavId == null && otdelenieId == null)
+            if (systavId == caseModel.JudicalCompositionId && otdelenieId == caseModel.OtdelenieId)
                 return false;
 
             try
@@ -3305,7 +3706,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при сетване на състав и отделение на дело с Id={ CaseId }");
+                logger.LogError(ex, $"Грешка при сетване на състав и отделение на дело с Id={CaseId}");
                 return false;
             }
         }
@@ -3395,5 +3796,319 @@ namespace IOWebApplication.Core.Services
             result.Add(FillBreadcrumbs("Преглед списък за държавен вестник", urlHelper.Action("EditTinyMCE", "VksNotification")));
             return result;
         }
+
+        public IQueryable<InstitutionVM> InstitutionByName_Select(string name, int? id = null)
+        {
+            DateTime dateNow = DateTime.Now;
+            Expression<Func<Institution, bool>> whereActive = x => true;
+            if ((id ?? 0) <= 0)
+                whereActive = x => (x.DateTo == null || x.DateTo > dateNow);
+
+            Expression<Func<Institution, bool>> whereSelect = x => true;
+            if (!string.IsNullOrEmpty(name))
+            {
+                whereSelect = x => EF.Functions.ILike(x.FullName, name.ToPaternSearch());
+            }
+            Expression<Func<Institution, bool>> whereId = x => true;
+            //Нарочно е оставено и 0 - така се изчиства контрола
+            if (id >= 0)
+            {
+                whereId = x => x.Id == id;
+                whereSelect = x => true;
+            }
+
+            return repo.AllReadonly<Institution>()
+                        .Where(whereId)
+                        .Where(whereSelect)
+                        .Where(whereActive)
+                        .Select(x => new InstitutionVM
+                        {
+                            Id = x.Id,
+                            FullName = x.FullName,
+                            Code = x.Code,
+                            DateFrom = x.DateFrom,
+                            DateTo = x.DateTo,
+                            EISPPCode = x.EISPPCode
+                        })
+                        .AsQueryable();
+        }
+
+        public LawUnit Get_LawunitByUserId(string userId)
+        {
+            return repo.AllReadonly<ApplicationUser>()
+                            .Where(x => x.Id == userId)
+                            .Select(x => x.LawUnit).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Изчитане на темплейтите за статистиката
+        /// </summary>
+        /// <returns></returns>
+        public IQueryable<ExcelReportTemplateVM> ExcelReportTemplate_Select()
+        {
+            return repo.AllReadonly<ExcelReportTemplate>()
+                            .Select(x => new ExcelReportTemplateVM()
+                            {
+                                Id = x.Id,
+                                CourtTypeLabel = x.CourtType.Label,
+                                DateFrom = x.DateFrom,
+                                DateTo = x.DateTo,
+                                Label = x.Label,
+                                Description = x.Description,
+                                FileName = x.FileName,
+                                ReportTypeLabel = x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal ? "Нормална" : "Медиация", //Засега го оставям така. Ако се появи нова статистика си е доста писане
+                            }).AsQueryable();
+        }
+
+        public bool ExcelReportTemplate_SaveData(ICollection<IFormFile> files, ExcelReportTemplate model)
+        {
+            try
+            {
+                if (model.Id > 0)
+                {
+                    //Update
+                    ExcelReportTemplate saved = repo.GetById<ExcelReportTemplate>(model.Id);
+                    saved.CourtTypeId = model.CourtTypeId;
+                    saved.Label = model.Label;
+                    saved.Description = model.Description;
+                    saved.DateFrom = model.DateFrom;
+                    saved.DateTo = model.DateTo;
+                    saved.ReportTypeId = model.ReportTypeId;
+
+                    FillDataFile(saved, files);
+                    repo.SaveChanges();
+                }
+                else
+                {
+                    //Insert
+                    FillDataFile(model, files);
+                    repo.Add(model);
+                    repo.SaveChanges();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Грешка в CommonService.ExcelReportTemplate_SaveData");
+                return false;
+            }
+        }
+
+        private void FillDataFile(ExcelReportTemplate report, ICollection<IFormFile> files)
+        {
+            if (files != null && files.Any())
+            {
+                var file = files.First();
+                using (var memory = new MemoryStream())
+                {
+                    file.CopyTo(memory);
+                    report.Content = memory.ToArray();
+                    report.ContentType = file.ContentType;
+                    report.FileName = Path.GetFileName(file.FileName);
+                }
+            }
+        }
+
+        public bool CheckCourtRestriction(int restrictionType, int courtId = 0)
+        {
+            if (courtId == 0)
+            {
+                courtId = userContext.CourtId;
+            }
+
+            DateTime dtNow = DateTime.Now;
+            DateTime dtEnd = DateTime.Now.AddYears(100);
+
+            return repo.AllReadonly<CourtRestriction>()
+                            .Where(x => x.CourtId == courtId && x.RestrictionType == restrictionType
+                                && (x.DateStart <= dtNow) && ((x.DateEnd ?? dtEnd) >= dtNow))
+                            .Any();
+        }
+
+        /// <summary>
+        /// Извличане на данни за съдилища за падащ списък 
+        /// </summary>
+        /// <param name="typeId">Идентификатор на тип съд</param>
+        /// <param name="addDefaultElement">Флаг дали да се добави елемент "Избери"</param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> GetDDL_Court(int? typeId, bool addDefaultElement = true)
+        {
+            Expression<Func<Court, bool>> typeIdWhere = x => true;
+            if (typeId != null && typeId > 0)
+                typeIdWhere = x => x.CourtTypeId == typeId;
+
+            Expression<Func<Court, bool>> courtIdWhere = x => true;
+            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+            {
+                courtIdWhere = x => x.Id == userContext.CourtId;
+            }
+
+            List<SelectListItem> selectListItems = await repo.AllReadonly<Court>()
+                                                             .Where(typeIdWhere)
+                                                             .Where(courtIdWhere)
+                                                             .OrderBy(x => x.OrderNumber)
+                                                             .Select(x => new SelectListItem()
+                                                             {
+                                                                 Value = x.Id.ToString(),
+                                                                 Text = x.Label
+                                                             })
+                                                             .ToListAsync();
+
+            if (addDefaultElement)
+                selectListItems = selectListItems.Prepend(new SelectListItem() { Text = "Избери", Value = "-1" }).ToList();
+
+            return selectListItems;
+        }
+
+        #region FilterTemplates
+
+        /// <summary>
+        /// Метод извличащ данни за шаблони за филтри за справки
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public IQueryable<FilterTemplatesListVM> GetFilterTemplates_Select(FilterTemplatesFilterVM filter)
+        {
+            Expression<Func<FilterTemplates, bool>> filterTemplateTypeIdWhere = x => true;
+            if (filter.FilterTemplateTypeId > 0)
+                filterTemplateTypeIdWhere = x => x.FilterTemplateTypeId == filter.FilterTemplateTypeId;
+
+            return repo.AllReadonly<FilterTemplates>()
+                       .Where(filterTemplateTypeIdWhere)
+                       .Select(x => new FilterTemplatesListVM()
+                       {
+                           Id = x.Id,
+                           FilterTemplateTypeLabel = x.FilterTemplateType.Label,
+                           Label = x.Label,
+                           IsActiveLabel = x.IsActive ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No
+                       })
+                       .AsQueryable();
+        }
+
+        /// <summary>
+        /// Извличане на данни за шаблон за филтър на специализирана справка
+        /// </summary>
+        /// <param name="id">Идентификатор на запис</param>
+        /// <returns></returns>
+        public async Task<FilterTemplatesSpecializedReportEditVM> GetFilterTemplatesSpecializedReportById(int id)
+        {
+            return await repo.AllReadonly<FilterTemplates>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new FilterTemplatesSpecializedReportEditVM()
+                             {
+                                 Id = x.Id,
+                                 FilterTemplateTypeId = x.FilterTemplateTypeId,
+                                 IsActive = x.IsActive,
+                                 Label = x.Label,
+                                 SpecializedReportFilter = JsonConvert.DeserializeObject<SpecializedReportFilterVM>(x.Data)
+                             })
+                             .FirstAsync()
+                             .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Метод извличащ записаният филтър за специализирана справка
+        /// </summary>
+        /// <param name="id">Идентификатор на шаблона</param>
+        /// <returns></returns>
+        public async Task<SpecializedReportFilterVM> GetFilterTemplatesSpecializedReportDataById(int id)
+        {
+            return await repo.AllReadonly<FilterTemplates>()
+                             .Where(x => x.Id == id)
+                             .Select(x => JsonConvert.DeserializeObject<SpecializedReportFilterVM>(x.Data))
+                             .FirstAsync()
+                             .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Метод попълващ обект за запис на шаблон за филтър за специализирана справка
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        private FilterTemplates FillFilterTemplatesSpecializedReport(FilterTemplatesSpecializedReportEditVM model)
+        {
+            return new FilterTemplates()
+            {
+                FilterTemplateTypeId = model.FilterTemplateTypeId,
+                Label = model.Label,
+                IsActive = model.IsActive,
+                Data = JsonConvert.SerializeObject(model.SpecializedReportFilter),
+                UserId = userContext.UserId,
+                DateWrt = DateTime.Now
+            };
+        }
+
+        /// <summary>
+        /// Метод сетващ стойности за запис при редакция на шаблон за филтър за специализирана справка
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <param name="modelSave">Модел за запис</param>
+        private void SetFieldsFilterTemplatesSpecializedReport(FilterTemplatesSpecializedReportEditVM model, FilterTemplates modelSave)
+        {
+            modelSave.FilterTemplateTypeId = model.FilterTemplateTypeId;
+            modelSave.Label = model.Label;
+            modelSave.IsActive = model.IsActive;
+            modelSave.Data = JsonConvert.SerializeObject(model.SpecializedReportFilter);
+            modelSave.UserId = userContext.UserId;
+            modelSave.DateWrt = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Метод за запис на шаблон за филтър за специализирана справка
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        public async Task<int?> SaveFilterTemplatesSpecializedReport(FilterTemplatesSpecializedReportEditVM model)
+        {
+            try
+            {
+                FilterTemplates modelSave = model.Id != null ? await repo.All<FilterTemplates>()
+                                                                         .Where(x => x.Id == model.Id)
+                                                                         .FirstAsync()
+                                                                         .ConfigureAwait(false) : FillFilterTemplatesSpecializedReport(model);
+
+                if (model.Id != null)
+                {
+                    SetFieldsFilterTemplatesSpecializedReport(model, modelSave);
+                }
+                else
+                {
+                    repo.Add(modelSave);
+                }
+
+                await repo.SaveChangesAsync().ConfigureAwait(false);
+                return modelSave.Id;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на шаблон за специализирана справка");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Метод зареждащ шаблони за филтри за справки
+        /// </summary>
+        /// <param name="filterTemplateTypeId">Идентификатор на тип шаблон</param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> GetFilterTemplates_SelectDDL(int filterTemplateTypeId)
+        {
+            var result = await repo.AllReadonly<FilterTemplates>()
+                                   .Where(x => x.FilterTemplateTypeId == filterTemplateTypeId &&
+                                               x.IsActive)
+                                   .OrderBy(x => x.Label)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Text = x.Label,
+                                       Value = x.Id.ToString()
+                                   })
+                                   .ToListAsync()
+                                   .ConfigureAwait(false) ?? new List<SelectListItem>();
+
+            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+            return result;
+        }
+
+        #endregion
     }
 }

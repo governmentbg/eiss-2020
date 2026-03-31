@@ -2,9 +2,17 @@
     $(function () {
         $('.cdn-files').each(function (i, e) {
             if (!$(e).attr('id')) {
-                $(e).attr('id', Date.now());
+
+                let cdnId = `cdnContainer${i}`;
+                $(e).attr('id', cdnId);
             }
-            LoadFiles('#'+$(e).attr('id'));
+            LoadFiles('#' + $(e).attr('id'));
+        });
+        $(document).on('click','.cdn-files .cdn-signer-info',function(e){
+            var element = e.currentTarget;
+            let fileId = $(element).data('id');
+
+            requestModal('Информация за електронни подписи','@Url.Action("FileSignerInfo", "Files")',{fileId:fileId});
         });
     });
     function LoadFiles(container) {
@@ -31,9 +39,9 @@
             }
         }
         let data = {
-            sourceType : sourceType,
+            sourceType: sourceType,
             sourceID: sourceId
-            };
+        };
         requestGET_Json(url, data, function (result) {
             let canAppend = true;
             let canDelete = true;
@@ -56,6 +64,11 @@
                     break;
                 default:
             }
+            if (editMode != 'replace') {
+                for (let i = 0; i < result.length; i++) {
+                    result[i].canDelete = result[i].canDelete && canAppend && canDelete;
+                }
+            }
             let filesModel = { label: label, canDelete: canDelete, canAppend: canAppend, data: result, container: container, genUrl: genUrl, defaultTitle: defaultTitle };
             if (genUrl) {
                 $(container).html(TemplateToHtml('#templateSingleFile', filesModel));
@@ -67,16 +80,18 @@
     function AppendFile(container, defaultTitle) {
         let sourceType = $(container).data('sourcetype');
         let sourceId = $(container).data('sourceid');
+        let fileGroup = $(container).data('filegroup');
         let url = '@Url.Action("UploadFile", "Files")';
         let data = {
-            sourceType : sourceType,
+            sourceType: sourceType,
             sourceID: sourceId,
             container: container,
-            defaultTitle: defaultTitle
+            defaultTitle: defaultTitle,
+            fileGroup:fileGroup
         };
         requestContent(url, data, function (html) {
             //debugger;
-            ShowModalDialog("Избор на файл",html);
+            ShowModalDialog("Избор на файл", html);
         });
     }
     function GenerateFile(sender) {
@@ -103,12 +118,12 @@
                 })
         } else {
             swalConfirm('Потвърди изтриването на файл ' + fileName + '!', function () {
-            let url = '@Url.Action("DeleteFile", "Files")';
-            let data = { cdnFileId: fileID };
-            requestContentOk(url, data, function () {
-                LoadFiles(container);
+                let url = '@Url.Action("DeleteFile", "Files")';
+                let data = { cdnFileId: fileID };
+                requestContentOk(url, data, function () {
+                    LoadFiles(container);
+                });
             });
-        });
         }
 
     }
@@ -125,16 +140,20 @@
         <div class="row">
             <div class="col-lg-11">
                 {{#if canPreview}}
-                <a class="btn btn-xs btn-default" href="@(Url.Action("Preview","Files"))/{{this.fileId}}" title="Преглед на файла" target="_blank"><i class="fa fa-eye"></i></a>
-                <a class="btn btn-xs btn-default" href="#" onclick="printPdfFile('@(Url.Action("Preview","Files"))/{{this.fileId}}'); return false;" title="Печат на файла" target="_blank"><i class="fa fa-print"></i></a>
+                <a class="btn btn-xs btn-default" href="@(Url.Action("Preview", "Files"))/{{this.fileId}}" title="Преглед на файла" target="_blank"><i class="fa fa-eye"></i></a>
+                <a class="btn btn-xs btn-default" href="#" onclick="printPdfFile('@(Url.Action("Preview", "Files"))/{{this.fileId}}'); return false;" title="Печат на файла" target="_blank"><i class="fa fa-print"></i></a>
+                &nbsp;
+                {{/if}}
+                {{#if hasSignerInfo}}
+                <a class="btn btn-xs btn-default cdn-signer-info" href="#" title="Информация за електронни подписи" data-id="{{this.fileId}}"><i class="fa fa-lock"></i></a>
                 &nbsp;
                 {{/if}}
 
-                <a class="text-primary" href="@(Url.Action("Download","Files"))/{{this.fileId}}" title="Изтегли файла"><i class="{{fileIcon}}"></i>&nbsp;{{this.title}}</a>
+                <a class="text-primary" href="@(Url.Action("Download", "Files"))/{{this.fileId}}" title="Изтегли файла {{this.safeFileName}}"><i class="{{fileIcon}}"></i>&nbsp;{{this.displayName}}</a>
 
             </div>
             <div class="col-lg-1">
-                {{#if ../canDelete}}
+                {{#if canDelete}}
                 <a class="btn btn-xs btn-danger m-b-5" href="#" title="Премахни файла" onclick="DeleteFile('{{this.fileId}}', '{{this.safeFileName}}', '{{../../container}}');">
                     <i class="glyphicon glyphicon-remove"></i>
                 </a>
@@ -156,6 +175,6 @@
     {{/if}}
 
     {{#each this.data}}
-    <a href="@(Url.Action("Download","Files"))/{{this.fileId}}" class="btn btn-sm btn-def m-b-5" title="{{../label}}"><i class="fa fa-download"></i> Изтегли</a>
+    <a href="@(Url.Action("Download", "Files"))/{{this.fileId}}" class="btn btn-sm btn-def m-b-5" title="{{../label}}"><i class="fa fa-download"></i> Изтегли</a>
     {{/each}}
 </script>

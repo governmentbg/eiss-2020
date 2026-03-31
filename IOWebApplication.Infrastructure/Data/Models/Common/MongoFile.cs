@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Common
 {
@@ -33,6 +34,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         public int? SignituresCount { get; set; }
         [Column("date_uploaded")]
         public DateTime DateUploaded { get; set; }
+
         [Column("user_uploaded")]
         public string UserUploaded { get; set; }
 
@@ -43,11 +45,31 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("user_expired_id")]
         public string UserExpiredId { get; set; }
 
+        [Column("mongo_file_type_id")]
+        public int? MongoFileTypeId { get; set; }
+
+        ///// <summary>
+        ///// Състояние на антивирусна проверка
+        ///// null-не подлежи на проверка;1-проверява се;2-проверен;3-заразен
+        ///// </summary>
+        //[Column("av_state")]
+        //public byte? AVState { get; set; } = null;
+
+        ///// <summary>
+        ///// Код за статус на антивирусна проверка
+        ///// </summary>
+        //[MaxLength(50)]
+        //[Column("av_key")]
+        //public string av_key { get; set; } = null;
+
         [Column("description_expired")]
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
+
+        [ForeignKey(nameof(MongoFileTypeId))]
+        public virtual MongoFileType MongoFileType { get; set; }
     }
 }

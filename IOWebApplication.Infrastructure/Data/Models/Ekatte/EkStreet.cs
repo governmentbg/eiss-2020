@@ -38,5 +38,9 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
         [Column("eispp_code")]
         public string EisppCode { get; set; }
+
+        [Column("date_wrt")]
+        [Display(Name = "Дата на последна редакция")]
+        public DateTime? DateWrt { get; set; }
     }
 }

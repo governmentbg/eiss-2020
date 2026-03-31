@@ -14,6 +14,7 @@ using System.Text;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Constants;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -46,6 +47,7 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.ParentDepartment)
                 .Include(x => x.Court)
                 .Where(x => x.CourtId == courtId)
+                .OrderBy(x => x.Label)
                 .Select(x => new CourtDepartmentVM()
                 {
                     Id = x.Id,
@@ -104,7 +106,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Съдебни нива Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Съдебни нива Id={model.Id}");
                 return false;
             }
         }
@@ -186,7 +188,7 @@ namespace IOWebApplication.Core.Services
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
             var courtDepartmentLowUnits = CourtDepartmentLowUnit_Select(departmentId);
-            IQueryable<LawUnit> lawUnits = commonService.LawUnit_JudgeByCourtDate(courtId, DateTime.Now);
+            var lawUnits = commonService.LawUnit_JudgeByCourtDate(courtId, DateTime.Now).ToList();
 
             foreach (var law in lawUnits)
                 checkListVMs.Add(FillCheckListVM(law, courtDepartmentLowUnits));
@@ -236,7 +238,7 @@ namespace IOWebApplication.Core.Services
                 // търси елемента от екрана в списъка с записани елементи
                 var court = courtDepartmentLowUnits.Where(x => x.LawUnitId == int.Parse(check.Value))
                                                           .Where(x => x.DateTo == null)
-                                                           .DefaultIfEmpty(null).FirstOrDefault();
+                                                          .FirstOrDefault();
 
                 if (court != null)
                 {
@@ -308,7 +310,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Съдии към Съдебен състав Id={ courtDepartmentLawUnits[0].CourtDepartmentId }");
+                logger.LogError(ex, $"Грешка при запис на Съдии към Съдебен състав Id={courtDepartmentLawUnits[0].CourtDepartmentId}");
                 return false;
             }
         }
@@ -358,7 +360,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Съдебни нива - съдии Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Съдебни нива - съдии Id={model.Id}");
                 return false;
             }
         }
@@ -376,20 +378,25 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при сторниране на Съдебни нива - съдии Id={ saved.Id }");
+                logger.LogError(ex, $"Грешка при сторниране на Съдебни нива - съдии Id={saved.Id}");
                 return false;
             }
         }
 
-        public List<SelectListItem> Department_SelectDDL(int courtId, int departmentTypeId)
+        public List<SelectListItem> Department_SelectDDL(int courtId, int departmentTypeId, int[] instanceId = null)
         {
             Expression<Func<CourtDepartment, bool>> departmentTypeWhere = x => true;
             if (departmentTypeId > 0)
                 departmentTypeWhere = x => x.DepartmentTypeId == departmentTypeId;
 
-            var result = repo.All<CourtDepartment>()
+            Expression<Func<CourtDepartment, bool>> instanceIdWhere = x => true;
+            if (instanceId != null && instanceId.Any())
+                instanceIdWhere = x => instanceId.Contains(x.CaseInstanceId ?? 0);
+
+            var result = repo.AllReadonly<CourtDepartment>()
                 .Where(x => x.CourtId == courtId)
                 .Where(departmentTypeWhere)
+                .Where(instanceIdWhere)
                 .Select(x => new SelectListItem()
                 {
                     Text = x.Label + " - " + (x.ParentDepartment.Label ?? ""),
@@ -402,10 +409,96 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        /// <summary>
+        /// Извличане на данни за съдебна структура за падащ списък
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="departmentTypeId">Тип елемент</param>
+        /// <param name="instanceId">Списък с идентификатори за инстанция</param>
+        /// <param name="caseGroupId">Група на дело</param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> Department_SelectDDLAsync(int courtId, int departmentTypeId, int[] instanceId = null, int? caseGroupId = null)
+        {
+            Expression<Func<CourtDepartment, bool>> departmentTypeWhere = x => true;
+            if (departmentTypeId > 0)
+                departmentTypeWhere = x => x.DepartmentTypeId == departmentTypeId;
+
+            Expression<Func<CourtDepartment, bool>> instanceIdWhere = x => true;
+            if (instanceId != null && instanceId.Any())
+                instanceIdWhere = x => instanceId.Contains(x.CaseInstanceId ?? 0);
+
+            Expression<Func<CourtDepartment, bool>> caseGroupIdWhere = x => true;
+            if ((caseGroupId ?? 0) > 0)
+                caseGroupIdWhere = x => x.CaseGroupId == caseGroupId;
+
+            DateTime dateTimeNow = DateTime.Now;
+            Expression<Func<CourtDepartment, bool>> dateFromWhere = x => x.DateFrom <= dateTimeNow;
+            Expression<Func<CourtDepartment, bool>> dateToWhere = x => (x.DateTo ?? dateTimeNow) >= dateTimeNow;
+
+            List<SelectListItem> result = await repo.AllReadonly<CourtDepartment>()
+                                                    .Where(x => x.CourtId == courtId)
+                                                    .Where(departmentTypeWhere)
+                                                    .Where(instanceIdWhere)
+                                                    .Where(caseGroupIdWhere)
+                                                    .Where(dateFromWhere)
+                                                    .Where(dateToWhere)
+                                                    .Select(x => new SelectListItem()
+                                                    {
+                                                        Text = x.Label + " - " + (x.ParentDepartment.Label ?? ""),
+                                                        Value = x.Id.ToString()
+                                                    })
+                                                    .OrderBy(x => x.Text)
+                                                    .ToListAsync() ?? new List<SelectListItem>();
+
+            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+            return result;
+        }
+
+        /// <summary>
+        /// Извличане на данни за съдебна структура за падащ списък
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Идентификатор на лице</param>
+        /// <param name="departmentTypeId">Тип елемент</param>
+        /// <param name="caseGroupId">Група на дело</param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> GetDDL_DepartmentByLawUnit(int courtId, int lawUnitId, int? departmentTypeId = null, int? caseGroupId = null)
+        {
+            Expression<Func<CourtDepartment, bool>> departmentTypeWhere = x => true;
+            if ((departmentTypeId ?? 0) > 0)
+                departmentTypeWhere = x => x.DepartmentTypeId == departmentTypeId;
+
+            Expression<Func<CourtDepartment, bool>> caseGroupIdWhere = x => true;
+            if ((caseGroupId ?? 0) > 0)
+                caseGroupIdWhere = x => x.CaseGroupId == caseGroupId;
+
+            DateTime dateTimeNow = DateTime.Now;
+            Expression<Func<CourtDepartment, bool>> dateFromWhere = x => x.DateFrom.Date <= dateTimeNow.Date;
+            Expression<Func<CourtDepartment, bool>> dateToWhere = x => (x.DateTo ?? dateTimeNow).Date >= dateTimeNow.Date;
+
+            List<SelectListItem> result = await repo.AllReadonly<CourtDepartment>()
+                                                    .Where(x => x.CourtId == courtId)
+                                                    .Where(x => x.CourtDepartmentLawUnits.Any(l => l.LawUnitId == lawUnitId))
+                                                    .Where(departmentTypeWhere)
+                                                    .Where(caseGroupIdWhere)
+                                                    .Where(dateFromWhere)
+                                                    .Where(dateToWhere)
+                                                    .Select(x => new SelectListItem()
+                                                    {
+                                                        Text = x.Label + " - " + (x.ParentDepartment.Label ?? ""),
+                                                        Value = x.Id.ToString()
+                                                    })
+                                                    .OrderBy(x => x.Text)
+                                                    .ToListAsync() ?? new List<SelectListItem>();
+
+            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+            return result;
+        }
+
         public IQueryable<CourtDepartmentVM> CourtDepartmentByLawUnit_Select(int LawUnitId, int CourtId)
         {
             return repo.AllReadonly<CourtDepartmentLawUnit>()
-                       .Where(x => x.CourtDepartment.CourtId == CourtId && 
+                       .Where(x => x.CourtDepartment.CourtId == CourtId &&
                                    x.LawUnitId == LawUnitId &&
                                    x.CourtDepartment.DepartmentTypeId == NomenclatureConstants.DepartmentType.Systav &&
                                    (x.DateFrom <= DateTime.Now && ((x.DateTo != null) ? x.DateTo >= DateTime.Now : true)))
@@ -414,6 +507,7 @@ namespace IOWebApplication.Core.Services
                            Id = x.CourtDepartment.Id,
                            Label = x.CourtDepartment.Label,
                            CourtLabel = x.CourtDepartment.Court.Label,
+                           DepartmentTypeId = x.CourtDepartment.DepartmentTypeId,
                            DepartmentTypeLabel = (x.CourtDepartment.DepartmentType != null) ? x.CourtDepartment.DepartmentType.Label : string.Empty,
                            MasterId = x.CourtDepartment.MasterId,
                            ParentId = (x.CourtDepartment.ParentId ?? 0)

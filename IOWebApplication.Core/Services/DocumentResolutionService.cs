@@ -1,5 +1,4 @@
-﻿using AutoMapper.QueryableExtensions;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -16,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -41,18 +40,58 @@ namespace IOWebApplication.Core.Services
             worktaskService = _worktaskService;
         }
 
+        private Expression<Func<DocumentResolution, DocumentResolutionVM>> expressionSelectResolution()
+        {
+            Expression<Func<DocumentResolution, DocumentResolutionVM>> select =
+                    x => new DocumentResolutionVM
+                    {
+                        Id = x.Id,
+                        DocumentId = x.DocumentId,
+                        ResolutionTypeId = x.ResolutionTypeId,
+                        RegNumber = x.RegNumber,
+                        RegDate = x.RegDate,
+                        DeclaredDate = x.DeclaredDate,
+                        DocumentNumber = x.Document.DocumentNumber,
+                        CourtId = x.CourtId,
+
+                        DocumentTypeName = x.Document.DocumentType.Label,
+                        ResolutionTypeName = x.ResolutionType.Label,
+                        JudgeUserId = x.JudgeDecisionUserId,
+                        JudgeName = x.JudgeDecisionLawunit.FullName,
+                        JudgeDecisionLawunitId = x.JudgeDecisionLawunitId,
+                        StateName = x.ResolutionState.Label,
+                        CourtName = x.Court.Label,
+                        CourtCity = x.Court.CityName,
+                        JudgeCount = x.JudgeDecisionCount ?? 1,
+                        JudgeUser2Id = x.JudgeDecisionUser2Id,
+                        JudgeName2 = (x.JudgeDecisionLawunit2Id > 0) ? x.JudgeDecisionLawunit2.FullName : "",
+                        JudgeDecisionLawunit2Id = x.JudgeDecisionLawunit2Id,
+                    };
+
+            return select;
+        }
+
+        /*
+         *                 cfg.CreateMap<DocumentResolution, DocumentResolutionVM>()
+                    .ForMember(d => d.DocumentNumber, s => s.MapFrom(m => m.Document.DocumentNumber))
+                    .ForMember(d => d.DocumentTypeName, s => s.MapFrom(m => m.Document.DocumentType.Label))
+                    .ForMember(d => d.ResolutionTypeName, s => s.MapFrom(m => m.ResolutionType.Label))
+                    .ForMember(d => d.JudgeUserId, s => s.MapFrom(m => m.JudgeDecisionUserId))
+                    .ForMember(d => d.JudgeName, s => s.MapFrom(m => m.JudgeDecisionLawunit.FullName))
+                    .ForMember(d => d.StateName, s => s.MapFrom(m => m.ResolutionState.Label))
+                    .ForMember(d => d.CourtName, s => s.MapFrom(m => m.Court.Label))
+                    .ForMember(d => d.CourtCity, s => s.MapFrom(m => m.Court.CityName))
+                    .ForMember(d => d.JudgeCount, s => s.MapFrom(m => m.JudgeDecisionCount ?? 1))
+                    .ForMember(d => d.JudgeUser2Id, s => s.MapFrom(m => m.JudgeDecisionUser2Id))
+                    .ForMember(d => d.JudgeName2, s => s.MapFrom(m => (m.JudgeDecisionLawunit2 != null) ? m.JudgeDecisionLawunit2.FullName : ""))
+
+         */
+
         public IQueryable<DocumentResolutionVM> Select(DocumentResolutionFilterVM filter)
         {
             filter.NormalizeValues();
 
-            return repo.AllReadonly<DocumentResolution>()
-                            .Include(x => x.JudgeDecisionLawunit)
-                            .Include(x => x.JudgeDecisionLawunit2)
-                            .Include(x => x.ResolutionType)
-                            .Include(x => x.ResolutionState)
-                            .Include(x => x.Court)
-                            .Include(x => x.Document)
-                            .ThenInclude(x => x.DocumentType)
+            return repo.AllReadonly<DocumentResolution>()                            
                             .Where(x => x.CourtId == userContext.CourtId)
                             .Where(x => x.RegDate != null)
                             .Where(x => x.RegDate >= (filter.DateFrom.ForceStartDate() ?? x.RegDate) && x.RegDate <= (filter.DateTo.ForceEndDate() ?? x.RegDate))
@@ -61,7 +100,7 @@ namespace IOWebApplication.Core.Services
                             .Where(x => x.Document.DocumentNumber == (filter.DocumentNumber ?? x.Document.DocumentNumber))
                             .Where(x => x.Document.DocumentDate.Year == (filter.DocumentYear ?? x.Document.DocumentDate.Year))
                             .Where(FilterExpireInfo<DocumentResolution>(false))
-                            .ProjectTo<DocumentResolutionVM>(DocumentResolutionVM.GetMapping())
+                            .Select(expressionSelectResolution())
                             .AsQueryable();
         }
 
@@ -73,7 +112,7 @@ namespace IOWebApplication.Core.Services
             {
                 idSearch = x => x.Id == id;
             }
-            return repo.AllReadonly<DocumentResolution>()
+            var result = repo.AllReadonly<DocumentResolution>()
                             .Include(x => x.JudgeDecisionLawunit)
                             .Include(x => x.JudgeDecisionLawunit2)
                             .Include(x => x.ResolutionType)
@@ -81,29 +120,40 @@ namespace IOWebApplication.Core.Services
                             .Include(x => x.Court)
                             .Where(idSearch)
                             .Where(FilterExpireInfo<DocumentResolution>(false))
-                            .ProjectTo<DocumentResolutionVM>(DocumentResolutionVM.GetMapping())
-                            //.Select(x => new DocumentResolutionVM
-                            //{
-                            //    Id = x.Id,
-                            //    DocumentId = x.DocumentId,
-                            //    ResolutionTypeId = x.ResolutionTypeId,
-                            //    ResolutionTypeName = x.ResolutionType.Label,
-                            //    JudgeName = x.JudgeDecisionLawunit.FullName,
-                            //    JudgeUserId = x.JudgeDecisionUserId,
-                            //    RegNumber = x.RegNumber,
-                            //    RegDate = x.RegDate,
-                            //    StateName = x.ResolutionState.Label,
-                            //    CourtId = x.CourtId,
-                            //    CourtName = x.Court.Label,
-                            //    CourtCity = x.Court.CityName
-                            //})
+                            .Select(expressionSelectResolution())
                             .AsQueryable();
+
+            if (id != null && result.Any())
+            {
+                var judge = result.FirstOrDefault();
+
+                judge.JudgePosition = getJudgePosition(judge.CourtId, judge.JudgeDecisionLawunitId);
+                if (judge.JudgeDecisionLawunit2Id > 0)
+                {
+                    judge.JudgePosition2 = getJudgePosition(judge.CourtId, judge.JudgeDecisionLawunit2Id.Value);
+                }
+                return new List<DocumentResolutionVM>() { judge }.AsQueryable();
+            }
+
+            return result;
+        }
+
+        private string getJudgePosition(int courtId, int lawUnitId)
+        {
+            var dtNow = DateTime.Now;
+            var dtEnd = DateTime.Now.AddYears(1);
+            return repo.AllReadonly<CourtLawUnit>()
+                                    .Where(x => x.CourtId == courtId && x.LawUnitId == lawUnitId)
+                                    .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
+                                    .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? dtEnd) > dtNow)
+                                    .Select(x => (x.LawUnitPositionId > 0) ? x.LawUnitPosition.Label : "").FirstOrDefault();
         }
 
 
-        public SaveResultVM SaveData(DocumentResolution model)
+        public async Task<SaveResultVM> SaveData(DocumentResolution model)
         {
             model.JudgeDecisionUserId = GetUserIdByLawUnitId(model.JudgeDecisionLawunitId);
+            model.TaskUserId = model.TaskUserId.EmptyToNull().EmptyToNull("0");
             if (string.IsNullOrEmpty(model.JudgeDecisionUserId))
             {
                 return new SaveResultVM(false, "За избрания съдия няма потребител в системата");
@@ -125,7 +175,7 @@ namespace IOWebApplication.Core.Services
             {
                 if (model.Id > 0)
                 {
-                    var saved = repo.GetById<DocumentResolution>(model.Id);
+                    var saved = await repo.GetByIdAsync<DocumentResolution>(model.Id);
                     saved.JudgeDecisionCount = model.JudgeDecisionCount;
                     saved.JudgeDecisionLawunitId = model.JudgeDecisionLawunitId;
                     saved.JudgeDecisionUserId = model.JudgeDecisionUserId;
@@ -135,17 +185,17 @@ namespace IOWebApplication.Core.Services
                     saved.UserDecisionId = model.UserDecisionId;
                     saved.Description = model.Description;
                     SetUserDateWRT(saved);
-                    repo.Update(saved);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
                     return new SaveResultVM(true);
                 }
                 else
                 {
                     model.CourtId = userContext.CourtId;
                     model.ResolutionStateId = 1;
+                    SetUserDateWRT(model);
                     repo.Add(model);
-                    repo.SaveChanges();
-                    DocumentResolution_SaveData_FinishTask(model.DocumentId);
+                    await repo.SaveChangesAsync();
+                    await DocumentResolution_SaveData_FinishTask(model.DocumentId);
                     return new SaveResultVM(true);
                 }
             }
@@ -157,18 +207,19 @@ namespace IOWebApplication.Core.Services
         }
 
 
-        private void DocumentResolution_SaveData_FinishTask(long documentId)
+        private async Task DocumentResolution_SaveData_FinishTask(long documentId)
         {
-            var myRouteTasks = repo.All<WorkTask>(
+            var myRouteTasks = await repo.AllReadonly<WorkTask>(
                 x => x.SourceId == documentId
                 && x.SourceType == SourceTypeSelectVM.Document
                 && x.UserId == userContext.UserId
                 && x.TaskTypeId == WorkTaskConstants.Types.ForDocumentResolution
-                && x.TaskStateId == WorkTaskConstants.States.Accepted);
+                && x.TaskStateId == WorkTaskConstants.States.Accepted)
+                .ToListAsync();
 
             foreach (var item in myRouteTasks)
             {
-                worktaskService.CompleteTask(item);
+                await worktaskService.CompleteTask(item);
             }
         }
 
@@ -181,7 +232,6 @@ namespace IOWebApplication.Core.Services
 
             if (counterService.Counter_GetDocumentResolutionCounter(model))
             {
-                repo.Update(model);
                 repo.SaveChanges();
                 return new SaveResultVM(true, null, "register");
             }
@@ -271,6 +321,7 @@ namespace IOWebApplication.Core.Services
             {
                 repo.Add(new DocumentResolutionCase()
                 {
+                    DateWrt = DateTime.Now,
                     DocumentResolutionId = documentResolutionId,
                     CaseId = caseId
                 });
@@ -338,7 +389,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при премахване на разпореждане Id={ model.LongId }");
+                logger.LogError(ex, $"Грешка при премахване на разпореждане Id={model.LongId}");
                 return new SaveResultVM(false);
             }
         }
@@ -366,10 +417,9 @@ namespace IOWebApplication.Core.Services
 
             if (!string.IsNullOrEmpty(act.ActCreatorUserId))
             {
-                var lawunitName = repo.All<ApplicationUser>()
-                                              .Include(x => x.LawUnit)
+                var lawunitName = repo.AllReadonly<ApplicationUser>()
                                               .Where(x => x.Id == act.ActCreatorUserId)
-                                              .Select(x => (x.LawUnit != null) ? x.LawUnit.FullName : "")
+                                              .Select(x => x.LawUnit.FullName)
                                               .FirstOrDefault();
 
                 return (false, lawunitName);

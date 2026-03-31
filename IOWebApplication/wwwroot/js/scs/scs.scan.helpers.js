@@ -14,6 +14,9 @@
     SCS.scanInit = function () {
         return SCS.invoke('scan/init', {});
     };
+    SCS.scanInitEx = function (dpi, black_threshold, discard_blank_pages) {
+        return SCS.invoke('scan/init', { "DPI": dpi, "BlackThreshold": black_threshold, "DiscardBlankPages": discard_blank_pages });
+    };
     SCS.scanRelease = function () {
         return SCS.invoke('scan/release', {});
     };

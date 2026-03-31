@@ -10,11 +10,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     /// </summary>
     public class CasePersonDefendantListReportVM
     {
+        public int CaseId { get; set; }
+
         [Display(Name = "Точен вид дело")]
         public string CaseTypeName { get; set; }
 
         [Display(Name = "Номер на дело")]
         public string CaseRegNumber { get; set; }
+        public DateTime CaseRegDate { get; set; }
 
         [Display(Name = "Съдия докладчик")]
         public string JudgeReporterName { get; set; }
@@ -24,6 +27,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Резултат от заседанието")]
         public string SessionResultName { get; set; }
+        
+        [Display(Name = "Резултат от заседанието")]
+        public string SessionResultNameFirst { get; set; }
 
         [Display(Name = "Дата на приключване на делото")]
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}", ApplyFormatInEditMode = true)]
@@ -61,6 +67,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Шифър")]
         public int CaseCodeId { get; set; }
+
+        /// <summary>
+        /// Шифър
+        /// </summary>
+        [Display(Name = "Шифър")]
+        public string[] CaseCodeIds { get; set; }
 
         [Display(Name = "Съдия докладчик")]
         public int JudgeReporterId { get; set; }

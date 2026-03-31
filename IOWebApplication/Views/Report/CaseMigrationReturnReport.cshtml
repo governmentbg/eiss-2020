@@ -9,10 +9,10 @@
 }
 
 @section breadcrumb{
-    <ol class="breadcrumb">
-        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
-        <li class="active">@ViewData["Title"]</li>
-    </ol>
+<ol class="breadcrumb">
+    <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    <li class="active">@ViewData["Title"]</li>
+</ol>
 }
 <form id="formFilter" method="post">
     <div class="row">
@@ -31,24 +31,16 @@
 
     <div class="row">
         <div class="col-md-6 text-left pb-15">
-            @if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ReqBooks))
-            {
-                <button type="button" onclick="ExcelData()" class="btn btn-primary">
-                    Експорт в Excel
-                    <i class="fa fa-file-excel-o" title="Търсене"></i>
-                </button>
-                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
-                    Експорт в Excel стар
-                    <i class="fa fa-file-excel-o" title="Търсене"></i>
-                </button>
-            }
-            else
-            {
-                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
-                    Експорт в Excel
-                    <i class="fa fa-file-excel-o" title="Търсене"></i>
-                </button>
-            }
+
+            <button type="button" onclick="ExcelData()" class="btn btn-primary">
+                Експорт в Excel
+                <i class="fa fa-file-excel-o" title="Търсене"></i>
+            </button>
+            <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
+                Експорт в Excel стар
+                <i class="fa fa-file-excel-o" title="Търсене"></i>
+            </button>
+
         </div>
     </div>
 </form>
@@ -75,8 +67,8 @@
 </script>
 
 @section scripts {
-    <script>
-        initCourts();
-        initLawUnit();
-    </script>
+<script>
+    initCourts();
+    initLawUnit();
+</script>
 }

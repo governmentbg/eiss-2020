@@ -1,42 +1,16 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.IO;
+﻿using IOWebApplication.Extensions;
+using Microsoft.AspNetCore.Builder;
 
-namespace IOWebApplication
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            BuildWebHost(args).Run();
-        }
+//Console.WriteLine($"{DateTime.Now}: App START"); 
+var builder = WebApplication.CreateBuilder(args);
+builder.ConfigureBuilder();
 
-        public static IWebHost BuildWebHost(string[] args)
-        {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                //.AddJsonFile("hosting.json", optional: true)
-                .AddCommandLine(args)
-                .Build();
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+builder.Services.ConfigureProgramServices(builder.Configuration);
 
-            return WebHost.CreateDefaultBuilder(args)
-                .UseConfiguration(config)
-                .UseStartup<Startup>()
-                .UseKestrel(options =>
-                {
-                    options.Limits.MaxRequestBodySize = null;
-                    if (environment == "LocalDebug" || environment == "Development")
-                    {
-                        options.ListenAnyIP(8080, listenOptions =>
-                        {
-                            listenOptions.UseHttps("Certificates/eiss.local.pfx", "123456");
-                        });
-                    }
-                })
-                .Build();
-        }
-    }
-}
+//Console.WriteLine($"{DateTime.Now}: App BUILD");
+
+var app = builder.Build();
+
+app.ConfigureApplication(builder.Configuration);
+//Console.WriteLine($"{DateTime.Now}: App RUN");
+app.Run();

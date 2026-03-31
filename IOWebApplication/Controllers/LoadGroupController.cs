@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace IOWebApplication.Controllers
 {
@@ -31,6 +30,16 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
+            if (commonService.CheckCourtRestriction(NomenclatureConstants.CourtRestrictionTypes.CriticalData, NomenclatureConstants.VSScourtId))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+
             ViewBag.breadcrumbs = commonService.Breadcrumbs_LoadGroup().DeleteOrDisableLast();
             return View();
         }
@@ -109,7 +118,7 @@ namespace IOWebApplication.Controllers
         /// <summary>
         /// натовареност по група
         /// </summary>
-        /// <param name="caseGroupId"></param>
+        /// <param name="loadGroupId"></param>
         /// <returns></returns>
         public IActionResult LoadGroupLinkList(int loadGroupId)
         {

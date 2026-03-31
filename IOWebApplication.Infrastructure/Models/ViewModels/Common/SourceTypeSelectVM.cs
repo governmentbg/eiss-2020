@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
+﻿using IOWebApplication.Infrastructure.Constants;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 {
@@ -9,23 +8,41 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
     {
         public int SourceType { get; set; }
         public long SourceId { get; set; }
-        public bool CanChange { get; set; }
         public bool TaskRequired { get; set; }
+        public int ObjectId { get; set; }
 
         public SourceTypeSelectVM()
         {
 
         }
-        public SourceTypeSelectVM(int sourceType, long sourceId, bool canChange = true)
+        public SourceTypeSelectVM(int sourceType, long sourceId, int objectId = 0)
         {
             this.SourceType = sourceType;
             this.SourceId = sourceId;
-            this.CanChange = canChange;
+            this.ObjectId = objectId;
         }
 
         public const int Document = 1;
+        public const int DocumentFileFromAPI = 40000;
+
+        public const int ElectronicDocument = 120;
+        public const int ElectronicDocumentTimeStamp = 121;
+        public const int ElectronicDocumentFile = 122;
+        public const int ElectronicDocumentRequest = 123;
+        public const int DocumentRequest = 1230;
+        public const int DocumentCaseRequest = 1231;
+        public const int ElectronicDocumentRegister = 130;
+        public const int DocumentFromElectronicDocument = 1200;
+        public static int[] ElectronicDocumentAllFiles = { ElectronicDocument, ElectronicDocumentTimeStamp, ElectronicDocumentFile };
+        public static int[] ElectronicDocumentAllFilesForCopy = { ElectronicDocument, ElectronicDocumentTimeStamp, ElectronicDocumentFile, ElectronicDocumentRequest };
+        public static int[] DocumentAllFiles = { Document, DocumentFromElectronicDocument };
+        public static int[] DocumentsNoCopytoEPEP = { DocumentRequest };
+        public static int[] DocumentAllFilesForCopy = { Document, DocumentFromElectronicDocument };
+        public static int[] DocumentForNotification = { Document, DocumentPdf, DocumentFromElectronicDocument };
+        public static int[] DocumentEpepFileInfo = { DocumentFromElectronicDocument, ElectronicDocument, ElectronicDocumentFile };
         public const int DocumentPdf = 102;
         public const int CaseMigration = 10;
+        public const int CaseMigrationRegistration = 101;
         public const int CaseMovement = 11;
         public const int DocumentTemplate = 12;
         public const int CaseLifecycle = 13;
@@ -38,9 +55,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int DocumentResolutionBlank = 1041;
         public const int DocumentResolutionPdf = 1042;
         public const int Case = 2;
+        public const int CaseReporter = 200200;
         public const int CaseInforcedDate = 20021;
         public const int CaseSelectionProtokol = 20;
         public const int CaseSelectionProtokolFile = 20020;
+        public const int CaseSelectionProtokolSubstitution = 20122;
+        public const int CaseSelectionChangeProtokol = 2020;
+        public const int CaseSelectionSubstitution = 20123;
         public const int CaseInDoc = 21;
         public const int DocumentDecision = 22;
         public const int CaseSessionActDivorce = 23;
@@ -48,10 +69,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int ExecList = 24;
         public const int DocumentPerson = 25;
         public const int LawUnit = 26;
+        public const int ExecProcess = 241;
+        public const int ExecProcessExecList = 2410;
+        public const int ExecProcessCaseSessionAct = 7410;
         //Плащане
         public const int Payment = 27;
         //Бюлетин за съдимост
         public const int CasePersonBulletin = 28;
+        public const int CasePersonBulletinPdf = 281;
+        public const int CasePersonBulletinXml = 282;
         //протоколи за ИЛ
         public const int ExchangeDoc = 29;
 
@@ -72,6 +98,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CasePersonMeasure = 38;
         public const int CasePersonDocument = 39;
         public const int CaseLawyerHelp = 46;
+        public const int CaseLawyerHelpAssignedLawyer = 460;
         public const int CaseLawyerHelpPerson = 47;
         public const int CaseSessionNotificationList = 301;
         public const int CaseSessionNotificationListMessage = 315;
@@ -94,6 +121,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseDeactivate = 42;
         public const int ExpenseOrder = 43;
         public const int ExecListBlank = 44;
+        public const int ExecListPdf = 441;
         public const int CasePersonAddress = 401;
         public const int CaseSessionPerson = 402;
         public const int CasePersonLink = 403;
@@ -110,6 +138,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseSessionActNotification = 604;
         public const int DocumentNotificationPrint = 605;
         public const int DocumentNotification = 606;
+        public const int MediationNotificationPrint = 607;
+        public const int MediationNotification = 608;
+        public const int DeliveryItem = 630;
+        public const int CaseNotificationDocument = 60006;
         public const int TestSignPDF = 666;
         public const int CaseSessionAct = 7;
         public const int CaseSessionActAllFiles = 7999;
@@ -124,6 +156,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseSessionActPreparatorByAct = 777;
         public const int CaseSessionActLawBase = 705;
         public const int CaseSessionActComplain = 706;
+        public const int CaseSessionActComplainActDepersonalized = 7061;
         public const int CaseSessionActComplainResult = 707;
         public const int CaseSessionActComplainPerson = 709;
         public const int CaseSessionActDoc = 708;
@@ -135,12 +168,19 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseSessionActMotivePdf = 802;
         public const int CaseSessionActMotiveDepersonalizedBlank = 803;
         public const int CaseSessionActMotiveDepersonalized = 804;
+        public const int CaseSessionActSelection = 805;
         public const int Instutution = 80;
         public const int ExcelReportTemplate = 850;
         public const int CaseSessionActCoordination = 9;
         public const int CaseSessionActCoordinationPdf = 902;
+        public const int CaseSessionActCoordinationDepersonalizedBlank = 903;
+        public const int CaseSessionActCoordinationDepersonalizedPdf = 904;
         public const int TemporaryFile = 99;
         public const int WorkNotification = 919;
+        public const int WorkTask = 920;
+        public const int MediationSession = 930;
+        public const int MediationCase = 931;
+        public static int[] CaseSessionActDocs = { CaseSessionActPdf };
 
 
         public const string InstututionPrefix = "inst";
@@ -156,20 +196,30 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int EisppPerson = 10100;
         public const int EpepUser = 11001;
         public const int EpepUserAssignment = 11002;
+        public const int EpepLastUpdate = 12000;
+        public const int EkStreetLastUpdate = 12001;
         public const int Files = 20000;
+        public const int DeactivateAttachedFiles = 19999;
         public const int DocumentFiles = 20001;
+        public const int AttachedDocumentFiles = 20002;
         public const int MobileApp = 19000;
         public const int Integration_ISPN = 10050;
         public const int WebApiPerson = 30100;
-        public const int DocumentFileFromAPI = 40000;
 
-        public const int VksSelectionProtocol =50100;
+        public const int VksSelectionProtocol = 50100;
+        public const int ElectionProtocol = 50200;
+        public const int ElectionPerson = 50201;
 
-    public static string GetSourceTypeName(int sourceType)
+        public const int ExpireObject = 66600;
+
+        public static int[] ActualPersonFromRegister = { Court, SourceTypeSelectVM.Instutution, LawUnit };
+
+        public static string GetSourceTypeName(int sourceType)
         {
             switch (sourceType)
             {
                 case Document: return "Документ";
+                case DocumentResolution: return "Разпореждане по документ";
                 case Case: return "Дело";
                 case CaseFastProcess: return "Заповедни производства";
                 case CaseBankAccount: return "Начин на плащане/изпълнение, Заповедни производства";
@@ -193,7 +243,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
                 case CaseSessionFastDocument: return "Съпровождащ документ представен в заседание";
                 case CaseSelectionProtokol: return "Протокол за разпределяне";
                 case CaseMigration: return "Движение на дело";
-                case SessionObligation: return "Суми заседатели";
+                case SessionObligation: return "Суми по заседание";
                 case SessionActObligation: return "Суми по акт";
                 case Court: return "Съд";
                 case Instutution: return "Институция";
@@ -240,7 +290,28 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
                 case CasePersonMeasure: return "Мерки към лице по НД";
                 case DocumentObligation: return "Суми към документ";
                 case CaseSessionActCompany: return "Заявление за регистрация";
+                case WorkTask: return "Задача";
+                case Files: return "Файл";
+                case Integration_EISPP: return "ЕИСПП Събитие";
+                case DeliveryItem: return "Уведомление от друг съд";
                 default: return "";
+            }
+        }
+
+        public static int InitFromEpepAttachedType(int attachedType)
+        {
+            switch (attachedType)
+            {
+                case EpepConstants.AttachedDocumentTypes.ElectronicDocumentMain:
+                    return SourceTypeSelectVM.ElectronicDocument;
+                case EpepConstants.AttachedDocumentTypes.ElectronicDocumentTimestamp:
+                    return SourceTypeSelectVM.ElectronicDocumentTimeStamp;
+                case EpepConstants.AttachedDocumentTypes.ElectronicDocument:
+                    return SourceTypeSelectVM.ElectronicDocumentFile;
+                case EpepConstants.AttachedDocumentTypes.ElectronicDocumentRequest:
+                    return SourceTypeSelectVM.ElectronicDocumentRequest;
+                default:
+                    return 0;
             }
         }
 

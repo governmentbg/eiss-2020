@@ -1,7 +1,5 @@
-﻿using IOWebApplication.Core.Helper.GlobalConstants;
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
-using IOWebApplication.Infrastructure.Data.Models;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
@@ -39,7 +37,7 @@ namespace IOWebApplication.ModelBinders
             return base.ToString();
         }
 
-        protected override Task BindProperty(ModelBindingContext bindingContext)
+        protected override async Task BindProperty(ModelBindingContext bindingContext)
         {
             var form = bindingContext.HttpContext.Request.Form;
             ControllerActionDescriptor controllerActionDescriptor = bindingContext.ActionContext.ActionDescriptor as ControllerActionDescriptor;
@@ -90,17 +88,15 @@ namespace IOWebApplication.ModelBinders
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("Error binding generic nomenclature properties", ex);
+                    //logger.LogError("Error binding generic nomenclature properties", ex);
                     bindingContext.Result = ModelBindingResult.Failed();
                 }
 
             }
             else
             {
-                base.BindProperty(bindingContext);
-            }
-
-            return Task.CompletedTask;
+                await base.BindProperty(bindingContext);
+            }            
         }
 
         protected override bool CanBindProperty(ModelBindingContext bindingContext, ModelMetadata propertyMetadata)

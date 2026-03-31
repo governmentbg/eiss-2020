@@ -1,0 +1,209 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Report.ReportWorkJudicialMediationCenters
+@model ReportWorkJudicialMediationCentersFilterVM
+
+@{
+    ViewData["Title"] = "Справка за дейността на медиаторите към СЦМ по дела";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.CaseCodeSubId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.CourtId, "GenericDropDown")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.MediatorId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataInformationActivitiesMediators", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CourtId: $("#CourtId").val(),
+                            MediatorId: $("#MediatorId").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            CaseCodeSubId: $("#CaseCodeSubId").val(),
+                        };
+                    }
+                },
+                filter:false,
+                scrollX: true,
+                scroller: true,
+                columns: [
+                    {
+                        className: 'col-md-3',
+                        name: 'mediatorName',
+                        data: 'mediatorName',
+                        title: 'Медиатор',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'informationMeetingsCount',
+                        data: 'informationMeetingsCount',
+                        title: 'Брой на проведените информационни срещи за процедура по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'informationMeetingDurationText',
+                        data: 'informationMeetingDurationText',
+                        title: 'Продължителност на информационните срещи за процедура по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'informationMeetingsElectedPartyCaseCount',
+                        data: 'informationMeetingsElectedPartyCaseCount',
+                        title: 'Брой информационни срещи за процедура по медиация, при които страните са избрали медиатора',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresERTPCount',
+                        data: 'mediationProceduresERTPCount',
+                        title: 'Проведените медиации',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresECRTPDurationText',
+                        data: 'mediationProceduresECRTPDurationText',
+                        title: 'Продължителност на  процедурите по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresECRTPCount',
+                        data: 'mediationProceduresECRTPCount',
+                        title: 'Брой на проведените срещи',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresElectedPartyCaseCount',
+                        data: 'mediationProceduresElectedPartyCaseCount',
+                        title: 'Брой медиации, при които страните са избрали медиатора',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'appraisals',
+                        data: 'appraisals',
+                        title: 'Обща удовлетвореност на страните от проведени процедури по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'terminationCaseCount',
+                        data: 'terminationCaseCount',
+                        title: 'Общ брой прекратени дела',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'terminationCaseSettlementCount',
+                        data: 'terminationCaseSettlementCount',
+                        title: 'Прекратени дела със спогодба',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'terminationCaseTerminationWithdrawalRefusalCount',
+                        data: 'terminationCaseTerminationWithdrawalRefusalCount',
+                        title: 'Прекратени дела поради оттегляне или отказ от иска',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'partiallyTerminationCaseCount',
+                        data: 'partiallyTerminationCaseCount',
+                        title: 'Общ брой частично прекратени дела',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'partiallyTerminationCaseSettlementCount',
+                        data: 'partiallyTerminationCaseSettlementCount',
+                        title: 'Частично прекратени дела със спогодба',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'partiallyTerminationCaseTerminationWithdrawalRefusalCount',
+                        data: 'partiallyTerminationCaseTerminationWithdrawalRefusalCount',
+                        title: 'Поради частично оттегляне или отказ от иска',
+                        sortable: false,
+                        searchable: false
+                    },
+                ]
+            });
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#CourtId').select2({ language: "bg" });
+        $('#MediatorId').select2({ language: "bg" });
+        $('#MediatorId').select2({ language: "bg" });
+        $('#CaseGroupId').trigger('change');
+        $('#CaseTypeId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
+        $('#CaseCodeSubId').select2({ language: "bg" });
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+</script>
+
+<script>
+    $(function () {
+    });
+</script>

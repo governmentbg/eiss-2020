@@ -11,13 +11,19 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int? CourtId { get; set; }
         public int CaseId { get; set; }
 
+        public string CaseName { get; set; }
+
         [Display(Name = "Основание за изпращане")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}")]
         public int LawyerHelpBaseId { get; set; }
 
+        public string LawyerHelpBaseLabel { get; set; }
+
         [Display(Name = "Вид правна помощ")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}")]
         public int LawyerHelpTypeId { get; set; }
+
+        public string LawyerHelpTypeLabel { get; set; }
 
         [Display(Name = "Акт за допускане на ПП")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}")]

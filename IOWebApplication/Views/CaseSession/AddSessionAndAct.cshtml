@@ -5,19 +5,25 @@
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
     bool hasComplainResult = (bool)ViewBag.hasComplainResult;
+    bool hasActComplainResultRespect = (bool)ViewBag.hasActComplainResultRespect;
+    bool hasSessionAddAct = (bool)ViewBag.hasSessionAddAct;
 
     ViewData["Title"] = "Добавяне на акт в ЗЗ";
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
 
+@section titleInfo {
+    @await Component.InvokeAsync(nameof(IOWebApplication.Components.CaseWarningComponent), new { caseId = Model.CaseId })
+}
+
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
         <form id="frmAddSessionAndAct" asp-action="AddSessionAndAct" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CaseId)
@@ -46,14 +52,43 @@
                                 <div class="col-lg-12">
                                     <div id="divActKind" style="display:none;">
                                         @Html.EditorFor(x => x.ActKindId, "GenericDropDown")
+                                        <div id="divRelatedAct" style="display:none;">
+                                            @Html.EditorFor(x => x.RelatedActId, "GenericDropDown")
+                                        </div>
                                     </div>
+                                </div>
+                            </div>
+                            @if ((ViewBag.isISPNcase == true) || (ViewBag.isRNFLcase == true))
+                            {
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.ActISPNReasonId, "GenericDropDown")</div>
+                                    @if (ViewBag.isRNFLcase == true)
+                                    {
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.RnflEffectiveImmediately, "bool")</div>
+                                    }
+                                </div>
+                            }
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    @Html.EditorFor(x => x.IsFinalDoc, "Boolean")
+                                    @if (ViewBag.hasTDActForRegistration == true)
+                                    {
+                                        @Html.EditorFor(x => x.TDActForRegistration, "Boolean")
+                                    }
+                                </div>
+                                <div id="divComplainResult" style="display:none;">
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div>
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-lg-6">@Html.EditorFor(x => x.IsFinalDoc, "Boolean")</div>
-                                <div id="divComplainResult">
-                                    <div class="col-lg-6">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div>
+                                <div class="col-lg-6">
+                                    @Html.EditorFor(x => x.HasCorrectedAct, "Boolean")
+                                </div>
+                            </div>
+                            <div class="row correct-act">
+                                <div class="col-lg-12">
+                                    @Html.EditorFor(x => x.CorrectedActsIds, "GenericDropDownMultipleArray")
                                 </div>
                             </div>
 
@@ -62,20 +97,40 @@
                             </div>
                         </fieldset>
                     </div>
+
                     <div class="col-lg-6">
+                        <fieldset id="divSessionAddAct" class="is-fieldset" @(!hasSessionAddAct ? "style=display:none;" : "")>
+                            <legend class="legend_1"><span class="text-yellow"><i class="fa fa-exclamation-triangle fa-lg"></i></span> ЗЗ в делото без акт</legend>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionAddActId, "GenericDropDown")</div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset id="divSessionResult" class="is-fieldset">
+                            <legend class="legend_1"> Добавяне на резултат</legend>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.SessionResultBaseId, "GenericDropDown")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.DescriptionResult, "Textarea")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.IsMainResult, "Boolean")</div>
+                            </div>
+                        </fieldset>
+
                         @if (Model.CaseLawUnitByCase?.Count() > 0)
                         {
                             <fieldset id="divLawUnit" class="is-fieldset">
                                 <legend class="legend_1"> Избор на съдия, който ще се произнесе по разпореждането</legend>
                                 <div class="col-lg-12">@Html.EditorFor(x => x.CaseLawUnitByCase)</div>
-                            </fieldset>
-                        }
-
-                        @if (Model.CaseSessions?.Count() > 0)
-                        {
-                            <fieldset class="is-fieldset">
-                                <legend class="legend_1"> ЗЗ в делото без акт</legend>
-                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessions)</div>
                             </fieldset>
                         }
                     </div>
@@ -108,7 +163,36 @@
         SessionTypeIdChange();
         $('#subButton').removeAttr("disabled");
         $('#subButton1').removeAttr("disabled");
-        SH_ComplainResult();
+        //SH_ComplainResult();
+        SH_SessionResult();
+        //SH_SessionAddAct();
+
+        $(document).on('change', '.datetime-divided .date-picker', function (e) {
+            SH_SessionResult();
+        });
+
+        $(document).on('dp.change', '.datetime-divided .time-picker', function (e) {
+            //debugger;
+            SH_SessionResult();
+        });
+
+        $('#SessionResultId').trigger('change');
+
+        $('#HasCorrectedAct').change(function () {
+                if($(this).is(':checked')){
+                    $('.correct-act').show();
+                }else{
+                    $('.correct-act').hide();
+                }
+            }).trigger('change');
+
+        $('#CorrectedActsIds').select2({ language: "bg" });
+        let s2Str = '@string.Join(',', Model.CorrectedActsIds)';
+        $('#CorrectedActsIds').val(s2Str.split(",")).trigger('change');
+    });
+
+    $('#SessionResultId').change(function () {
+        requestCombo('@Url.Action("GetDDL_SessionResultBase", "Ajax")', { sessionResultId: $(this).val(), caseId: @Model.CaseId }, '#SessionResultBaseId', @(Model.SessionResultBaseId ?? 0), function () { $('#SessionResultBaseId').trigger('change') });
     });
 
     function SubmitAddSessionAndAct(ActSaveType) {
@@ -125,8 +209,8 @@
                         SubmitAddSessionAndActIsExistSessionWithoutAct();
 
                     }, function () {
-                            $("#subButton").removeAttr("disabled");
-                            $("#subButton1").removeAttr("disabled");
+                        $("#subButton").removeAttr("disabled");
+                        $("#subButton1").removeAttr("disabled");
                     });
                 } else {
                     SubmitAddSessionAndActIsExistSessionWithoutAct();
@@ -189,8 +273,30 @@
         requestCombo('@Url.Action("GetActTypesFromCaseByCase", "CaseSessionAct")', { caseId: @Model.CaseId, SessionTypeId: $('#SessionTypeId').val() }, '#ActTypeId', @(Model.ActTypeId ?? 0), function () { $('#ActTypeId').trigger('change') });
     }
 
+    $('#ActKindId').change(function () {
+        ActKindChange();
+    });
+
+    function ActKindChange() {
+        var selected = $("#ActKindId").val()
+        //debugger;
+        requestGET_Json('@Url.Action("Get_ActKindInfo", "CaseSessionAct")', { actKindId: selected }, function (data) {
+            if (data) {
+                if (data.mustSelectRelatedAct == true) {
+                    $('#divRelatedAct').show();
+                } else {
+                    $('#divRelatedAct').hide();
+                    $('#RelatedActId').val(-1);
+                }
+            } else {
+                $('#divRelatedAct').hide();
+                $('#RelatedActId').val(-1);
+            }
+        });
+    }
+
     function ActTypeIdChange() {
-        requestCombo('@Url.Action("Get_ActKindsByActType", "CaseSessionAct")', { actTypeId: $('#ActTypeId').val() }, '#ActKindId', @(Model.ActKindId ?? 0), function () {
+        requestCombo('@Url.Action("Get_ActKindsByActType", "CaseSessionAct")', { actTypeId: $('#ActTypeId').val(),caseId: @Model.CaseId }, '#ActKindId', @(Model.ActKindId ?? 0), function () {
             if ($('#ActKindId').find('option').length > 1) {
                 $('#divActKind').show();
                 $('#subButton1').hide();
@@ -209,6 +315,44 @@
         else {
             $('#divLawUnit').hide();
         }
+
+        let _isEdit = '@(Model.Id == 0)';
+
+        if (_isEdit == 'True') {
+            //debugger;
+            let defFinalActs = JSON.parse('@NomenclatureConstants.ActType.FinalByDefaultStr');
+            let isFinal = false;
+            for (var i = 0; i < defFinalActs.length; i++) {
+                if (defFinalActs[i] == selected) {
+                    isFinal = true;
+                }
+            }
+            if (isFinal) {
+                $('#IsFinalDoc').prop("checked", true);
+            } else {
+                $('#IsFinalDoc').prop("checked", false);
+            }
+            let defFinalAppealActs = JSON.parse('@NomenclatureConstants.ActType.AppealByDefaultStr');
+            let isFinalAppeal = false;
+            for (var i = 0; i < defFinalActs.length; i++) {
+                if (defFinalAppealActs[i] == selected) {
+                    isFinalAppeal = true;
+                }
+            }
+
+            if (isFinalAppeal) {
+                $('#ActCanAppeal').prop("checked", true);
+                if ('@hasActComplainResultRespect' == 'True')
+                    $('#ActComplainResultId').val('@NomenclatureConstants.ActComplainResults.Respect');
+                else
+                    $('#ActComplainResultId').val(0);
+
+            } else {
+                $('#ActCanAppeal').prop("checked", false);
+                $('#ActComplainResultId').val(0);
+            }
+            SH_ComplainResult();
+        }
     }
 
     $('#ActTypeId').change(function () {
@@ -220,7 +364,7 @@
     });
 
     function SH_ComplainResult() {
-        debugger;
+        //debugger;
         var isFinalDoc = $("#IsFinalDoc").is(":checked");
         if ((isFinalDoc) && ('@hasComplainResult' == 'True')) {
             $("#divComplainResult").show();
@@ -229,6 +373,34 @@
             $("#divComplainResult").hide();
         }
     }
+
+    // function SH_SessionAddAct() {
+    //     if ('@hasSessionAddAct' == 'True') {
+    //         $("#divSessionAddAct").show();
+    //     }
+    //     else {
+    //         $("#divSessionAddAct").hide();
+    //     }
+    // }
+
+    function SH_SessionResult() {
+        var selected = $("#CaseSessionAddActId").val()
+        let dateTime = getDevidedDateTimeValue("#DateFrom");
+        let today = new Date();
+        let date = today.getFullYear() + '-' + ((today.getMonth() + 1) < 10 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1)) + '-' + ((today.getDate()) < 10 ? '0' + (today.getDate()) : (today.getDate()));
+        let time = (today.getHours() < 10 ? '0' + today.getHours() : today.getHours()) + ":" + (today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes());
+        let dateTimeNow = date + ' ' + time;
+        if ((dateTime <= dateTimeNow) && (selected < 1)) {
+            $("#divSessionResult").show();
+        }
+        else {
+            $("#divSessionResult").hide();
+        }
+    }
+
+    $('#CaseSessionAddActId').change(function () {
+        SH_SessionResult();
+    });
 
 </script>
 

@@ -33,8 +33,7 @@
     </div>
     <div class="row">
         <div class="col-md-6 text-left pb-15">
-            @if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ReqBooks))
-            {
+           
                 <button type="button" onclick="ExcelData()" class="btn btn-primary">
                     Експорт в Excel
                     <i class="fa fa-file-excel-o" title="Търсене"></i>
@@ -43,14 +42,7 @@
                     Експорт в Excel стар
                     <i class="fa fa-file-excel-o" title="Търсене"></i>
                 </button>
-            }
-            else
-            {
-                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
-                    Експорт в Excel
-                    <i class="fa fa-file-excel-o" title="Търсене"></i>
-                </button>
-            }
+           
         </div>
     </div>
 </form>

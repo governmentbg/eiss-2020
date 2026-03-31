@@ -11,6 +11,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int CaseId { get; set; }
         public int? CourtId { get; set; }
         public string CaseName { get; set; }
+        public DateTime? CaseRegDate { get; set; }
 
         [Display(Name = "Тип насочване")]
         public string MovementTypeLabel { get; set; }

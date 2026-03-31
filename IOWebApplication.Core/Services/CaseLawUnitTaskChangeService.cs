@@ -10,8 +10,10 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Protocols.WsTrust;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace IOWebApplication.Core.Services
 {
@@ -30,26 +32,39 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseLawUnitTaskChangeVM> Select(int? id, DateTime? dateFrom, DateTime? dateTo, string caseNumber, string newTaskUserName)
         {
             int courtId = userContext.CourtId;
+
+            Expression<Func<CaseLawUnitTaskChange, bool>> filterId = x => true;
+            if (id > 0)
+            {
+                filterId = x => x.Id == id.Value;
+            }
+            Expression<Func<CaseLawUnitTaskChange, bool>> filterCaseNumber = x => true;
+            if (!string.IsNullOrEmpty(caseNumber))
+            {
+                filterCaseNumber = x => EF.Functions.ILike(x.Case.RegNumber, caseNumber.ToCasePaternSearch());
+            }
+            Expression<Func<CaseLawUnitTaskChange, bool>> filterDateFrom = x => true;
+            if (dateFrom.HasValue)
+            {
+                filterDateFrom = x => x.DateWrt >= dateFrom.Value;
+            }
+            Expression<Func<CaseLawUnitTaskChange, bool>> filterDateTo = x => true;
+            if (dateTo.HasValue)
+            {
+                filterDateTo = x => x.DateWrt <= dateTo.MakeEndDate().Value;
+            }
+            Expression<Func<CaseLawUnitTaskChange, bool>> filterTaskUser = x => true;
+            if (!string.IsNullOrEmpty(newTaskUserName))
+            {
+                filterTaskUser = x => EF.Functions.ILike(x.NewTaskUser.LawUnit.FullName, newTaskUserName.ToPaternSearch());
+            }
             return repo.AllReadonly<CaseLawUnitTaskChange>()
-                            .Include(x => x.Case)
-                            .Include(x => x.CaseSessionAct)
-                            .ThenInclude(x => x.ActType)
-                            .Include(x => x.WorkTask)
-                            .ThenInclude(x => x.TaskType)
-                            .Include(x => x.WorkTask)
-                            .ThenInclude(x => x.User)
-                            .ThenInclude(x => x.LawUnit)
-                            .Include(x => x.NewTaskUser)
-                            .ThenInclude(x => x.LawUnit)
-                            .Include(x => x.User)
-                            .ThenInclude(x => x.LawUnit)
-                            .Where(x => x.Id == (id ?? x.Id))
+                            .Where(filterId)
                             .Where(x => x.CourtId == userContext.CourtId)
-                            .Where(x =>
-                               EF.Functions.ILike(x.Case.RegNumber,caseNumber.ToCasePaternSearch())
-                               && x.DateWrt >= (dateFrom ?? DateTime.MinValue) && x.DateWrt <= (dateTo ?? DateTime.MaxValue)
-                            )
-                            .Where(x => EF.Functions.ILike(x.NewTaskUser.LawUnit.FullName, newTaskUserName.ToPaternSearch()))
+                            .Where(filterCaseNumber)
+                            .Where(filterDateFrom)
+                            .Where(filterDateTo)
+                            .Where(filterTaskUser)
                             .Select(x => new CaseLawUnitTaskChangeVM
                             {
                                 Id = x.Id,
@@ -57,12 +72,12 @@ namespace IOWebApplication.Core.Services
                                 CaseNumber = x.Case.RegNumber,
                                 ActType = x.CaseSessionAct.ActType.Label,
                                 ActNumber = x.CaseSessionAct.RegNumber,
-                                ActDate = x.CaseSessionAct.RegDate.Value,
+                                ActDate = (x.CaseSessionAct.RegDate != null) ? x.CaseSessionAct.RegDate : x.CaseSessionAct.CaseSession.DateFrom,
                                 ChangeDate = x.DateWrt,
                                 Description = x.Description,
                                 TaskDate = x.WorkTask.DateCreated,
                                 TaskTypeName = x.WorkTask.TaskType.Label,
-                                OldTaskUserName = (x.WorkTask.User != null) ? x.WorkTask.User.LawUnit.FullName : "",
+                                OldTaskUserName = (x.WorkTask.UserId != null) ? x.WorkTask.User.LawUnit.FullName : "",
                                 NewTaskUserName = x.NewTaskUser.LawUnit.FullName,
                                 ChangeUserName = x.User.LawUnit.FullName
                             }).AsQueryable();
@@ -102,7 +117,6 @@ namespace IOWebApplication.Core.Services
                 workTask.TaskStateId = WorkTaskConstants.States.Deleted;
 
                 repo.Add(newTask);
-                repo.Update(workTask);
 
                 repo.Add(model);
 

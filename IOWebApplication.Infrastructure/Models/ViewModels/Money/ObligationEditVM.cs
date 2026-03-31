@@ -70,5 +70,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         [Display(Name = "Основание за налагане на глоба")]
         public int? MoneyFineTypeId { get; set; }
 
+        [Display(Name = "Наименование")]
+        public string ObligationDescription { get; set; }
     }
 }

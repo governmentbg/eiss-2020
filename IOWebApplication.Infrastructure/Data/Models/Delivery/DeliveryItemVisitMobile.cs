@@ -1,8 +1,10 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Extensions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 {
@@ -32,6 +34,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
         public int DeliveryReasonId { get; set; }
 
         [Column("date_oper")]
+        [JsonConverter(typeof(JsonDateTimeFormatConvertor))]
         public DateTime DateOper { get; set; }
 
         [Column("notification_state_id")]
@@ -47,22 +50,27 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
         public int LawUnitId { get; set; }
 
         [Column("date_api")]
+        [JsonIgnore]
+        //[JsonConverter(typeof(JsonDateTimeFormatConvertor))]
         public DateTime? DateAPI { get; set; }
-        
+
         [Column("user_id")]
         public string UserId { get; set; }
 
         [Column("is_ok")]
         public bool IsOK { get; set; }
-        
+
         [Column("error")]
         public string Error { get; set; }
-        
+
         [Column("delivery_info")]
         public string DeliveryInfo { get; set; }
 
         [Column("delivery_uuid")]
         public string DeliveryUUID { get; set; }
+
+        [Column("date_time_offset")]
+        public string DateTimeOffset { get; set; }
 
     }
 }

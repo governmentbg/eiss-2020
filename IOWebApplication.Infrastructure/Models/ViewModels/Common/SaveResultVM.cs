@@ -1,13 +1,14 @@
-﻿using IOWebApplication.Infrastructure.Constants;
-
-namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
+﻿namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 {
     public class SaveResultVM
     {
         public bool Result { get; set; }
+        public string Content { get; set; }
         public string ErrorMessage { get; set; }
         public string SaveMethod { get; set; }
         public bool ReloadNeeded { get; set; }
+        public object ObjectId { get; set; }
+        public string AuditInfo { get; set; }
         public SaveResultVM()
         {
             Result = false;

@@ -31,59 +31,67 @@
 
 
 <script>
-        $(function () {
-            var table = $('#caseLawyerHelpMainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("ListDataCaseLawyerHelpPerson", "CaseLawyerHelp")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.caseLawyerHelpId = @Model.Id;
-                    }
+    $(function () {
+        var table = $('#caseLawyerHelpMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListDataCaseLawyerHelpPerson", "CaseLawyerHelp")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseLawyerHelpId = @Model.Id;
+                }
 
+            },
+            dom: 'rt',
+            columns: [
+                {
+                    name: 'casePersonText',
+                    data: 'casePersonText',
+                    title: 'Лице, за което се иска правна помощ',
+                    sortable: true,
+                    searchable: true
                 },
-                dom: 'rt',
-                columns: [
-                    {
-                        name: 'casePersonText',
-                        data: 'casePersonText',
-                        title: 'Лице, за което се иска правна помощ',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'assignedLawyerText',
-                        data: 'assignedLawyerText',
-                        title: 'Назначен адвокат',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'actions',
-                        data: "id",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#caseLawyerHelpTemplateEdit', value);
-                        }
+                {
+                    name: 'assignedLawyerText',
+                    data: null,
+                    title: 'Назначен адвокат',
+                    sortable: false,
+                    searchable: false,
+                    "render": function (a, b, item) {
+                        return TemplateToHtml('#templateLawyer', item);
                     }
-                ]
-            });
-
-
+                },
+                {
+                    name: 'actions',
+                    data: null,
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (a, b, item) {
+                        return TemplateToHtml('#caseLawyerHelpTemplateEdit', item);
+                    }
+                }
+            ]
         });
-</script>
 
+    });
+</script>
+<script id="templateLawyer" type="text/x-handlebars-template">
+    {{#if descriptionExpired}}
+        <span class="text-danger">{{descriptionExpired}}</span>
+    {{else}}
+        {{assignedLawyerText}}
+    {{/if}}
+</script>
 <script id="caseLawyerHelpTemplateEdit" type="text/x-handlebars-template">
     @if (access.CanChange)
     {
-        <a href="@Url.Action("EditCaseLawyerHelpPerson", "CaseLawyerHelp")?id={{this}}" class="btn btn-info btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+       <a href="@Url.Action("EditCaseLawyerHelpPerson", "CaseLawyerHelp")?id={{id}}" class="btn btn-info btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
     }
     else
     {
-        <a href="@Url.Action("EditCaseLawyerHelpPerson", "CaseLawyerHelp")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+       <a href="@Url.Action("EditCaseLawyerHelpPerson", "CaseLawyerHelp")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
     }
 </script>
 

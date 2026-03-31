@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -21,12 +22,10 @@ namespace IOWebApplication.Core.Services
         public CaseLoadCorrectionService(
         ILogger<CaseLoadCorrectionService> _logger,
         IRepository _repo,
-        AutoMapper.IMapper _mapper,
         IUserContext _userContext)
         {
             logger = _logger;
             repo = _repo;
-            mapper = _mapper;
             userContext = _userContext;
         }
 
@@ -37,13 +36,11 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseLoadCorrectionActivityVM> CaseLoadCorrectionActivity_Select()
         {
             return repo.AllReadonly<CaseLoadCorrectionActivity>()
-                       .Include(x => x.CaseGroup)
-                       .Include(x => x.CaseInstance)
                        .Select(x => new CaseLoadCorrectionActivityVM()
                        {
                            Id = x.Id,
-                           CaseGroupLabel = (x.CaseGroup != null) ? x.CaseGroup.Label : string.Empty,
-                           CaseInstanceLabel = (x.CaseInstance != null) ? x.CaseInstance.Label : string.Empty,
+                           CaseGroupLabel = x.CaseGroup.Label,
+                           CaseInstanceLabel = x.CaseInstance.Label,
                            LoadIndex = x.LoadIndex,
                            CorrectionGroup = x.CorrectionGroup,
                            Label = x.Label
@@ -111,12 +108,11 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseLoadCorrectionActivityIndexVM> CaseLoadCorrectionActivityIndex_Select(int CaseLoadCorrectionActivityId)
         {
             return repo.AllReadonly<CaseLoadCorrectionActivityIndex>()
-                       .Include(x => x.CaseInstance)
                        .Where(x => x.CaseLoadCorrectionActivityId == CaseLoadCorrectionActivityId)
                        .Select(x => new CaseLoadCorrectionActivityIndexVM()
                        {
                            Id = x.Id,
-                           CaseInstanceLabel = (x.CaseInstance != null) ? x.CaseInstance.Label : string.Empty,
+                           CaseInstanceLabel = x.CaseInstance.Label,
                            LoadIndex = x.LoadIndex
                        })
                        .AsQueryable();
@@ -166,13 +162,12 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseLoadCorrectionVM> CaseLoadCorrection_Select(int CaseId)
         {
             return repo.AllReadonly<CaseLoadCorrection>()
-                       .Include(x => x.CaseLoadCorrectionActivity)
                        .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                        .Select(x => new CaseLoadCorrectionVM()
                        {
                            Id = x.Id,
                            CorrectionDate = x.CorrectionDate,
-                           CaseLoadCorrectionActivityLabel = (x.CaseLoadCorrectionActivity != null) ? x.CaseLoadCorrectionActivity.Label : string.Empty,
+                           CaseLoadCorrectionActivityLabel = x.CaseLoadCorrectionActivity.Label,
                            CorrectionLoadIndex = x.CorrectionLoadIndex
                        })
                        .AsQueryable();
@@ -183,9 +178,9 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="CaseLoadCorrectionActivityId"></param>
         /// <returns></returns>
-        private decimal GetLoadCorrection(int CaseLoadCorrectionActivityId)
+        private async Task<decimal> GetLoadCorrection(int CaseLoadCorrectionActivityId)
         {
-            var caseLoadCorrectionActivity = repo.GetById<CaseLoadCorrectionActivity>(CaseLoadCorrectionActivityId);
+            var caseLoadCorrectionActivity = await repo.GetByIdAsync<CaseLoadCorrectionActivity>(CaseLoadCorrectionActivityId);
             return (caseLoadCorrectionActivity != null) ? caseLoadCorrectionActivity.LoadIndex : 0;
         }
 
@@ -206,16 +201,16 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseLoadCorrection_SaveData(CaseLoadCorrection model)
+        public async Task<bool> CaseLoadCorrection_SaveData(CaseLoadCorrection model)
         {
             try
             {
-                var caseSave = repo.GetById<Case>(model.CaseId);
+                var caseSave = await repo.GetByIdAsync<Case>(model.CaseId);
 
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CaseLoadCorrection>(model.Id);
+                    var saved = await repo.GetByIdAsync<CaseLoadCorrection>(model.Id);
                     saved.CaseId = model.CaseId;
                     saved.CorrectionDate = model.CorrectionDate;
 
@@ -223,55 +218,53 @@ namespace IOWebApplication.Core.Services
                     if (saved.CaseLoadCorrectionActivityId != model.CaseLoadCorrectionActivityId)
                     {
                         saved.CaseLoadCorrectionActivityId = model.CaseLoadCorrectionActivityId;
-                        saved.CorrectionLoadIndex = GetLoadCorrection(model.CaseLoadCorrectionActivityId);
+                        saved.CorrectionLoadIndex = await GetLoadCorrection(model.CaseLoadCorrectionActivityId);
                         _changeCorrection = true;
                     }
 
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
 
                     if (_changeCorrection)
                     {
-                        caseSave.CorrectionLoadIndex = GetCaseLoadCorrection(saved.CaseId); 
+                        caseSave.CorrectionLoadIndex = await GetCaseLoadCorrectionAsync(saved.CaseId); 
                         caseSave.DateWrt = DateTime.Now;
                         caseSave.UserId = userContext.UserId;
                         repo.Update(caseSave);
-                        repo.SaveChanges();
+                        await repo.SaveChangesAsync();
                     }
                 }
                 else
                 {
-                    model.CorrectionLoadIndex = GetLoadCorrection(model.CaseLoadCorrectionActivityId);
+                    model.CorrectionLoadIndex = await GetLoadCorrection(model.CaseLoadCorrectionActivityId);
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
-                    repo.Add<CaseLoadCorrection>(model);
-                    repo.SaveChanges();
+                    repo.Add(model);
+                    await repo.SaveChangesAsync();
 
-                    caseSave.CorrectionLoadIndex = GetCaseLoadCorrection(model.CaseId);
+                    caseSave.CorrectionLoadIndex = await GetCaseLoadCorrectionAsync(model.CaseId);
                     caseSave.DateWrt = DateTime.Now;
                     caseSave.UserId = userContext.UserId;
                     repo.Update(caseSave);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
                 }
 
                 // тази част я има и като метод в CaseLoadIndexService
-                var caseLoadIndices = repo.AllReadonly<CaseLoadIndex>()
-                                          .Include(x => x.Case)
-                                          .Where(x => x.CaseId == model.CaseId &&
-                                                      x.DateExpired == null)
-                                          .ToList();
+                var caseLoadIndices = await repo.All<CaseLoadIndex>()
+                                                .Where(x => x.CaseId == model.CaseId &&
+                                                            x.DateExpired == null)
+                                                .ToListAsync();
 
                 foreach (var caseLoad in caseLoadIndices)
                 {
-                    var caseLoadCorrectionIdex = GetCaseLoadCorrectionToDate(model.CaseId, caseLoad.DateActivity);
-                    caseLoad.BaseIndex = caseLoadCorrectionIdex > 0 ? caseLoad.Case.LoadIndex * caseLoadCorrectionIdex : caseLoad.Case.LoadIndex;
+                    var caseLoadCorrectionIdex = await GetCaseLoadCorrectionToDateAsync(model.CaseId, caseLoad.DateActivity);
+                    caseLoad.BaseIndex = caseLoadCorrectionIdex > 0 ? caseSave.LoadIndex * caseLoadCorrectionIdex : caseSave.LoadIndex;
                     caseLoad.DateWrt = DateTime.Now;
                     caseLoad.UserId = userContext.UserId;
-                    repo.Update(caseLoad);
                 }
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
 
                 return true;
             }
@@ -322,6 +315,45 @@ namespace IOWebApplication.Core.Services
         }
 
         /// <summary>
+        /// Зареждане в комбо на Коригиращи индекси за трудност на дело
+        /// </summary>
+        /// <param name="CaseGroupId"></param>
+        /// <param name="CaseInstanceId"></param>
+        /// <param name="addDefaultElement"></param>
+        /// <param name="addAllElement"></param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> GetDDL_CaseLoadCorrectionActivityAsync(int CaseGroupId, int CaseInstanceId, bool addDefaultElement = true, bool addAllElement = false)
+        {
+            var selectListItems = await repo.AllReadonly<CaseLoadCorrectionActivity>()
+                                            .Where(x => (x.CaseGroupId == CaseGroupId) &&
+                                                        (x.CaseInstanceId == CaseInstanceId) &&
+                                                        ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            .Select(x => new SelectListItem()
+                                            {
+                                                Text = x.Label,
+                                                Value = x.Id.ToString()
+                                            })
+                                            .OrderBy(x => x.Text)
+                                            .ToListAsync() ?? new List<SelectListItem>();
+
+            if (addDefaultElement)
+            {
+                selectListItems = selectListItems
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
+                    .ToList();
+            }
+
+            if (addAllElement)
+            {
+                selectListItems = selectListItems
+                    .Prepend(new SelectListItem() { Text = "Всички", Value = "0" })
+                    .ToList();
+            }
+
+            return selectListItems;
+        }
+
+        /// <summary>
         /// Проверка дали съществува Коригиращи коефициенти по дело в дело
         /// </summary>
         /// <param name="ModelId"></param>
@@ -352,13 +384,12 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        public decimal GetCaseLoadCorrectionToDate(int CaseId, DateTime dateTime)
+        public async Task<decimal> GetCaseLoadCorrectionAsync(int CaseId)
         {
-            var caseLoadCorrections = repo.AllReadonly<CaseLoadCorrection>()
-                                          .Where(x => x.CaseId == CaseId &&
-                                                      x.CorrectionDate.Date <= dateTime.Date &&
-                                                      x.DateExpired == null)
-                                          .ToList() ?? new List<CaseLoadCorrection>();
+            var caseLoadCorrections = await repo.AllReadonly<CaseLoadCorrection>()
+                                                .Where(x => x.CaseId == CaseId &&
+                                                            x.DateExpired == null)
+                                                .ToListAsync() ?? new List<CaseLoadCorrection>();
 
             var result = (decimal)0;
             if (caseLoadCorrections.Count > 0)
@@ -369,6 +400,43 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        public decimal GetCaseLoadCorrectionToDate(int CaseId, DateTime dateTime)
+        {
+            var caseLoadCorrections = repo.AllReadonly<CaseLoadCorrection>()
+                                          .Where(x => x.CaseId == CaseId &&
+                                                      x.CorrectionDate.Date <= dateTime.Date &&
+                                                      x.DateExpired == null)
+                                          .ToList() ?? new List<CaseLoadCorrection>();
+
+            return GetCaseLoadCorrectionToDateFromList(caseLoadCorrections, dateTime);
+        }
+
+        public async Task<decimal> GetCaseLoadCorrectionToDateAsync(int CaseId, DateTime dateTime)
+        {
+            var caseLoadCorrections = await repo.AllReadonly<CaseLoadCorrection>()
+                                                .Where(x => x.CaseId == CaseId &&
+                                                            x.CorrectionDate.Date <= dateTime.Date &&
+                                                            x.DateExpired == null)
+                                                .ToListAsync() ?? new List<CaseLoadCorrection>();
+
+            return GetCaseLoadCorrectionToDateFromList(caseLoadCorrections, dateTime);
+        }
+
+        public decimal GetCaseLoadCorrectionToDateFromList(List<CaseLoadCorrection> models, DateTime dateTime)
+        {
+            var caseLoadCorrections = models.Where(x => x.CorrectionDate.Date <= dateTime.Date &&
+                                                        x.DateExpired == null)
+                                            .ToList() ?? new List<CaseLoadCorrection>();
+
+            var result = (decimal)0;
+            if (caseLoadCorrections.Count > 0)
+            {
+                result = caseLoadCorrections.Sum(x => x.CorrectionLoadIndex) - (caseLoadCorrections.Count - 1);
+            }
+
+            return result;
+        }
+        
         public bool IsExistCaseLoadIndex(int CaseId, DateTime dateTime)
         {
             return repo.AllReadonly<CaseLoadIndex>()

@@ -38,8 +38,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Сума")]
         public decimal Amount { get; set; }
 
+        [Display(Name = "Сума в лева")]
+        public decimal AmountBGN { get; set; }
+
         [Display(Name = "В т.ч. пътни")]
         public decimal AmountTransport { get; set; }
+
+        [Display(Name = "В т.ч. пътни в лева")]
+        public decimal AmountTransportBGN { get; set; }
 
         public decimal AmountPayment { get; set; }
 
@@ -96,6 +102,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Вид лице")]
         public string PersonTypeLabel { get; set; }
+
+        public string ColumnVisibility { get; set; }
     }
 
 }

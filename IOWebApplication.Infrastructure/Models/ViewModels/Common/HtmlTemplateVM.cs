@@ -15,5 +15,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string FileName { get; set; }
         public string ContentType { get; set; }
         public bool? IsCreate { get; set; }
+        public bool IsActive { get; set; }
     }
 }

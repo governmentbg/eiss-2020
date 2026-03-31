@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Services;
+using IOWebApplication.Core.Services.Mocks;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Http;
@@ -12,12 +12,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace IOWebApplication.Test.Extensions
 {
-  public static class TestServiceCollectionExtension
+    public static class TestServiceCollectionExtension
   {
     public static void AddTestServices(this IServiceCollection services)
     {
@@ -32,7 +31,7 @@ namespace IOWebApplication.Test.Extensions
       services.AddScoped<IHttpRequester, HttpRequester>();
       services.AddScoped<IDocumentService, DocumentService>();
       services.AddScoped<IDocumentTemplateService, DocumentTemplateService>();
-      services.AddScoped<ICounterService, CounterServiceMock>();
+      services.AddScoped<ICounterService, MockCounterService>();
       services.AddScoped<ICourtLawUnitService, CourtLawUnitService>();
       services.AddScoped<ICourtDepartmentService, CourtDepartmentService>();
       services.AddScoped<ICourtOrganizationService, CourtOrganizationService>();
@@ -96,8 +95,8 @@ namespace IOWebApplication.Test.Extensions
       services.AddScoped<IExcelReportService, ExcelReportService>();
       services.AddScoped<IAuditLogService, AuditLogService>();
       services.AddScoped<IVKSSelectionService, VKSSelectionService>();
+      services.AddScoped<ICaisBuletinService, CaisBuletinService>();
 
-      services.AddAutoMapper();
       services.AddLogging();
       services.TryAddSingleton(GetConfiguration());
     }

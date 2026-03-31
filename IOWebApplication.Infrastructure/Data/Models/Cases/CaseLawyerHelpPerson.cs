@@ -1,6 +1,7 @@
 ﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -11,7 +12,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Лица, за които се иска правна помощ
     /// </summary>
     [Table("case_lawyer_help_person")]
-    public class CaseLawyerHelpPerson: IExpiredInfo
+    public class CaseLawyerHelpPerson : IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -36,12 +37,24 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Искан адвокат от лицето")]
         public int? SpecifiedLawyerLawUnitId { get; set; }
 
+        [Column("case_person_address_id")]
+        [Display(Name = "Адрес")]
+        public int? CasePersonAddressId { get; set; }
+
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
         public DateTime? DateExpired { get; set; }
 
         [Column("user_expired_id")]
         public string UserExpiredId { get; set; }
+
+        //---Заради трансфера към ЕЕСПП
+
+        [Column("eespp_person_state_id")]
+        public int? EesppPersonStateId { get; set; }
+
+        [Column("eespp_assigned_lawyer_id")]
+        public int? EesppAssignedLawyerId { get; set; }
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
@@ -53,6 +66,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(SpecifiedLawyerLawUnitId))]
         public virtual LawUnit SpecifiedLawyerLawUnit { get; set; }
 
+        [ForeignKey(nameof(CasePersonAddressId))]
+        public virtual CasePersonAddress CasePersonAddress { get; set; }
+
         [ForeignKey(nameof(CaseLawyerHelpId))]
         public virtual CaseLawyerHelp CaseLawyerHelp { get; set; }
 
@@ -61,5 +77,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(AssignedLawyerId))]
         public virtual CasePerson AssignedLawyer { get; set; }
+
+        [ForeignKey(nameof(EesppPersonStateId))]
+        public virtual EesppPersonState EesppPersonState { get; set; }
+
+        [ForeignKey(nameof(EesppAssignedLawyerId))]
+        public virtual CaseLawyerHelpAssignedLawyer EesppAssignedLawyer { get; set; }
     }
 }

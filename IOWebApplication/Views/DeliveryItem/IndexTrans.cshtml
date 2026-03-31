@@ -3,11 +3,10 @@
 @using IOWebApplication.Core.Helper.GlobalConstants;
 @using IOWebApplication.Extensions
 @model DeliveryItemTransFilterVM;
-@inject IViewLocalizer Localizer
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 @{
@@ -17,7 +16,7 @@
     bool showCheckOnRegNum = false;
 }
 <form id="formFilter" asp-action="Edit" method="post">
-   @* @Html.HiddenFor(x => x.NotificationStateId)*@
+    @* @Html.HiddenFor(x => x.NotificationStateId)*@
     @Html.HiddenFor(x => x.ToNotificationStateId)
     <div class="row">
         <div class="col-md-2">
@@ -26,6 +25,10 @@
         <div class="col-md-2">
             @Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")
         </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NotificationDeliveryGroupId, "GenericDropDown")
+        </div>
+        
         @if (Model.ToNotificationStateId != NomenclatureConstants.NotificationState.Send)
         {
             <div class="col-md-2">
@@ -41,13 +44,12 @@
         <div class="col-md-2">
             @Html.EditorFor(x => x.DateTo, "DateTimeViewDataLabel")
         </div>
-        @if (Model.ToNotificationStateId == NomenclatureConstants.NotificationState.Send)
-        {
-            <div class="col-md-2">
-            </div>
-        }
+        <div class="col-md-2">
+            @Html.EditorFor(m => m.IsFastProcess, "GenericDropDownString")
+        </div>
+    </div>
+    <div class="row">
         <div class="col-md-2 pb-15">
-            <br>
             <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="LoadDeliveryTransItems()" value="Филтриране" title="Филтриране">
                 Филтриране
                 <i class="fa fa-search" title="Търсене"></i>
@@ -55,15 +57,14 @@
         </div>
     </div>
     <hr>
-    <div class="row for-show" style = "display:none">
+    <div class="row for-show" style="display:none">
         <div class="col-md-6">
             <label for="ForId" class="control-label">@Html.Raw(DeliveryItemTransFilterVM.GetForIdLabel(Model.ToNotificationStateId))</label>
             @Html.DropDownListFor(model => model.ForId, new List<SelectListItem>(), new { @class = "form-control" })
             <br />
         </div>
     </div>
-
-    <div class="row for-show" style = "display:none">
+    <div class="row for-show" style="display:none">
         <div class="col-md-2 col-sm-3">
             <div class="form-group">
                 <label asp-for="@showCheckOnRegNum" class="control-label">
@@ -86,8 +87,22 @@
         </div>
     </div>
 </form>
-
-<div class="row for-show" style = "display:none">
+<br>
+<div class="row for-show" style="display:none">
+    <div class="col-md-12">
+        <label id="labelRecapTop" name="labelRecapTop">Маркирани </label>
+    </div>
+</div>
+<div class="row for-show btn-submit" style="display:none">
+    <div class="col-md-2">
+        <button id="submit_button_top" onclick="submitAllCheckDeliveryItem()" class="btn btn-success btn-block">@Html.Raw(DeliveryItemTransFilterVM.GetButtonLabel(Model.ToNotificationStateId))</button>
+    </div>
+    <div class="col-md-2">
+        <button id="print_button_top" onclick="printAllCheckDeliveryItem()" class="btn btn-def">Печат на маркираните</button>
+    </div>
+</div>
+<br>
+<div class="row container-delivery-trans for-show" style="display:none">
     <div class="col-md-12">
         <table id="mainTable" class="table table-hover table-striped"></table>
     </div>
@@ -98,13 +113,12 @@
 <form name="formPrintPdfsPost" id="formPrintPdfsPost" action="@Url.Action("PrintPdfsFromDeliveryItemIds", "CaseNotification")" method="post">
     <input type="hidden" id="deliveryItemIdsJson" name="deliveryItemIdsJson" value="">
 </form>
-<div class="row for-show" style = "display:none">
+<div class="row for-show" style="display:none">
     <div class="col-md-12">
         <label id="labelRecap" name="labelRecap">Маркирани </label>
     </div>
 </div>
-
-<div class="row for-show btn-submit" style = "display:none">
+<div class="row for-show btn-submit" style="display:none">
     <div class="col-md-2">
         <button id="submit_button" onclick="submitAllCheckDeliveryItem()" class="btn btn-success btn-block">@Html.Raw(DeliveryItemTransFilterVM.GetButtonLabel(Model.ToNotificationStateId))</button>
     </div>
@@ -114,24 +128,24 @@
 </div>
 @if (Model.ToNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery || Model.ToNotificationStateId == NomenclatureConstants.NotificationState.Received)
 {
-<hr>
-<div class="row for-show" style="display:none">
-    <div class="col-md-2">
-        @Html.EditorFor(x => x.NewCourtId, "GenericDropDown")
+    <hr>
+    <div class="row for-show" style="display:none">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NewCourtId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NewDeliveryAreaId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NewLawUnitType, "GenericDropDown")
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.NewLawUnitId, "GenericDropDown")
+        </div>
+        <div class="col-md-2" style="margin-top:25px;">
+            <button id="submit_button" onclick="submitAllCheckDeliveryItemChange()" class="btn btn-success btn-block">Промени</button>
+        </div>
     </div>
-    <div class="col-md-2">
-        @Html.EditorFor(x => x.NewDeliveryAreaId, "GenericDropDown")
-    </div>
-    <div class="col-md-2">
-        @Html.EditorFor(x => x.NewLawUnitType, "GenericDropDown")
-    </div>
-    <div class="col-md-3">
-        @Html.EditorFor(x => x.NewLawUnitId, "GenericDropDown")
-    </div>
-    <div class="col-md-2" style="margin-top:25px;">
-        <button id="submit_button" onclick="submitAllCheckDeliveryItemChange()" class="btn btn-success btn-block">Промени</button>
-    </div>
-</div>
 }
 <script>
     var dataSet = [];
@@ -139,6 +153,7 @@
     $(function () {
         var table = $('#mainTable').DataTable({
             data: dataSet,
+            processing: false,
             serverSide: false,
             'order': [[1, 'asc']],
             columnDefs: [{
@@ -183,9 +198,11 @@
                      "render": function (item, type, row, meta) {
                          if (row.caseNotificationId > 0) {
                              return '<a style="cursor: pointer;" data-toggle="tooltip" onclick="printNotificationRaw(' + row.caseNotificationId + ')" title="Печат">' + row.regNumber + '</a>';
-                         } else {
-                             return row.regNumber;
+                         } 
+                         if (row.documentNotificationId > 0) {
+                            return '<a style="cursor: pointer;" data-toggle="tooltip" onclick="printNotificationDocumentRaw(' + row.documentNotificationId + ')" title="Печат">' + row.regNumber + '</a>';
                          }
+                         return row.regNumber;
                      },
                      sortable: true,
                      searchable: true
@@ -203,7 +220,15 @@
                      data: 'caseInfo',
                      title: 'Към дело',
                      sortable: true,
-                     searchable: false
+                     searchable: false,
+                     "render": function (item, type, row, meta) {
+                        let info = item;
+                        if (row.fastCaseInfo)
+                        {
+                            info += `<span class="fast-case-info"> ${row.fastCaseInfo}</span>`;
+                        }
+                        return info;
+                    }
                  },
                 {
                     name: 'personName',
@@ -427,6 +452,7 @@
             message = "Маркирани " + deliveryItemIds.length.toString();
         message += " от " + dataSet.length.toString();
         $('#labelRecap').html(message);
+        $('#labelRecapTop').html(message);
     }
 
 
@@ -539,9 +565,7 @@
             error: log_ajax_err
         });
     };
-    function printNotificationRaw(id) {
-        window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
-    }
+    
     $( document ).ready(function() {
         $("#showCheckOnRegNum").trigger("change");
         //  $("#btnFilter").trigger("click");

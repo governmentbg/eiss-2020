@@ -23,12 +23,12 @@ namespace IOWebApplication.Components
                 case "MyTasks":
                     {
                         var model = workTaskService.Select_ToDo(5);
-                        ViewBag.taskCount = workTaskService.Select_ToDoCount();
+                        ViewBag.taskCount = await workTaskService.Select_ToDoCount();
                         return await Task.FromResult<IViewComponentResult>(View(view, model));
                     }
                 case "TaskCount":
                     {
-                        var model = workTaskService.Select_ToDoCount();
+                        var model = await workTaskService.Select_ToDoCount();
                         return await Task.FromResult<IViewComponentResult>(View(view, model));
                     }
                 default:

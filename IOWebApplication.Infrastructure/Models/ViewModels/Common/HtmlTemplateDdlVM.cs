@@ -18,5 +18,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public bool? HaveInstitutionDocument { get; set; }
         public bool? HaveMoneyObligation { get; set; }
         public bool? HaveNotificationIspnReason { get; set; }
+        public bool? HaveDocuments { get; set; }
+        public bool? HaveMongoFiles { get; set; }
+
+        public bool? HaveSessionMultiAct { get; set; }
     }
 }

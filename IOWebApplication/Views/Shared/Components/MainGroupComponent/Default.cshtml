@@ -1,0 +1,12 @@
+﻿@model MainTransactionVM
+<fieldset class="is-fieldset">
+    <legend class="casereport-legend">@Model.Title</legend>
+    @if (Model.ContinueSourceId > 0)
+    {
+        <a href="@Html.Raw(Model.ContinueUrl)">Продължи обработката</a>
+    }
+    else
+    {
+        <a href="@Url.Action("TakeMainGroup","Manage",new{sourceType= Model.SourceType})">@(Model.WaitingCount) чакащи</a>
+    }
+</fieldset>

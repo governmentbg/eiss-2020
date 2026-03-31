@@ -14,5 +14,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string SessionResultLabel { get; set; }
         public string ActComplainResultLabel { get; set; }
         public int? SessionWornings { get; set; }
+        public string SessionActList { get; set; }
     }
 }

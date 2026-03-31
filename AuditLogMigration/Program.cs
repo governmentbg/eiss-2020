@@ -1,19 +1,10 @@
 ﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models;
-using System;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.IO;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Audit;
-using System.Linq;
-using Audit.Core;
-using Newtonsoft.Json;
-using IOWebApplication.Core.Models;
-using Newtonsoft.Json.Linq;
-using System.Diagnostics;
-using IOWebApplication.Infrastructure.Data.Models.Identity;
 using System.Threading;
 
 namespace AuditLogMigration
@@ -57,7 +48,7 @@ namespace AuditLogMigration
                 {
                     var repo = services.GetService<IRepository>();
                     Thread.Sleep(1000);
-                    Migrate(repo, connStr);
+                    //Migrate(repo, connStr);
                     retryAttempt = 100;
                 }
                 catch (Exception ex)
@@ -74,6 +65,7 @@ namespace AuditLogMigration
             Console.ReadLine();
         }
 
+        /*
         static void Migrate(IRepository repo, string connStr)
         {
             int fetchCount = 100;
@@ -186,5 +178,6 @@ namespace AuditLogMigration
             } while (canLoop);
             Console.WriteLine($"Finished:{DateTime.Now}");
         }
+        */
     }
 }

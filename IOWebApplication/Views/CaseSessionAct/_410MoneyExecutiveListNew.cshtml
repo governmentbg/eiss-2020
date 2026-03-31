@@ -1,25 +1,31 @@
 ﻿@model CaseSessionActCommandVM
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Extensions
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@inject IUserContext userContext
 @{
     Layout = null;
 }
 
 <style>
     div.just {
-        text-align: justify;
-        text-justify: inter-word;
+    text-align: justify;
+    text-justify: inter-word;
+    text-rendering: geometricPrecision;
     }
 </style>
 
 <div style="font-family: 'Times New Roman'">
     <center>
-        <b>ИЗПЪЛНИТЕЛЕН ЛИСТ № @Model.CaseSessionActPrint.ActRegNumber</b><br /><br />
-        @Model.CaseSessionActPrint.CourtCity   @DateTime.Now.ToString("dd.MM.yyyy") г.<br /><br />
-        <b>В ИМЕТО НА НАРОДА</b><br /><br />
+        <partial name="_ExecListExecProcessInfo" model="@Model.CaseSessionActPrint" />
+        <b>ИЗПЪЛНИТЕЛЕН ЛИСТ</b><br />
+        <p>гр. @Model.CaseSessionActPrint.CourtCity</p><br />
+        <b>В ИМЕТО НА НАРОДА</b><br />
     </center>
     <br />
     <div class="just">
-        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName състав на основание чл. 416 във връзка с чл. 410 от Гражданския процесуален кодекс като констатира, че @Model.CaseSessionActPrint.RelatedActTypeName № @Model.CaseSessionActPrint.RelatedActNumber/@Model.CaseSessionActPrint.RelatedActYear по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear по описа на @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName подлежи на изпълнение, разпореди да се издаде следния<br />
+        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName на основание чл. 416, във връзка с чл. 410 от Гражданския процесуален кодекс, като констатира, че@(string.IsNullOrEmpty(Model.CaseSessionActPrint.RelatedActNumber) ? " " : " " + Model.CaseSessionActPrint.RelatedActTypeName + " № " + Model.CaseSessionActPrint.RelatedActNumber + "/" + Model.CaseSessionActPrint.RelatedActYear + " ")по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear по описа на @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName подлежи на изпълнение, разпореди да се издаде следния<br />
     </div>
     <br />
     <center>
@@ -27,134 +33,79 @@
     </center>
     <br />
 
-    @Html.Raw("<div class='just'>")
-    @Html.Raw("Осъжда " + string.Join(" и ", Model.CaseSessionActPrint.RightSide) + "<br />")
-    @Html.Raw("</div>")
-
-    @if (Model.CaseSessionActPrint.RightSide.Count() > 1)
+    @if (Model.JointDistribution)
     {
-        @Html.Raw("да заплатят на " + "<br />")
-    }
-    else
-    {
-        @Html.Raw("да заплати на " + "<br />")
+        string _row = Model.CaseSessionActPrint.LeftWithOutRoleRightSide_410_417 + ", " + Model.SumJointDistributionWithoutPoint + (!string.IsNullOrEmpty(Model.FastProcessRequestExpenses) ? ", както и направените в производството разноски за: " + Model.FastProcessRequestExpenses + "." : string.Empty) + "<br />";
+        @Html.Raw("<div class='just'>");
+        @Html.Raw("<b>ОСЪЖДА</b> " + _row);
+        @Html.Raw("</div>");
+        <br />
+        <br />
     }
 
-    @Html.Raw("<div class='just'>")
-    @Html.Raw(string.Join(" и ", Model.CaseSessionActPrint.LeftSide) + "<br />")
-    @Html.Raw("</div>")
-    <br />
-    @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+    @if (!Model.JointDistribution)
     {
-        @foreach (var caseMoneyCollectionTotal in caseMoneyClaim.CaseMoneyCollectionTotalSums.OrderBy(x => x.CurrencyId))
+        @if (Model.SumIsNotJointDistribution.Length > 0)
         {
-            @Html.Raw("сумата " + caseMoneyCollectionTotal.TotalSum.ToString("### ### ##0.00") + " /" + caseMoneyCollectionTotal.TotalSumText + "/" + "<br />");
-        }
-        foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections.Where(x => x.IsMoney && ((x.RespectedAmount > 0) || (x.PretendedAmount == 0 && x.RespectedAmount == 0))))
-        {
-            @Html.Raw("<div class='just'>")
-            @Html.Raw("за " + caseMoneyCollection.CaseMoneyCollectionTypeLabel + (caseMoneyCollection.RespectedAmount > 0 ? " в размер на " + caseMoneyCollection.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollection.RespectedAmountString + "/ " : string.Empty) + ((caseMoneyCollection.JointDistributionBool && (Model.CaseSessionActPrint.RightSide.Count() > 1)) ? "солидарно" : string.Empty) + (!string.IsNullOrEmpty(caseMoneyCollection.Description) ? caseMoneyCollection.Description : string.Empty) + " <br />");
-            @Html.Raw("</div>")
-
-            @if (!caseMoneyCollection.JointDistributionBool)
+            @foreach (var sumPerson in Model.SumIsNotJointDistribution)
             {
-                @if (caseMoneyCollection.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0).ToList().Count > 0)
-                {
-                    @Html.Raw("Разделно на:" + "<br />");
-                    foreach (var caseMoneyCollectionPerson in caseMoneyCollection.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0))
-                    {
-                        @Html.Raw(caseMoneyCollectionPerson.CasePersonLabel + " в размер на " + caseMoneyCollectionPerson.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionPerson.CurrencyCode + " /" + caseMoneyCollectionPerson.RespectedAmountString + "/ " + "<br />");
-                    }
-                }
-            }
-
-            foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras.Where(x => ((x.RespectedAmount > 0) || (x.PretendedAmount == 0 && x.RespectedAmount == 0))))
-            {
-                @Html.Raw("<div class='just'>")
-                @Html.Raw("с/със " + (caseMoneyCollectionExtra.RespectedAmount > 0 ? caseMoneyCollectionExtra.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollectionExtra.RespectedAmountString + "/ " : string.Empty) + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + " г. " + caseMoneyCollectionExtra.DateToLabel + ((caseMoneyCollectionExtra.JointDistributionBool && (Model.CaseSessionActPrint.RightSide.Count() > 1)) ? " солидарно" : string.Empty) + (!string.IsNullOrEmpty(caseMoneyCollectionExtra.Description) ? " " + caseMoneyCollectionExtra.Description : string.Empty) + " <br />");
-                @Html.Raw("</div>")
-
-                @if (!caseMoneyCollectionExtra.JointDistributionBool)
-                {
-                    @if (caseMoneyCollectionExtra.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0).ToList().Count > 0)
-                    {
-                        @Html.Raw("Разделно на:" + "<br />");
-                        foreach (var caseMoneyCollectionPerson in caseMoneyCollectionExtra.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0))
-                        {
-                            @Html.Raw(caseMoneyCollectionPerson.CasePersonLabel + " в размер на " + caseMoneyCollectionPerson.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionPerson.CurrencyCode + " /" + caseMoneyCollectionPerson.RespectedAmountString + "/ " + "<br />");
-                        }
-                    }
-                }
+                @Html.Raw("<div class='just'>");
+                @Html.Raw("<b>ОСЪЖДА</b> " + sumPerson + " <br />");
+                @Html.Raw("</div>");
+                <br />
             }
         }
+        <br />
     }
-    и да върне:<br />
-    @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+
+    @if (Model.FastProcessRequest != null)
     {
-        foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections.Where(x => x.IsItem))
+        @if (Model.FastProcessRequest.ItemSubstitutionClaims != null && Model.FastProcessRequest.ItemSubstitutionClaims.Count() > 0)
         {
             @Html.Raw("и да върне:<br />");
-            @Html.Raw(caseMoneyCollection.Description + " на стойност " + caseMoneyCollection.PretendedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollection.PretendedAmountString + "/ " + "<br />");
-            foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras)
+            @Html.Raw("<div class='just'>");
+            @foreach (var item in Model.FastProcessRequest.ItemSubstitutionClaims)
             {
-                @Html.Raw("с/със " + caseMoneyCollectionExtra.PretendedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionExtra.CurrencyCode + " /" + caseMoneyCollectionExtra.PretendedAmountString + "/ " + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + " г. до " + caseMoneyCollectionExtra.DateTo?.ToString("dd.MM.yyyy") + " г.<br />");
+                @Html.Raw($"{item.TypeName} {item.QuantityText} {(Model.IsInEuro ? item.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : item.TotalAmountBGN.ToString("### ### ##0.00") + " BGN")}");
+                <br />
             }
+            @Html.Raw("</div>");
+            <br />
+            <br />
+        }
+
+        @if (Model.FastProcessRequest.ItemClaim != null && !string.IsNullOrEmpty(Model.FastProcessRequest.ItemClaim.Description))
+        {
+            @Html.Raw("и да върне:<br />");
+            @Html.Raw("<div class='just'>");
+            @Html.Raw($"{Model.FastProcessRequest.ItemClaim.Description} на стойност {(Model.IsInEuro ? Model.FastProcessRequest.ItemClaim.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : Model.FastProcessRequest.ItemClaim.TotalAmountBGN.ToString("### ### ##0.00") + " BGN")}");
+            @Html.Raw("</div>");
+            <br />
+            <br />
         }
     }
-    @if (Model.CaseFastProcessView.CaseMoneyExpenses.Count > 0)
-    {
-        @Html.Raw("както и сумите:<br />");
-        foreach (var caseMoneyExpense in Model.CaseFastProcessView.CaseMoneyExpenses)
-        {
-            @Html.Raw("&nbsp;&nbsp; - " + caseMoneyExpense.Amount.ToString("### ### ##0.00") + " " + caseMoneyExpense.CurrencyCode + " /" + caseMoneyExpense.AmountString + "/ " + caseMoneyExpense.CaseMoneyExpenseTypeLabel + (!string.IsNullOrEmpty(caseMoneyExpense.Description) ? " " + caseMoneyExpense.Description : string.Empty) + "<br />");
-            @if (!caseMoneyExpense.JointDistributionBool)
-            {
-                @if (caseMoneyExpense.MoneyExpensePeople.Where(x => x.PersonAmount > 0).ToList().Count > 0)
-                {
-                    @Html.Raw("&nbsp;&nbsp;&nbsp; Разделно на:" + "<br />");
-                    foreach (var caseMoneyExpensePerson in caseMoneyExpense.MoneyExpensePeople.Where(x => x.PersonAmount > 0))
-                    {
-                        @Html.Raw("&nbsp;&nbsp;&nbsp; " + caseMoneyExpensePerson.CasePersonLabel + " в размер на " + caseMoneyExpensePerson.PersonAmount.ToString("### ### ##0.00") + " " + caseMoneyExpensePerson.CurrencyCode + " /" + caseMoneyExpensePerson.PersonAmountString + "/ " + "<br />");
-                    }
-                }
-            }
-        }
-        @Html.Raw("разноски по делото.<br />");
-    }
-    Вземането произтича от следните обстоятелства:<br />
-    @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
-    {
-        if (caseMoneyClaim.CaseMoneyCollections.Any(x => x.IsMoney || x.IsItem))
-        {
-            @Html.Raw("<div class='just'>")
-            @Html.Raw("&nbsp;&nbsp;" + (caseMoneyClaim.CaseMoneyClaimTypeLabel == string.Empty ? " - " + caseMoneyClaim.CaseMoneyClaimGroupLabel : string.Empty) + ((caseMoneyClaim.CaseMoneyClaimTypeLabel != string.Empty) ? " - " + caseMoneyClaim.CaseMoneyClaimTypeLabel : string.Empty) + (!string.IsNullOrEmpty(caseMoneyClaim.ClaimNumber) ? " Номер: " + caseMoneyClaim.ClaimNumber : string.Empty) + (!string.IsNullOrEmpty(caseMoneyClaim.Description) ? " " + caseMoneyClaim.Description : string.Empty) + " <br />");
-            @Html.Raw("</div>")
-        }
-    }
-    Присъдената сума може да бъде:<br />
-    @foreach (var caseBankAccount in Model.CaseFastProcessView.CaseBankAccounts.OrderBy(x => x.CaseBankAccountTypeId))
-    {
-        if (caseBankAccount.CaseBankAccountTypeId == 1)
-        {
-            @Html.Raw("&nbsp;&nbsp; - внесена по следната банкова сметка на заявителя/кредитора IBAN: " + caseBankAccount.LabelIBAN + " BIC: " + caseBankAccount.LabelBIC + " " + caseBankAccount.BankName + (!string.IsNullOrEmpty(caseBankAccount.Description) ? " " + caseBankAccount.Description : string.Empty) + "<br />");
-        }
-        else
-        {
-            @Html.Raw("&nbsp;&nbsp; - платена по следния начин: " + caseBankAccount.Description + "<br />");
-        }
-    }
-    <br />
+
     <b>Този изпълнителен лист се издава в полза на</b><br />
     @Html.Raw("<div class='just'>")
     @Html.Raw(string.Join(" и ", Model.CaseSessionActPrint.LeftSide) + "<br />")
     @Html.Raw("</div>")
     <br />
-    <b>Задължават се органите на държавното управление да оказват съдействие на съдебния изпълнител, за привеждане в изпълнение на изпълнителния лист.</b>
+    <b>Задължават се органите на държавното управление да оказват съдействие на съдебния изпълнител за привеждане в изпълнение на изпълнителния лист.</b>
     <br />
     <br />
-    <div align="right">
-        Районен съдия: ...............................................<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
-    </div>
+    @if (Model.GenerateExecProcess)
+    {
+        <div align="right">
+            <b>Изпълнителният лист е подписан с квалифициран електронен подпис от съдия:</b><br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
+        </div>
+    }
+    else
+    {
+        <div align="right">
+            Районен съдия: ...............................................<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
+        </div>
+    }
 </div>
 

@@ -1,0 +1,69 @@
+﻿@model CasePersonPrevName
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool canChange = access.CanChange;
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на предходно име на лице" : "Преглед на предходно име на лице";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на предходно име на лице";
+    }
+}
+
+@section breadcrumb {
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditPrevName" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CasePersonId)
+
+            <fieldset class="is-fieldset case-person-container">
+                <legend class="legend_1">Основни данни за лице</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                    <div class="row">
+                        <div class="col-md-6">@Html.EditorFor(x => x.PersonPrevNamesTypeId, "GenericDropDown")</div>
+                    </div>
+                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = false, viewLatinGender = false })
+                </div>
+
+                <div class="form-group">
+                    @if (canChange)
+                    {
+                        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    }
+
+                    <a asp-controller="CasePerson" asp-action="Edit" asp-route-id="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+
+                            @if (Model.DateExpired == null && access.CanChangeFull)
+                            {
+                                @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на лице към дело", ExpireSubmitUrl = Url.Action("CasePerson_ExpiredInfo") })
+                                <span>&nbsp;</span>
+                            }
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+

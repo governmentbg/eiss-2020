@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
@@ -13,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
     /// Разходен касов ордер
     /// </summary>
     [Table("money_expense_order")]
-    public class ExpenseOrder : UserDateWRT
+    public class ExpenseOrder : UserDateWRT, IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -58,6 +59,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("lawunit_sign_id")]
         [Display(Name = "Съдия")]
         public int? LawUnitSignId { get; set; }
+
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

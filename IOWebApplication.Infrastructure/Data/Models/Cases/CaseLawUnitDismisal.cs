@@ -58,6 +58,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("document_person_id")]
         public long? DocumentPersonId { get; set; }
 
+        [Display(Name = "Искане за отвод")]
+        [Column("dismissal_request_type")]
+        public int? DismissalRequestType { get; set; }
+
+        [Column("dismissal_session_act_id")]
+        [Display(Name = "Протокол, с който се иска отвода")]
+        public int? DismissalSessionActId { get; set; }
+
+        [Column("dismissal_case_person_id")]
+        [Display(Name = "Вносител на искането")]
+        public int? DismissalCasePersonId { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
@@ -81,5 +93,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(DocumentPersonId))]
         public virtual DocumentPerson DocumentPerson { get; set; }
+
+        [ForeignKey(nameof(DismissalSessionActId))]
+        public virtual CaseSessionAct DismissalSessionAct { get; set; }
+
+        [ForeignKey(nameof(DismissalCasePersonId))]
+        public virtual CasePerson DismissalCasePerson { get; set; }
     }
 }

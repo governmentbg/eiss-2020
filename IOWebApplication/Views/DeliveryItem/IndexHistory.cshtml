@@ -1,0 +1,183 @@
+﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+@using IOWebApplication.Infrastructure.Constants;
+@model DeliveryItemOperLogVM;
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
+    }
+}
+
+@{
+    ViewData["Title"] = "Тракер за призовки/съобщение";
+    var filterJson = ViewBag.filterJson;
+}
+
+<div class="row">
+    @Html.HiddenFor(x => x.DeliveryItemId)
+    <div class="col-md-2">
+        @Html.EditorFor(x => x.RegNumber)
+    </div>
+    <div class="col-md-4">
+        @Html.EditorFor(x => x.CaseInfo)
+    </div>
+    <div class="col-md-4">
+        @Html.EditorFor(x => x.FromCourtName)
+    </div>
+</div>
+
+<div class="row">
+    <hr>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItem")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<script>
+    var dataSet = [];
+    function postToFilterDeliveryItems() {
+        $("#formPostFilter").submit();
+    }
+    function createMainTable() {
+        var table = $('#mainTable').DataTable({
+            data: dataSet,
+            processing: false,
+            serverSide: false,
+            scrollX: true,
+            scroller: true,
+            'order': [[0, 'asc']],
+            "paging": false,
+            "lengthMenu": [[-1], ["Покажи всички"]],
+            columns: [
+                {
+                    name: 'dateWrt',
+                    data: 'dateWrt',
+                    title: 'Дата на записа',
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY HH:mm:ss");
+                        else
+                            return "";
+                    },
+                    sortable: true,
+                    searchable: true,
+                },
+                {
+                    name: 'userName',
+                    data: 'userName',
+                    title: 'Потребител',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'action',
+                    data: 'action',
+                    title: 'Действие',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'pageLabel',
+                    data: 'pageLabel',
+                    title: 'Екран',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'personName',
+                    data: 'personName',
+                    title: 'Име на лицето',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'address',
+                    data: 'address',
+                    title: 'Адрес',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'lawUnitName',
+                    data: 'lawUnitName',
+                    title: 'Връчител',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'areaName',
+                    data: 'areaName',
+                    title: 'Район',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'toCourtName',
+                    data: 'toCourtName',
+                    title: 'Изпратена към',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'stateName',
+                    data: 'stateName',
+                    title: 'Статус',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'operName',
+                    data: 'operName',
+                    title: 'Посещение',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'dateOper',
+                    data: 'dateOper',
+                    title: 'На дата',
+                    sortable: true,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY  HH:mm:ss");
+                        else
+                            return "";
+                    }
+                }
+            ]
+        });
+    };
+    function LoadDataSet() {
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("ListDataHistory")",
+            dataType: "json",
+            cache: false,
+            data: { deliveryItemId: $('#DeliveryItemId').val() },
+            success: function (response) {
+                dataSet = response;
+                if (response) {
+                    var last_log = response[response.length - 1];
+                    $('#RegNumber').val(last_log.regNumber)
+                    $('#CaseInfo').val(last_log.caseInfo)
+                    $('#FromCourtName').val(last_log.fromCourtName)
+                }
+            },
+            complete: function () {
+                createMainTable();
+                
+            },
+            error: log_ajax_err
+        });
+    }
+    $(document).ready(function () {
+        LoadDataSet();
+    });
+</script>

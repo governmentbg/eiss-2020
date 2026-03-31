@@ -8,6 +8,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     {
         public int Id { get; set; }
         public string Text { get; set; }
-        public int Selected { get; set; }
+        public int? MasterId { get; set; }
     }
 }

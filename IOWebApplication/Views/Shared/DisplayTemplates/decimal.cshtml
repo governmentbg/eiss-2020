@@ -1,0 +1,5 @@
+﻿@model decimal?
+<div class="form-group">
+    <label asp-for="@Model" class="control-label"></label>
+    <div>@((Model != null) ? Model.Value.ToString("N2") : "")</div>
+</div>

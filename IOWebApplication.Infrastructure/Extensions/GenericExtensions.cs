@@ -1,10 +1,9 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.ServiceModel;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -35,16 +34,16 @@ namespace IOWebApplication.Infrastructure.Extensions
         /// <param name="method">HttpMethod</param>
         /// <param name="data">Обект за изпращане</param>
         /// <returns></returns>
-        public static async Task<HttpResponseMessage> SendMessage(this HttpClient client, HttpMethod method, object data = null)
+        public static Task<HttpResponseMessage> SendMessage(this HttpClient client, HttpMethod method, object data = null)
         {
             HttpRequestMessage _message = new HttpRequestMessage();
             _message.Method = method;
             if (data != null)
             {
-                var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                var jsonData = JsonTextSerializer.Serialize(data);
                 _message.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
             }
-            return await client.SendAsync(_message);
+            return client.SendAsync(_message);
         }
 
         public static T[] ValueToArray<T>(this T value)
@@ -56,7 +55,7 @@ namespace IOWebApplication.Infrastructure.Extensions
 
         public static int[] StringToIntArray(this string value)
         {
-            if (string.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value) || value == "null")
             {
                 return new List<int>().ToArray();
             }
@@ -110,6 +109,53 @@ namespace IOWebApplication.Infrastructure.Extensions
                 shortName += name[i];
             }
             return name;
+        }
+
+        public static string TrimLength(this string model, int charCount)
+        {
+            if (string.IsNullOrEmpty(model))
+            {
+                return model;
+            }
+
+            if (model.Length <= charCount)
+            {
+                return model;
+            }
+            return model.Substring(0, charCount);
+        }
+
+        public static JsonSerializerOptions SystemJsonAddDateFormat(string format)
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new JsonDateTimeFormatConvertor(format));
+            return options;
+        }
+
+        public static string MakeNiceNamesList(this List<string> names)
+        {
+
+            string result = string.Empty;
+            if (names == null || names.Count == 0)
+            {
+                return result;
+            }
+
+            var arrNames = names.ToArray();
+            for (int i = 0; i < arrNames.Length; i++)
+            {
+                if (i > 0 && i < arrNames.Length - 1)
+                {
+                    result += ", ";
+                }
+                if (i == arrNames.Length - 1 && i > 0)
+                {
+                    result += " и ";
+                }
+                result = result + arrNames[i];
+            }
+
+            return result;
         }
     }
 }

@@ -1,0 +1,217 @@
+﻿@{
+    var electionGroupId = ViewBag.ElectionGroupId;
+    var notFilledProtocol_ID = ViewBag.NotFilledProtocol_ID;
+    ViewData["Title"] = @ViewBag.Title;
+
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Election")">Списък избори</a></li>
+    </ol>
+}
+
+
+
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseTab">
+
+        @if (notFilledProtocol_ID == 0)
+        {
+            <li class=""><a href="#" onclick="document.location.href='@Url.Action("ElectionPersons",new {id=electionGroupId})';"><i class="fa fa-users"></i> Списък участници</a></li>
+
+        }
+        else
+        {
+            <li class=""><a href="#" onclick="document.location.href='@Url.Action("ElectionPersonsFinal",new{ id=notFilledProtocol_ID})';"><i class="fa fa-newspaper-o"></i> Финализиран списък</a></li>
+        }
+
+        <li class="active"><a href="#"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+
+
+
+    </ul>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="ProtokolMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+
+
+            var table = $('#ProtokolMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataProtocol", "Election")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.electionGroupId = @electionGroupId;
+                    }
+
+                },
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'dateAdded',
+                        data: 'dateAdded',
+                        title: 'Дата на финализиране ',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY HH:mm");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'selectedLawunitFullName',
+                        data: 'selectedLawunitFullName',
+                        title: 'Избран съдия',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateElection',
+                        data: 'dateElection',
+                        title: 'Дата на избор ',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY HH:mm");
+                            else
+                                return "";
+                        }
+                    },
+
+
+                    {
+                    className: 'col-md-1',
+                    name: 'dateSigned',
+                    data: 'dateSigned',
+                    title: 'Подписан на',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY HH:mm");
+                        else
+                            return "";
+                    }
+                    },
+
+                    {
+                        name: 'isSigned',
+                        data: 'isSigned',
+                        title: 'Статус',
+                        "render": function (item, type, row, meta) {
+                            var sign = "";
+                            if (row.isSigned) {
+                                sign = "Подписан"
+
+                            }
+                            else {
+                                sign = "Не подписан"
+
+                            }
+
+                            return sign;
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'userAddedName',
+                        data: 'userAddedName',
+                        title: 'Изготвил',
+                        sortable: true,
+                        searchable: true
+                    },
+
+
+                    {
+                        name: 'fileName',
+                        data: 'fileName',
+                        title: 'файл ',
+                       "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("Download", "Files",new { id = 666}))';
+                           url = url.replace('666', row.fileId);
+                           return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.fileName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateAction', value);
+                        }
+                    },
+                    {
+                    name: 'isSigned',
+                    data: 'isSigned',
+                    title: ' ',
+                    "render": function (item, type, row, meta) {
+
+
+                        var result = "";
+                        if (!row.isSigned) {
+
+
+                            result = TemplateToHtml('#Sign', row.id);
+
+                     }
+
+                        return result;
+                    },
+                    sortable: true,
+                    searchable: true
+                    }
+                   
+
+
+                ]
+            });
+            table.order([0, 'desc']);
+        });
+    </script>
+
+    <script id="Sign" type="text/x-handlebars-template">
+        @if (1 == 1)
+        {
+            <a href="@Url.Action("SendForSign", "Election")/{{this}}" class="btn btn-success" title="Подпиши"><span class="hidden-sm hidden-xs"> Подпиши</span></a>
+
+
+        }
+    </script>
+
+    <script id="templateAction" type="text/x-handlebars-template">
+        <a href="@Url.Action("PreviewDoc")/{{this}}" class="btn btn-info btn-sm" title="Преглед"><i class="fa fa-eye"></i> Преглед</a>
+    </script>
+}
+<script>
+
+
+
+
+    function HideAddButton(showA) {
+        if (show) {
+            x.style.display = "show"
+        }
+        else { x.style.display = "none" };
+    }
+
+</script>

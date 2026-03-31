@@ -12,7 +12,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int? CourtHallId { get; set; }
         public string CourtHallName { get; set; }
         public string CaseName { get; set; }
+        public DateTime CaseDate { get; set; }
         public string SessionLabel { get; set; }
+        public DateTime SessionDate { get; set; }
         public DateTime DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
         public string SessionTypeLabel { get; set; }

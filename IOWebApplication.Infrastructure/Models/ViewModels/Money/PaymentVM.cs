@@ -49,5 +49,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public int PosPaymentResultId { get; set; }
 
         public bool ForPopUp { get; set; }
+
+        public long DocumentId { get; set; }
+
+        [Display(Name = "Вносител")]
+        public string DocumentPersonId { get; set; }
+
+        [Display(Name = "Без връзка с ПОС")]
+        public bool OfflinePos { get; set; }
     }
 }

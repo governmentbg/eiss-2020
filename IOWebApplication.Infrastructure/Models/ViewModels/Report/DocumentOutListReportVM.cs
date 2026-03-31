@@ -25,6 +25,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         
         [Display(Name = "Адресант")]
         public string DocumentPersons { get; set; }
+        public string DocumentPersonsFirst { get; set; }
 
         [Display(Name = "Текст")]
         public string Description { get; set; }

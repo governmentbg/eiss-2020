@@ -3,7 +3,7 @@
 @inject IWorkNotificationService service;
 @model WorkNotificationFilterVM;
 @{
-    IEnumerable<WorkNotification> notifications = service.SelectWorkNotifications(Model);
+    IEnumerable<WorkNotificationListVM> notifications = service.SelectWorkNotifications(Model);
 }
 
 <div class="box wn-box" style="border:none">

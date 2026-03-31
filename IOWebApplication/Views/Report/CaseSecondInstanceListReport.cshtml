@@ -3,7 +3,7 @@
 @model CaseSecondInstanceListFilterReportVM
 
 @{
-    ViewData["Title"] = "Справка постъпили дела за период – въззивни дела";
+    ViewData["Title"] = "Справка постъпили дела за период – въззивни/касационни дела";
 }
 
 @section breadcrumb{
@@ -16,12 +16,17 @@
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.LifeCycleDateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.LifeCycleDateTo, "DateTime")</div>
     </div>
     <div class="row">
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.FromCourtId, "SelectCourt")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.CaseCreateFromId, "GenericDropDown")</div>
     </div>
@@ -56,15 +61,18 @@
                     "type": "POST",
                     "datatype": "json",
                     data: function (d) {
-                        d.model = {
+                        d.filter = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
                             JudgeReporterId: $("#JudgeReporterId").val(),
                             CaseCreateFromId: $("#CaseCreateFromId").val(),
-                            CaseCodeId: $("#CaseCodeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
                             FromCourtId: $("#FromCourtId").val(),
+                            LifeCycleDateFrom: $("#LifeCycleDateFrom").val(),
+                            LifeCycleDateTo: $("#LifeCycleDateTo").val(),
+                            CourtDepartmentId: $("#CourtDepartmentId").val(),
                         };
                     }
                 },
@@ -104,6 +112,34 @@
                         }
                     },
                     {
+                        className: "text-center",
+                        name: 'dateFinishCase',
+                        data: 'dateFinishCase',
+                        title: 'Дата на свършване на делото',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateFromNewLifeCycle',
+                        data: 'dateFromNewLifeCycle',
+                        title: 'Нов интервал',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
                         name: 'judgeReporterName',
                         data: 'judgeReporterName',
                         title: 'Съдия докладчик',
@@ -121,14 +157,14 @@
                         name: 'fromCourtName',
                         data: 'fromCourtName',
                         title: 'Първоинстанционен съд',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                     },
                     {
                         name: 'caseCreateFromName',
                         data: 'caseCreateFromName',
                         title: 'Източник на постъпване',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                     },
                     {
@@ -146,6 +182,8 @@
 <script>
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
+        $('#CaseTypeId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
 
         $.fn.dataTable.ext.buttons.io_excel.action = function () {
             $("#formFilter").submit();
@@ -153,14 +191,19 @@
     });
 
     $('#CaseGroupId').change(function () {
-        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+        var instances = '@NomenclatureConstants.CaseInstanceType.SecondInstance' + "," + '@NomenclatureConstants.CaseInstanceType.ThirdInstance';
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val(), caseInstanceIds: instances }, '#CaseTypeId', @Model.CaseTypeId);
+    });
+
+    $('#CaseTypeId').change(function () {
+        //requestCombo('@Url.Action("GetDDL_CaseTypeUnits", "Ajax")', { caseTypeId: $(this).val()}, '#CaseTypeUnitId', @Model.CaseTypeUnitId);
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
     });
 </script>
 
 <script>
     $(function () {
         initLawUnit();
-        initCaseCode();
         initCourts();
     });
 </script>

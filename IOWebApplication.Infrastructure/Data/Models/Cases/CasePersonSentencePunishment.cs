@@ -44,26 +44,36 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public int? SentenceTypeId { get; set; }
 
         //--------Пари-------------------------
+        
         [Column("sentence_money")]
-        [Display(Name = "Размер, лв")]
+        [Display(Name = "Размер")]
         public decimal SentenseMoney { get; set; }
+
+        [Column("sentence_money_bgn")]
+        [Display(Name = "Размер, лв")]
+        public decimal SentenseMoneyBGN { get; set; }
+
         //--------Време-------------------------
         [Column("sentence_days")]
         [Range(0, int.MaxValue, ErrorMessage = "Въведете дни в интервала 0-9999")]
         [Display(Name = "Дни")]
         public int SentenseDays { get; set; }
+
         [Column("sentence_weeks")]
         [Display(Name = "Седмици")]
         [Range(0, int.MaxValue, ErrorMessage = "Въведете седмици в интервала 0-9999")]
         public int SentenseWeeks { get; set; }
+
         [Column("sentence_months")]
         [Display(Name = "Месеци")]
         [Range(0, int.MaxValue, ErrorMessage = "Въведете месеци в интервала 0-9999")]
         public int SentenseMonths { get; set; }
+
         [Column("sentence_years")]
         [Display(Name = "Години")]
         [Range(0, int.MaxValue, ErrorMessage = "Въведете години в интервала 0-9999")]
         public int SentenseYears { get; set; }
+
         //--------Описание-------------------------
         [Column("sentence_text")]
         [Display(Name = "Описание")]
@@ -111,6 +121,34 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("is_main_punishment")]
         [Display(Name = "Основно наказание")]
         public bool IsMainPunishment { get; set; }
+
+        [Column("punishment_general_category")]
+        [Display(Name = "Обща категория")]
+        public int? PunishmentGeneralCategoryId { get; set; }
+
+        //--------Приспадането и зачитането на предварителното задържане-----------------
+        [Column("preliminary_detention_days")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете дни в интервала 0-9999")]
+        [Display(Name = "Дни")]
+        public int PreliminaryDetentionDays { get; set; }
+
+        [Column("preliminary_detention_weeks")]
+        [Display(Name = "Седмици")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете седмици в интервала 0-9999")]
+        public int PreliminaryDetentionWeeks { get; set; }
+
+        [Column("preliminary_detention_months")]
+        [Display(Name = "Месеци")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете месеци в интервала 0-9999")]
+        public int PreliminaryDetentionMonths { get; set; }
+
+        [Column("preliminary_detention_years")]
+        [Display(Name = "Години")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете години в интервала 0-9999")]
+        public int PreliminaryDetentionYears { get; set; }
+
+        [ForeignKey(nameof(PunishmentGeneralCategoryId))]
+        public virtual PunishmentGeneralCategory PunishmentGeneralCategory { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

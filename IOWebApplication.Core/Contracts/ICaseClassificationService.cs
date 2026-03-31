@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -14,7 +15,15 @@ namespace IOWebApplication.Core.Contracts
 
         bool CaseClassification_SaveData(CheckListViewVM model);
 
-        List<SelectListItem> CaseClassification_Select(int caseId, int? caseSessionId);
-        List<CaseClassification> CaseClassification_SelectObject(int caseId, int? caseSessionId);
+        /// <summary>
+        /// Извличане на данни за индикатори към дело
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <param name="caseSessionId"></param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> CaseClassification_Select(int caseId, int? caseSessionId);
+
+        Task<List<CaseClassification>> CaseClassification_SelectObject(int caseId, int? caseSessionId);
+        List<CaseClassification> CaseClassification_SelectRow(int caseId, int? caseSessionId);
     }
 }

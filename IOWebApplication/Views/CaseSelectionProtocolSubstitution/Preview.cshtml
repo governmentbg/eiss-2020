@@ -1,0 +1,139 @@
+﻿@model CaseSelectionProtocolSubstitutionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@{
+    Layout = null;
+}
+
+<div>
+    <center>
+        <b>@Model.CourtName</b>
+    </center>
+    <br />
+
+     <center>
+            <b>
+            Протокол от избор на заместващ съдия
+
+        </b>
+        </center>
+
+    <br />
+    <br />
+    <br />
+
+    <div>
+        <div><b> Дата на разпределението: </b>@Model.SelectionDate.ToString("dd.MM.yyyy г. HH:mm:ss ч. ")</div><br />
+        <div><b> Група за разпределние: </b>@Model.CourtGroupName</div><br />
+        <div>  <b> Отсъстващсъдия: </b>@Model.SubstitutedLawUnitName Период @Model.SubstitutionDateFrom.ToString("dd.MM.yyyy") - @Model.SubstitutionDateTo.ToString("dd.MM.yyyy")</div><br />
+        <div><b> Избран заместващ съдия: </b>@Model.SelectedLawUnitName</div><br />
+        <div><b> Причина за заместване: </b>@Model.Description</div><br />
+ 
+
+        </div>
+    <table width="100%">
+      
+            <tr>
+                <td colspan="3">
+                    <b>Списък на възможни съдии</b>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="3">
+                    <table width="100%" class="bordered protokol-table">
+
+                        <tr>
+                            <th width="50%"><b>Съдия</b></th>
+           
+                                <th align="center"><b>Натоварване</b></th>
+                                <th align="center"> <b>Брой дела в групата</b></th>
+                      
+                        </tr>
+
+                            @foreach (var item in Model.ProtokolLawUnit.Where(x => x.StateId != NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.LawUnitFullName))
+                        {
+                            string trclass = "";
+
+                            @if (item.Id == Model.SelectedLawUnitId)
+                            {
+                                trclass = "highlight-bold";
+                            }
+                            <tr class="@trclass">
+
+
+
+
+                                <td align="left">
+                                    @item.LawUnitFullName
+                                </td>
+                               <td align="center">
+                                   @item.LoadIndex%
+                                </td>
+                                        <td align="center"> @item.CaseCount</td>
+
+                                   
+
+                            </tr>
+                        }
+                    </table>
+                </td>
+            </tr>
+        
+
+                @if (Model.ProtokolLawUnit.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).Any())
+            {
+
+            
+                <tr>
+                    <td colspan="3">
+
+                        <b>Списък на изключени съдии</b>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">
+                        <table width="100%" class="bordered protokol-table">
+
+                            <tr>
+                                <th width="50%"><b>Съдия</b></th>
+                                <th colspan="2"><b>Причини</b></th>
+                            </tr>
+
+                                @foreach (var item in Model.ProtokolLawUnit.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.LawUnitFullName))
+                            {
+                                <tr>
+                                    <td> @item.LawUnitFullName</td>
+
+                                    <td colspan="2">
+                                        @item.Description
+                                    </td>
+                                </tr>
+                            }
+
+                        </table>
+                    </td>
+                </tr>
+
+            }
+
+        
+
+        <tr>
+            <td>
+                <br />
+                @Html.DisplayFor(x => x.UserName, "objInline")
+            </td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td></td>
+            <td width="30%" style="font-weight:bold">Подпис: </td>
+        </tr>
+    </table>
+
+</div>

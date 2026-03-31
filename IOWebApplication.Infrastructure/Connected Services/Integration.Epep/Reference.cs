@@ -10,30 +10,31 @@
 namespace Integration.Epep
 {
     using System.Runtime.Serialization;
-    
-    
+
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Side", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Side", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummarySide))]
     public partial class Side : object
     {
-        
+
         private System.Guid CaseIdField;
-        
+
         private Integration.Epep.Entity EntityField;
-        
+
         private System.DateTime InsertDateField;
-        
+
         private bool IsActiveField;
-        
+
         private Integration.Epep.Person PersonField;
-        
+
         private string ProceduralRelationField;
-        
+
         private System.Nullable<System.Guid> SideIdField;
-        
+
         private string SideInvolvementKindCodeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid CaseId
         {
@@ -46,7 +47,7 @@ namespace Integration.Epep
                 this.CaseIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public Integration.Epep.Entity Entity
         {
@@ -59,7 +60,7 @@ namespace Integration.Epep
                 this.EntityField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.DateTime InsertDate
         {
@@ -72,7 +73,7 @@ namespace Integration.Epep
                 this.InsertDateField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public bool IsActive
         {
@@ -85,7 +86,7 @@ namespace Integration.Epep
                 this.IsActiveField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public Integration.Epep.Person Person
         {
@@ -98,7 +99,7 @@ namespace Integration.Epep
                 this.PersonField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string ProceduralRelation
         {
@@ -111,7 +112,7 @@ namespace Integration.Epep
                 this.ProceduralRelationField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> SideId
         {
@@ -124,7 +125,7 @@ namespace Integration.Epep
                 this.SideIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string SideInvolvementKindCode
         {
@@ -138,19 +139,19 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Entity", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Entity", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class Entity : object
     {
-        
+
         private string AddressField;
-        
+
         private string BulstatField;
-        
+
         private string NameField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Address
         {
@@ -163,7 +164,7 @@ namespace Integration.Epep
                 this.AddressField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Bulstat
         {
@@ -176,7 +177,7 @@ namespace Integration.Epep
                 this.BulstatField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Name
         {
@@ -190,23 +191,23 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Person", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Person", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class Person : object
     {
-        
+
         private string AddressField;
-        
+
         private string EGNField;
-        
+
         private string FirstnameField;
-        
+
         private string LastnameField;
-        
+
         private string SecondnameField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Address
         {
@@ -219,7 +220,7 @@ namespace Integration.Epep
                 this.AddressField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string EGN
         {
@@ -232,7 +233,7 @@ namespace Integration.Epep
                 this.EGNField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Firstname
         {
@@ -245,7 +246,7 @@ namespace Integration.Epep
                 this.FirstnameField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Lastname
         {
@@ -258,7 +259,7 @@ namespace Integration.Epep
                 this.LastnameField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Secondname
         {
@@ -272,19 +273,41 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="InfocaseFault", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummarySide", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummarySide : Integration.Epep.Side
+    {
+
+        private string SideInvolvementKindNameField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SideInvolvementKindName
+        {
+            get
+            {
+                return this.SideInvolvementKindNameField;
+            }
+            set
+            {
+                this.SideInvolvementKindNameField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "InfocaseFault", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class InfocaseFault : object
     {
-        
+
         private int ErrorCodeField;
-        
+
         private string ErrorFieldField;
-        
+
         private string ReasonField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public int ErrorCode
         {
@@ -297,7 +320,7 @@ namespace Integration.Epep
                 this.ErrorCodeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string ErrorField
         {
@@ -310,7 +333,7 @@ namespace Integration.Epep
                 this.ErrorFieldField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Reason
         {
@@ -324,23 +347,23 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="LawyerAssignment", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "LawyerAssignment", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class LawyerAssignment : object
     {
-        
+
         private System.DateTime DateField;
-        
+
         private bool IsActiveField;
-        
+
         private System.Nullable<System.Guid> LawyerAssignmentIdField;
-        
+
         private System.Guid LawyerRegistrationIdField;
-        
+
         private System.Nullable<System.Guid> SideIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.DateTime Date
         {
@@ -353,7 +376,7 @@ namespace Integration.Epep
                 this.DateField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public bool IsActive
         {
@@ -366,7 +389,7 @@ namespace Integration.Epep
                 this.IsActiveField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> LawyerAssignmentId
         {
@@ -379,7 +402,7 @@ namespace Integration.Epep
                 this.LawyerAssignmentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid LawyerRegistrationId
         {
@@ -392,7 +415,7 @@ namespace Integration.Epep
                 this.LawyerRegistrationIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> SideId
         {
@@ -406,23 +429,23 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PersonAssignment", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PersonAssignment", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PersonAssignment : object
     {
-        
+
         private System.DateTime DateField;
-        
+
         private bool IsActiveField;
-        
+
         private System.Nullable<System.Guid> PersonAssignmentIdField;
-        
+
         private System.Guid PersonRegistrationIdField;
-        
+
         private System.Nullable<System.Guid> SideIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.DateTime Date
         {
@@ -435,7 +458,7 @@ namespace Integration.Epep
                 this.DateField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public bool IsActive
         {
@@ -448,7 +471,7 @@ namespace Integration.Epep
                 this.IsActiveField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PersonAssignmentId
         {
@@ -461,7 +484,7 @@ namespace Integration.Epep
                 this.PersonAssignmentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid PersonRegistrationId
         {
@@ -474,7 +497,7 @@ namespace Integration.Epep
                 this.PersonRegistrationIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> SideId
         {
@@ -488,23 +511,23 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="LawyerRegistration", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "LawyerRegistration", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class LawyerRegistration : object
     {
-        
+
         private System.DateTime BirthDateField;
-        
+
         private string DescriptionField;
-        
+
         private string EmailField;
-        
+
         private System.Guid LawyerIdField;
-        
+
         private System.Nullable<System.Guid> LawyerRegistrationIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.DateTime BirthDate
         {
@@ -517,7 +540,7 @@ namespace Integration.Epep
                 this.BirthDateField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Description
         {
@@ -530,7 +553,7 @@ namespace Integration.Epep
                 this.DescriptionField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Email
         {
@@ -543,7 +566,7 @@ namespace Integration.Epep
                 this.EmailField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid LawyerId
         {
@@ -556,7 +579,7 @@ namespace Integration.Epep
                 this.LawyerIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> LawyerRegistrationId
         {
@@ -570,27 +593,27 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PersonRegistration", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PersonRegistration", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PersonRegistration : object
     {
-        
+
         private string AddressField;
-        
+
         private System.DateTime BirthDateField;
-        
+
         private string DescriptionField;
-        
+
         private string EGNField;
-        
+
         private string EmailField;
-        
+
         private string NameField;
-        
+
         private System.Nullable<System.Guid> PersonRegistrationIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Address
         {
@@ -603,7 +626,7 @@ namespace Integration.Epep
                 this.AddressField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.DateTime BirthDate
         {
@@ -616,7 +639,7 @@ namespace Integration.Epep
                 this.BirthDateField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Description
         {
@@ -629,7 +652,7 @@ namespace Integration.Epep
                 this.DescriptionField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string EGN
         {
@@ -642,7 +665,7 @@ namespace Integration.Epep
                 this.EGNField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Email
         {
@@ -655,7 +678,7 @@ namespace Integration.Epep
                 this.EmailField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Name
         {
@@ -668,7 +691,7 @@ namespace Integration.Epep
                 this.NameField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PersonRegistrationId
         {
@@ -682,33 +705,38 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Summon", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Summon", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummarySummon))]
     public partial class Summon : object
     {
-        
+
         private string AddressField;
-        
+
         private string AddresseeField;
-        
+
         private System.DateTime DateCreatedField;
-        
+
         private System.Nullable<System.DateTime> DateServedField;
-        
+
+        private string NumberField;
+
         private System.Guid ParentIdField;
-        
+
         private System.Guid SideIdField;
-        
+
         private string SubjectField;
-        
+
         private System.Nullable<System.Guid> SummonIdField;
-        
+
         private string SummonKindField;
-        
+
         private string SummonTypeCodeField;
-        
+
+        private System.Nullable<System.Guid> IncommingDocumentIdField;
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Address
         {
@@ -721,7 +749,7 @@ namespace Integration.Epep
                 this.AddressField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Addressee
         {
@@ -734,7 +762,7 @@ namespace Integration.Epep
                 this.AddresseeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.DateTime DateCreated
         {
@@ -747,7 +775,7 @@ namespace Integration.Epep
                 this.DateCreatedField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.DateTime> DateServed
         {
@@ -760,7 +788,20 @@ namespace Integration.Epep
                 this.DateServedField = value;
             }
         }
-        
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Number
+        {
+            get
+            {
+                return this.NumberField;
+            }
+            set
+            {
+                this.NumberField = value;
+            }
+        }
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid ParentId
         {
@@ -773,7 +814,7 @@ namespace Integration.Epep
                 this.ParentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid SideId
         {
@@ -786,7 +827,7 @@ namespace Integration.Epep
                 this.SideIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Subject
         {
@@ -799,7 +840,7 @@ namespace Integration.Epep
                 this.SubjectField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> SummonId
         {
@@ -812,7 +853,7 @@ namespace Integration.Epep
                 this.SummonIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string SummonKind
         {
@@ -825,7 +866,7 @@ namespace Integration.Epep
                 this.SummonKindField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string SummonTypeCode
         {
@@ -838,24 +879,141 @@ namespace Integration.Epep
                 this.SummonTypeCodeField = value;
             }
         }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> IncommingDocumentId
+        {
+            get
+            {
+                return this.IncommingDocumentIdField;
+            }
+            set
+            {
+                this.IncommingDocumentIdField = value;
+            }
+        }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="ScannedDocument", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummarySummon", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummarySummon : Integration.Epep.Summon
+    {
+
+        private Integration.Epep.SummaryFile[] FilesField;
+
+        private string SummonTypeNameField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SummonTypeName
+        {
+            get
+            {
+                return this.SummonTypeNameField;
+            }
+            set
+            {
+                this.SummonTypeNameField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryFile", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummaryFile : object
+    {
+
+        private string FileNameField;
+
+        private string FileTitleField;
+
+        private int FileTypeField;
+
+        private System.Guid GidField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string FileName
+        {
+            get
+            {
+                return this.FileNameField;
+            }
+            set
+            {
+                this.FileNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string FileTitle
+        {
+            get
+            {
+                return this.FileTitleField;
+            }
+            set
+            {
+                this.FileTitleField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int FileType
+        {
+            get
+            {
+                return this.FileTypeField;
+            }
+            set
+            {
+                this.FileTypeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid Gid
+        {
+            get
+            {
+                return this.GidField;
+            }
+            set
+            {
+                this.GidField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "ScannedDocument", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class ScannedDocument : object
     {
-        
+
         private System.Guid CaseIdField;
-        
+
         private string DescriptionField;
-        
+
         private byte[] ScannedDocumentContentField;
-        
+
         private System.Nullable<System.Guid> ScannedDocumentIdField;
-        
+
         private string ScannedDocumentMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid CaseId
         {
@@ -868,7 +1026,7 @@ namespace Integration.Epep
                 this.CaseIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Description
         {
@@ -881,7 +1039,7 @@ namespace Integration.Epep
                 this.DescriptionField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] ScannedDocumentContent
         {
@@ -894,7 +1052,7 @@ namespace Integration.Epep
                 this.ScannedDocumentContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> ScannedDocumentId
         {
@@ -907,7 +1065,7 @@ namespace Integration.Epep
                 this.ScannedDocumentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string ScannedDocumentMimeType
         {
@@ -921,21 +1079,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="AssignmentFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "AssignmentFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class AssignmentFile : object
     {
-        
+
         private System.Nullable<System.Guid> AssignmentFileIdField;
-        
+
         private System.Guid AssignmentIdField;
-        
+
         private byte[] ProtocolContentField;
-        
+
         private string ProtocolMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> AssignmentFileId
         {
@@ -948,7 +1106,7 @@ namespace Integration.Epep
                 this.AssignmentFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid AssignmentId
         {
@@ -961,7 +1119,7 @@ namespace Integration.Epep
                 this.AssignmentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] ProtocolContent
         {
@@ -974,7 +1132,7 @@ namespace Integration.Epep
                 this.ProtocolContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string ProtocolMimeType
         {
@@ -988,21 +1146,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PrivateProtocolFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PrivateProtocolFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PrivateProtocolFile : object
     {
-        
+
         private System.Guid HearingIdField;
-        
+
         private System.Nullable<System.Guid> PrivateProtocolFileIdField;
-        
+
         private byte[] ProtocolContentField;
-        
+
         private string ProtocolMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid HearingId
         {
@@ -1015,7 +1173,7 @@ namespace Integration.Epep
                 this.HearingIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PrivateProtocolFileId
         {
@@ -1028,7 +1186,7 @@ namespace Integration.Epep
                 this.PrivateProtocolFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] ProtocolContent
         {
@@ -1041,7 +1199,7 @@ namespace Integration.Epep
                 this.ProtocolContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string ProtocolMimeType
         {
@@ -1055,21 +1213,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PublicProtocolFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PublicProtocolFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PublicProtocolFile : object
     {
-        
+
         private System.Guid HearingIdField;
-        
+
         private byte[] ProtocolContentField;
-        
+
         private string ProtocolMimeTypeField;
-        
+
         private System.Nullable<System.Guid> PublicProtocolFileIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid HearingId
         {
@@ -1082,7 +1240,7 @@ namespace Integration.Epep
                 this.HearingIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] ProtocolContent
         {
@@ -1095,7 +1253,7 @@ namespace Integration.Epep
                 this.ProtocolContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string ProtocolMimeType
         {
@@ -1108,7 +1266,7 @@ namespace Integration.Epep
                 this.ProtocolMimeTypeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PublicProtocolFileId
         {
@@ -1122,21 +1280,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="IncomingDocumentFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "IncomingDocumentFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class IncomingDocumentFile : object
     {
-        
+
         private byte[] IncomingDocumentContentField;
-        
+
         private System.Nullable<System.Guid> IncomingDocumentFileIdField;
-        
+
         private System.Guid IncomingDocumentIdField;
-        
+
         private string IncomingDocumentMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] IncomingDocumentContent
         {
@@ -1149,7 +1307,7 @@ namespace Integration.Epep
                 this.IncomingDocumentContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> IncomingDocumentFileId
         {
@@ -1162,7 +1320,7 @@ namespace Integration.Epep
                 this.IncomingDocumentFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid IncomingDocumentId
         {
@@ -1175,7 +1333,7 @@ namespace Integration.Epep
                 this.IncomingDocumentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string IncomingDocumentMimeType
         {
@@ -1189,21 +1347,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="OutgoingDocumentFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "OutgoingDocumentFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class OutgoingDocumentFile : object
     {
-        
+
         private byte[] OutgoingDocumentContentField;
-        
+
         private System.Nullable<System.Guid> OutgoingDocumentFileIdField;
-        
+
         private System.Guid OutgoingDocumentIdField;
-        
+
         private string OutgoingDocumentMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] OutgoingDocumentContent
         {
@@ -1216,7 +1374,7 @@ namespace Integration.Epep
                 this.OutgoingDocumentContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> OutgoingDocumentFileId
         {
@@ -1229,7 +1387,7 @@ namespace Integration.Epep
                 this.OutgoingDocumentFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid OutgoingDocumentId
         {
@@ -1242,7 +1400,7 @@ namespace Integration.Epep
                 this.OutgoingDocumentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string OutgoingDocumentMimeType
         {
@@ -1256,21 +1414,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="SummonFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummonFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class SummonFile : object
     {
-        
+
         private byte[] ContentField;
-        
+
         private string MimeTypeField;
-        
+
         private System.Nullable<System.Guid> SummonFileIdField;
-        
+
         private System.Guid SummonIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] Content
         {
@@ -1283,7 +1441,7 @@ namespace Integration.Epep
                 this.ContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string MimeType
         {
@@ -1296,7 +1454,7 @@ namespace Integration.Epep
                 this.MimeTypeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> SummonFileId
         {
@@ -1309,7 +1467,7 @@ namespace Integration.Epep
                 this.SummonFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid SummonId
         {
@@ -1323,21 +1481,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PrivateActFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PrivateActFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PrivateActFile : object
     {
-        
+
         private System.Guid ActIdField;
-        
+
         private byte[] PrivateActContentField;
-        
+
         private System.Nullable<System.Guid> PrivateActFileIdField;
-        
+
         private string PrivateActMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid ActId
         {
@@ -1350,7 +1508,7 @@ namespace Integration.Epep
                 this.ActIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] PrivateActContent
         {
@@ -1363,7 +1521,7 @@ namespace Integration.Epep
                 this.PrivateActContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PrivateActFileId
         {
@@ -1376,7 +1534,7 @@ namespace Integration.Epep
                 this.PrivateActFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string PrivateActMimeType
         {
@@ -1390,21 +1548,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PublicActFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PublicActFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PublicActFile : object
     {
-        
+
         private System.Guid ActIdField;
-        
+
         private byte[] PublicActContentField;
-        
+
         private System.Nullable<System.Guid> PublicActFileIdField;
-        
+
         private string PublicActMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid ActId
         {
@@ -1417,7 +1575,7 @@ namespace Integration.Epep
                 this.ActIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] PublicActContent
         {
@@ -1430,7 +1588,7 @@ namespace Integration.Epep
                 this.PublicActContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PublicActFileId
         {
@@ -1443,7 +1601,7 @@ namespace Integration.Epep
                 this.PublicActFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string PublicActMimeType
         {
@@ -1457,21 +1615,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PrivateMotiveFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PrivateMotiveFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PrivateMotiveFile : object
     {
-        
+
         private System.Guid ActIdField;
-        
+
         private byte[] PrivateMotiveContentField;
-        
+
         private System.Nullable<System.Guid> PrivateMotiveFileIdField;
-        
+
         private string PrivateMotiveMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid ActId
         {
@@ -1484,7 +1642,7 @@ namespace Integration.Epep
                 this.ActIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] PrivateMotiveContent
         {
@@ -1497,7 +1655,7 @@ namespace Integration.Epep
                 this.PrivateMotiveContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PrivateMotiveFileId
         {
@@ -1510,7 +1668,7 @@ namespace Integration.Epep
                 this.PrivateMotiveFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string PrivateMotiveMimeType
         {
@@ -1524,21 +1682,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="PublicMotiveFile", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "PublicMotiveFile", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class PublicMotiveFile : object
     {
-        
+
         private System.Guid ActIdField;
-        
+
         private byte[] PublicMotiveContentField;
-        
+
         private System.Nullable<System.Guid> PublicMotiveFileIdField;
-        
+
         private string PublicMotiveMimeTypeField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid ActId
         {
@@ -1551,7 +1709,7 @@ namespace Integration.Epep
                 this.ActIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public byte[] PublicMotiveContent
         {
@@ -1564,7 +1722,7 @@ namespace Integration.Epep
                 this.PublicMotiveContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PublicMotiveFileId
         {
@@ -1577,7 +1735,7 @@ namespace Integration.Epep
                 this.PublicMotiveFileIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string PublicMotiveMimeType
         {
@@ -1591,727 +1749,126 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="IncomingDocument", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class IncomingDocument : object
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "AttachedDocument", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class AttachedDocument : object
     {
-        
-        private System.Nullable<System.Guid> CaseIdField;
-        
-        private string CourtCodeField;
-        
-        private Integration.Epep.Entity EntityField;
-        
-        private System.DateTime IncomingDateField;
-        
-        private System.Nullable<System.Guid> IncomingDocumentIdField;
-        
-        private string IncomingDocumentTypeCodeField;
-        
-        private int IncomingNumberField;
-        
-        private Integration.Epep.Person PersonField;
-        
+
+        private System.Nullable<System.Guid> AttachedDocumentIdField;
+
+        private byte[] FileContentField;
+
+        private System.DateTime FileDateField;
+
+        private string FileNameField;
+
+        private string FileTitleField;
+
+        private string MimeTypeField;
+
+        private System.Guid ParentIdField;
+
+        private int TypeField;
+
+        private string FileTypeCodeField;
+
+        private string FileContentBase64Field;
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> CaseId
+        public System.Nullable<System.Guid> AttachedDocumentId
         {
             get
             {
-                return this.CaseIdField;
+                return this.AttachedDocumentIdField;
             }
             set
             {
-                this.CaseIdField = value;
+                this.AttachedDocumentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public string CourtCode
+        public byte[] FileContent
         {
             get
             {
-                return this.CourtCodeField;
+                return this.FileContentField;
             }
             set
             {
-                this.CourtCodeField = value;
+                this.FileContentField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public Integration.Epep.Entity Entity
+        public System.DateTime FileDate
         {
             get
             {
-                return this.EntityField;
+                return this.FileDateField;
             }
             set
             {
-                this.EntityField = value;
+                this.FileDateField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime IncomingDate
+        public string FileName
         {
             get
             {
-                return this.IncomingDateField;
+                return this.FileNameField;
             }
             set
             {
-                this.IncomingDateField = value;
+                this.FileNameField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> IncomingDocumentId
+        public string FileTitle
         {
             get
             {
-                return this.IncomingDocumentIdField;
+                return this.FileTitleField;
             }
             set
             {
-                this.IncomingDocumentIdField = value;
+                this.FileTitleField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public string IncomingDocumentTypeCode
+        public string MimeType
         {
             get
             {
-                return this.IncomingDocumentTypeCodeField;
+                return this.MimeTypeField;
             }
             set
             {
-                this.IncomingDocumentTypeCodeField = value;
+                this.MimeTypeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public int IncomingNumber
+        public System.Guid ParentId
         {
             get
             {
-                return this.IncomingNumberField;
+                return this.ParentIdField;
             }
             set
             {
-                this.IncomingNumberField = value;
+                this.ParentIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public Integration.Epep.Person Person
-        {
-            get
-            {
-                return this.PersonField;
-            }
-            set
-            {
-                this.PersonField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="OutgoingDocument", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class OutgoingDocument : object
-    {
-        
-        private System.Nullable<System.Guid> CaseIdField;
-        
-        private Integration.Epep.Entity EntityField;
-        
-        private System.Nullable<System.DateTime> OutgoingDateField;
-        
-        private System.Nullable<System.Guid> OutgoingDocumentIdField;
-        
-        private string OutgoingDocumentTypeCodeField;
-        
-        private int OutgoingNumberField;
-        
-        private Integration.Epep.Person PersonField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public Integration.Epep.Entity Entity
-        {
-            get
-            {
-                return this.EntityField;
-            }
-            set
-            {
-                this.EntityField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.DateTime> OutgoingDate
-        {
-            get
-            {
-                return this.OutgoingDateField;
-            }
-            set
-            {
-                this.OutgoingDateField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> OutgoingDocumentId
-        {
-            get
-            {
-                return this.OutgoingDocumentIdField;
-            }
-            set
-            {
-                this.OutgoingDocumentIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string OutgoingDocumentTypeCode
-        {
-            get
-            {
-                return this.OutgoingDocumentTypeCodeField;
-            }
-            set
-            {
-                this.OutgoingDocumentTypeCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public int OutgoingNumber
-        {
-            get
-            {
-                return this.OutgoingNumberField;
-            }
-            set
-            {
-                this.OutgoingNumberField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public Integration.Epep.Person Person
-        {
-            get
-            {
-                return this.PersonField;
-            }
-            set
-            {
-                this.PersonField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Case", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Case : object
-    {
-        
-        private string CaseCodeField;
-        
-        private System.Nullable<System.Guid> CaseIdField;
-        
-        private string CaseKindCodeField;
-        
-        private string CaseTypeCodeField;
-        
-        private int CaseYearField;
-        
-        private string CourtCodeField;
-        
-        private string DepartmentNameField;
-        
-        private System.DateTime FormationDateField;
-        
-        private System.Nullable<System.Guid> IncomingDocumentIdField;
-        
-        private string LegalSubjectField;
-        
-        private int NumberField;
-        
-        private string PanelNameField;
-        
-        private System.Nullable<bool> RestrictedAccessField;
-        
-        private string StatisticCodeField;
-        
-        private string StatusField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string CaseCode
-        {
-            get
-            {
-                return this.CaseCodeField;
-            }
-            set
-            {
-                this.CaseCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string CaseKindCode
-        {
-            get
-            {
-                return this.CaseKindCodeField;
-            }
-            set
-            {
-                this.CaseKindCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string CaseTypeCode
-        {
-            get
-            {
-                return this.CaseTypeCodeField;
-            }
-            set
-            {
-                this.CaseTypeCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public int CaseYear
-        {
-            get
-            {
-                return this.CaseYearField;
-            }
-            set
-            {
-                this.CaseYearField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string CourtCode
-        {
-            get
-            {
-                return this.CourtCodeField;
-            }
-            set
-            {
-                this.CourtCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string DepartmentName
-        {
-            get
-            {
-                return this.DepartmentNameField;
-            }
-            set
-            {
-                this.DepartmentNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime FormationDate
-        {
-            get
-            {
-                return this.FormationDateField;
-            }
-            set
-            {
-                this.FormationDateField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> IncomingDocumentId
-        {
-            get
-            {
-                return this.IncomingDocumentIdField;
-            }
-            set
-            {
-                this.IncomingDocumentIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string LegalSubject
-        {
-            get
-            {
-                return this.LegalSubjectField;
-            }
-            set
-            {
-                this.LegalSubjectField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public int Number
-        {
-            get
-            {
-                return this.NumberField;
-            }
-            set
-            {
-                this.NumberField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string PanelName
-        {
-            get
-            {
-                return this.PanelNameField;
-            }
-            set
-            {
-                this.PanelNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<bool> RestrictedAccess
-        {
-            get
-            {
-                return this.RestrictedAccessField;
-            }
-            set
-            {
-                this.RestrictedAccessField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string StatisticCode
-        {
-            get
-            {
-                return this.StatisticCodeField;
-            }
-            set
-            {
-                this.StatisticCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Status
-        {
-            get
-            {
-                return this.StatusField;
-            }
-            set
-            {
-                this.StatusField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="ConnectedCase", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class ConnectedCase : object
-    {
-        
-        private System.Guid CaseIdField;
-        
-        private string ConnectedCaseTypeCodeField;
-        
-        private System.Guid PredecessorCaseIdField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string ConnectedCaseTypeCode
-        {
-            get
-            {
-                return this.ConnectedCaseTypeCodeField;
-            }
-            set
-            {
-                this.ConnectedCaseTypeCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid PredecessorCaseId
-        {
-            get
-            {
-                return this.PredecessorCaseIdField;
-            }
-            set
-            {
-                this.PredecessorCaseIdField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Reporter", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Reporter : object
-    {
-        
-        private System.Guid CaseIdField;
-        
-        private System.DateTime DateAssignedField;
-        
-        private System.Nullable<System.DateTime> DateReplacedField;
-        
-        private string JudgeNameField;
-        
-        private string ReasonReplacedField;
-        
-        private System.Nullable<System.Guid> ReporterIdField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime DateAssigned
-        {
-            get
-            {
-                return this.DateAssignedField;
-            }
-            set
-            {
-                this.DateAssignedField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.DateTime> DateReplaced
-        {
-            get
-            {
-                return this.DateReplacedField;
-            }
-            set
-            {
-                this.DateReplacedField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string JudgeName
-        {
-            get
-            {
-                return this.JudgeNameField;
-            }
-            set
-            {
-                this.JudgeNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string ReasonReplaced
-        {
-            get
-            {
-                return this.ReasonReplacedField;
-            }
-            set
-            {
-                this.ReasonReplacedField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> ReporterId
-        {
-            get
-            {
-                return this.ReporterIdField;
-            }
-            set
-            {
-                this.ReporterIdField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Assignment", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Assignment : object
-    {
-        
-        private System.Nullable<System.Guid> AssignmentIdField;
-        
-        private string AssignorField;
-        
-        private System.Guid CaseIdField;
-        
-        private System.DateTime DateField;
-        
-        private System.Guid IncomingDocumentIdField;
-        
-        private string JudgeNameField;
-        
-        private string TypeField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> AssignmentId
-        {
-            get
-            {
-                return this.AssignmentIdField;
-            }
-            set
-            {
-                this.AssignmentIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Assignor
-        {
-            get
-            {
-                return this.AssignorField;
-            }
-            set
-            {
-                this.AssignorField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime Date
-        {
-            get
-            {
-                return this.DateField;
-            }
-            set
-            {
-                this.DateField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid IncomingDocumentId
-        {
-            get
-            {
-                return this.IncomingDocumentIdField;
-            }
-            set
-            {
-                this.IncomingDocumentIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string JudgeName
-        {
-            get
-            {
-                return this.JudgeNameField;
-            }
-            set
-            {
-                this.JudgeNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Type
+        public int Type
         {
             get
             {
@@ -2322,168 +1879,75 @@ namespace Integration.Epep
                 this.TypeField = value;
             }
         }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Hearing", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Hearing : object
-    {
-        
-        private System.Guid CaseIdField;
-        
-        private string CourtRoomField;
-        
-        private System.DateTime DateField;
-        
-        private System.Nullable<System.Guid> HearingIdField;
-        
-        private string HearingResultField;
-        
-        private string HearingTypeField;
-        
-        private bool IsCanceledField;
-        
-        private string ProsecutorNameField;
-        
-        private string SecretaryNameField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid CaseId
+        public string FileTypeCode
         {
             get
             {
-                return this.CaseIdField;
+                return this.FileTypeCodeField;
             }
             set
             {
-                this.CaseIdField = value;
+                this.FileTypeCodeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
-        public string CourtRoom
+        public string FileContentBase64
         {
             get
             {
-                return this.CourtRoomField;
+                return this.FileContentBase64Field;
             }
             set
             {
-                this.CourtRoomField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime Date
-        {
-            get
-            {
-                return this.DateField;
-            }
-            set
-            {
-                this.DateField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> HearingId
-        {
-            get
-            {
-                return this.HearingIdField;
-            }
-            set
-            {
-                this.HearingIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string HearingResult
-        {
-            get
-            {
-                return this.HearingResultField;
-            }
-            set
-            {
-                this.HearingResultField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string HearingType
-        {
-            get
-            {
-                return this.HearingTypeField;
-            }
-            set
-            {
-                this.HearingTypeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public bool IsCanceled
-        {
-            get
-            {
-                return this.IsCanceledField;
-            }
-            set
-            {
-                this.IsCanceledField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string ProsecutorName
-        {
-            get
-            {
-                return this.ProsecutorNameField;
-            }
-            set
-            {
-                this.ProsecutorNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string SecretaryName
-        {
-            get
-            {
-                return this.SecretaryNameField;
-            }
-            set
-            {
-                this.SecretaryNameField = value;
+                this.FileContentBase64Field = value;
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="HearingParticipant", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class HearingParticipant : object
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "HearingDocument", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummaryHearingDocument))]
+    public partial class HearingDocument : object
     {
-        
+
+        private System.Nullable<System.Guid> HearingDocumentIdField;
+
+        private string HearingDocumentKindField;
+
         private System.Guid HearingIdField;
-        
-        private System.Nullable<System.Guid> HearingParticipantIdField;
-        
-        private string JudgeNameField;
-        
-        private string RoleField;
-        
-        private string SubstituteForField;
-        
-        private string SubstituteReasonField;
-        
+
+        private System.Guid SideIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> HearingDocumentId
+        {
+            get
+            {
+                return this.HearingDocumentIdField;
+            }
+            set
+            {
+                this.HearingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string HearingDocumentKind
+        {
+            get
+            {
+                return this.HearingDocumentKindField;
+            }
+            set
+            {
+                this.HearingDocumentKindField = value;
+            }
+        }
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid HearingId
         {
@@ -2496,395 +1960,7 @@ namespace Integration.Epep
                 this.HearingIdField = value;
             }
         }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> HearingParticipantId
-        {
-            get
-            {
-                return this.HearingParticipantIdField;
-            }
-            set
-            {
-                this.HearingParticipantIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string JudgeName
-        {
-            get
-            {
-                return this.JudgeNameField;
-            }
-            set
-            {
-                this.JudgeNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Role
-        {
-            get
-            {
-                return this.RoleField;
-            }
-            set
-            {
-                this.RoleField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string SubstituteFor
-        {
-            get
-            {
-                return this.SubstituteForField;
-            }
-            set
-            {
-                this.SubstituteForField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string SubstituteReason
-        {
-            get
-            {
-                return this.SubstituteReasonField;
-            }
-            set
-            {
-                this.SubstituteReasonField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Act", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Act : object
-    {
-        
-        private System.Nullable<System.Guid> ActIdField;
-        
-        private string ActKindCodeField;
-        
-        private System.Nullable<bool> CanBeSubjectToAppealField;
-        
-        private System.Guid CaseIdField;
-        
-        private System.Nullable<System.DateTime> DateInPowerField;
-        
-        private System.DateTime DateSignedField;
-        
-        private System.Nullable<bool> FinishingField;
-        
-        private System.Nullable<System.Guid> HearingIdField;
-        
-        private System.Nullable<System.DateTime> MotiveDateField;
-        
-        private System.Nullable<int> NumberField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> ActId
-        {
-            get
-            {
-                return this.ActIdField;
-            }
-            set
-            {
-                this.ActIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string ActKindCode
-        {
-            get
-            {
-                return this.ActKindCodeField;
-            }
-            set
-            {
-                this.ActKindCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<bool> CanBeSubjectToAppeal
-        {
-            get
-            {
-                return this.CanBeSubjectToAppealField;
-            }
-            set
-            {
-                this.CanBeSubjectToAppealField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.DateTime> DateInPower
-        {
-            get
-            {
-                return this.DateInPowerField;
-            }
-            set
-            {
-                this.DateInPowerField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime DateSigned
-        {
-            get
-            {
-                return this.DateSignedField;
-            }
-            set
-            {
-                this.DateSignedField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<bool> Finishing
-        {
-            get
-            {
-                return this.FinishingField;
-            }
-            set
-            {
-                this.FinishingField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> HearingId
-        {
-            get
-            {
-                return this.HearingIdField;
-            }
-            set
-            {
-                this.HearingIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.DateTime> MotiveDate
-        {
-            get
-            {
-                return this.MotiveDateField;
-            }
-            set
-            {
-                this.MotiveDateField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<int> Number
-        {
-            get
-            {
-                return this.NumberField;
-            }
-            set
-            {
-                this.NumberField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="ActPreparator", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class ActPreparator : object
-    {
-        
-        private System.Guid ActIdField;
-        
-        private System.Nullable<System.Guid> ActPreparatorIdField;
-        
-        private string JudgeNameField;
-        
-        private string RoleField;
-        
-        private string SubstituteForField;
-        
-        private string SubstituteReasonField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid ActId
-        {
-            get
-            {
-                return this.ActIdField;
-            }
-            set
-            {
-                this.ActIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> ActPreparatorId
-        {
-            get
-            {
-                return this.ActPreparatorIdField;
-            }
-            set
-            {
-                this.ActPreparatorIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string JudgeName
-        {
-            get
-            {
-                return this.JudgeNameField;
-            }
-            set
-            {
-                this.JudgeNameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Role
-        {
-            get
-            {
-                return this.RoleField;
-            }
-            set
-            {
-                this.RoleField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string SubstituteFor
-        {
-            get
-            {
-                return this.SubstituteForField;
-            }
-            set
-            {
-                this.SubstituteForField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string SubstituteReason
-        {
-            get
-            {
-                return this.SubstituteReasonField;
-            }
-            set
-            {
-                this.SubstituteReasonField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Appeal", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Appeal : object
-    {
-        
-        private System.Guid ActIdField;
-        
-        private System.Nullable<System.Guid> AppealIdField;
-        
-        private string AppealKindCodeField;
-        
-        private System.DateTime DateFiledField;
-        
-        private System.Guid SideIdField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid ActId
-        {
-            get
-            {
-                return this.ActIdField;
-            }
-            set
-            {
-                this.ActIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> AppealId
-        {
-            get
-            {
-                return this.AppealIdField;
-            }
-            set
-            {
-                this.AppealIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string AppealKindCode
-        {
-            get
-            {
-                return this.AppealKindCodeField;
-            }
-            set
-            {
-                this.AppealKindCodeField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime DateFiled
-        {
-            get
-            {
-                return this.DateFiledField;
-            }
-            set
-            {
-                this.DateFiledField = value;
-            }
-        }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid SideId
         {
@@ -2898,23 +1974,1553 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="CaseRuling", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class CaseRuling : object
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryHearingDocument", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummaryHearingDocument : Integration.Epep.HearingDocument
     {
-        
+
+        private Integration.Epep.SummaryFile[] FilesField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "UserAssignment", Namespace = "http://www.abbaty.com/eCase/v3")]
+    public partial class UserAssignment : object
+    {
+
+        private int AssignmentRoleField;
+
+        private System.DateTime DateField;
+
+        private bool IsActiveField;
+
+        private System.Guid SideIdField;
+
+        private System.Nullable<System.Guid> UserAssignmentIdField;
+
+        private System.Guid UserRegistrationIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int AssignmentRole
+        {
+            get
+            {
+                return this.AssignmentRoleField;
+            }
+            set
+            {
+                this.AssignmentRoleField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime Date
+        {
+            get
+            {
+                return this.DateField;
+            }
+            set
+            {
+                this.DateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public bool IsActive
+        {
+            get
+            {
+                return this.IsActiveField;
+            }
+            set
+            {
+                this.IsActiveField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid SideId
+        {
+            get
+            {
+                return this.SideIdField;
+            }
+            set
+            {
+                this.SideIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> UserAssignmentId
+        {
+            get
+            {
+                return this.UserAssignmentIdField;
+            }
+            set
+            {
+                this.UserAssignmentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid UserRegistrationId
+        {
+            get
+            {
+                return this.UserRegistrationIdField;
+            }
+            set
+            {
+                this.UserRegistrationIdField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "UserRegistration", Namespace = "http://www.abbaty.com/eCase/v3")]
+    public partial class UserRegistration : object
+    {
+
+        private string AddressField;
+
+        private string EmailField;
+
+        private string LawyerNumberField;
+
+        private System.DateTime ModifyDateField;
+
+        private string NameField;
+
+        private string UICField;
+
+        private System.Guid UserRegistrationIdField;
+
+        private int UserTypeField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Address
+        {
+            get
+            {
+                return this.AddressField;
+            }
+            set
+            {
+                this.AddressField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Email
+        {
+            get
+            {
+                return this.EmailField;
+            }
+            set
+            {
+                this.EmailField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string LawyerNumber
+        {
+            get
+            {
+                return this.LawyerNumberField;
+            }
+            set
+            {
+                this.LawyerNumberField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime ModifyDate
+        {
+            get
+            {
+                return this.ModifyDateField;
+            }
+            set
+            {
+                this.ModifyDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Name
+        {
+            get
+            {
+                return this.NameField;
+            }
+            set
+            {
+                this.NameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string UIC
+        {
+            get
+            {
+                return this.UICField;
+            }
+            set
+            {
+                this.UICField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid UserRegistrationId
+        {
+            get
+            {
+                return this.UserRegistrationIdField;
+            }
+            set
+            {
+                this.UserRegistrationIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int UserType
+        {
+            get
+            {
+                return this.UserTypeField;
+            }
+            set
+            {
+                this.UserTypeField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummonReadTimeResult", Namespace = "http://www.abbaty.com/eCase/v3")]
+    public partial class SummonReadTimeResult : object
+    {
+
+        private bool IsReadField;
+
+        private System.Nullable<System.DateTime> ReadDateField;
+
+        private System.Nullable<System.DateTime> VacationEndDateField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public bool IsRead
+        {
+            get
+            {
+                return this.IsReadField;
+            }
+            set
+            {
+                this.IsReadField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> ReadDate
+        {
+            get
+            {
+                return this.ReadDateField;
+            }
+            set
+            {
+                this.ReadDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> VacationEndDate
+        {
+            get
+            {
+                return this.VacationEndDateField;
+            }
+            set
+            {
+                this.VacationEndDateField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "ElectronicDocument", Namespace = "http://www.abbaty.com/eCase/v3")]
+    public partial class ElectronicDocument : object
+    {
+
+        private System.Nullable<int> BaseAmountField;
+
+        private System.Nullable<System.Guid> CaseIdField;
+
+        private string CourtCodeField;
+
+        private string CurrencyCodeField;
+
+        private System.DateTime DateApplyField;
+
+        private System.DateTime? DatePaidField;
+
+        private System.Nullable<int> PaymentKindField;
+
+        private string DescriptionField;
+
+        private string DocumentKindField;
+
+        private string DocumentTypeField;
+
+        private System.Guid ElectronicDocumentIdField;
+
+        private Integration.Epep.ElectronicDocumentFile[] FilesField;
+
+        private string NumberApplyField;
+
+        private string PricelistCodeField;
+
+        private System.Nullable<System.Guid> SideIdField;
+
+        private Integration.Epep.ElectronicDocumentSide[] SidesField;
+
+        private System.Nullable<int> TaxAmountField;
+
+        private System.Guid UserRegistrationIdField;
+
+        private string DocumentRequestTypeField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<int> BaseAmount
+        {
+            get
+            {
+                return this.BaseAmountField;
+            }
+            set
+            {
+                this.BaseAmountField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CourtCode
+        {
+            get
+            {
+                return this.CourtCodeField;
+            }
+            set
+            {
+                this.CourtCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CurrencyCode
+        {
+            get
+            {
+                return this.CurrencyCodeField;
+            }
+            set
+            {
+                this.CurrencyCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime DateApply
+        {
+            get
+            {
+                return this.DateApplyField;
+            }
+            set
+            {
+                this.DateApplyField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime? DatePaid
+        {
+            get
+            {
+                return this.DatePaidField;
+            }
+            set
+            {
+                this.DatePaidField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Description
+        {
+            get
+            {
+                return this.DescriptionField;
+            }
+            set
+            {
+                this.DescriptionField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string DocumentKind
+        {
+            get
+            {
+                return this.DocumentKindField;
+            }
+            set
+            {
+                this.DocumentKindField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string DocumentType
+        {
+            get
+            {
+                return this.DocumentTypeField;
+            }
+            set
+            {
+                this.DocumentTypeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid ElectronicDocumentId
+        {
+            get
+            {
+                return this.ElectronicDocumentIdField;
+            }
+            set
+            {
+                this.ElectronicDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.ElectronicDocumentFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string NumberApply
+        {
+            get
+            {
+                return this.NumberApplyField;
+            }
+            set
+            {
+                this.NumberApplyField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string PricelistCode
+        {
+            get
+            {
+                return this.PricelistCodeField;
+            }
+            set
+            {
+                this.PricelistCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> SideId
+        {
+            get
+            {
+                return this.SideIdField;
+            }
+            set
+            {
+                this.SideIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.ElectronicDocumentSide[] Sides
+        {
+            get
+            {
+                return this.SidesField;
+            }
+            set
+            {
+                this.SidesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<int> TaxAmount
+        {
+            get
+            {
+                return this.TaxAmountField;
+            }
+            set
+            {
+                this.TaxAmountField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid UserRegistrationId
+        {
+            get
+            {
+                return this.UserRegistrationIdField;
+            }
+            set
+            {
+                this.UserRegistrationIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<int> PaymentKind
+        {
+            get
+            {
+                return this.PaymentKindField;
+            }
+            set
+            {
+                this.PaymentKindField = value;
+            }
+        }
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string DocumentRequestType
+        {
+            get
+            {
+                return this.DocumentRequestTypeField;
+            }
+            set
+            {
+                this.DocumentRequestTypeField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "ElectronicDocumentFile", Namespace = "http://www.abbaty.com/eCase/v3")]
+    public partial class ElectronicDocumentFile : object
+    {
+
+        private int AttachmentTypeField;
+
+        private byte[] ContentField;
+
+        private string FileNameField;
+
+        private long FileSizeField;
+
+        private string TitleField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int AttachmentType
+        {
+            get
+            {
+                return this.AttachmentTypeField;
+            }
+            set
+            {
+                this.AttachmentTypeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public byte[] Content
+        {
+            get
+            {
+                return this.ContentField;
+            }
+            set
+            {
+                this.ContentField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string FileName
+        {
+            get
+            {
+                return this.FileNameField;
+            }
+            set
+            {
+                this.FileNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public long FileSize
+        {
+            get
+            {
+                return this.FileSizeField;
+            }
+            set
+            {
+                this.FileSizeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Title
+        {
+            get
+            {
+                return this.TitleField;
+            }
+            set
+            {
+                this.TitleField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "ElectronicDocumentSide", Namespace = "http://www.abbaty.com/eCase/v3")]
+    public partial class ElectronicDocumentSide : object
+    {
+
+        private System.Guid ElectronicDocumentSideIdField;
+
+        private Integration.Epep.Entity EntityField;
+
+        private Integration.Epep.Person PersonField;
+
+        private string SideInvolvementKindField;
+
+        private System.Guid? RepresentsSideIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid ElectronicDocumentSideId
+        {
+            get
+            {
+                return this.ElectronicDocumentSideIdField;
+            }
+            set
+            {
+                this.ElectronicDocumentSideIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Entity Entity
+        {
+            get
+            {
+                return this.EntityField;
+            }
+            set
+            {
+                this.EntityField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Person Person
+        {
+            get
+            {
+                return this.PersonField;
+            }
+            set
+            {
+                this.PersonField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SideInvolvementKind
+        {
+            get
+            {
+                return this.SideInvolvementKindField;
+            }
+            set
+            {
+                this.SideInvolvementKindField = value;
+            }
+        }
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid? RepresentsSideId
+        {
+            get
+            {
+                return this.RepresentsSideIdField;
+            }
+            set
+            {
+                this.RepresentsSideIdField = value;
+            }
+        }
+
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Case", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummaryCase))]
+    public partial class Case : object
+    {
+
+        private string CaseCodeField;
+
+        private System.Nullable<System.Guid> CaseIdField;
+
+        private string CaseKindCodeField;
+
+        private string CaseTypeCodeField;
+
+        private int CaseYearField;
+
+        private string CourtCodeField;
+
+        private string DepartmentNameField;
+
+        private System.DateTime FormationDateField;
+
+        private System.Nullable<System.Guid> IncomingDocumentIdField;
+
+        private string LegalSubjectField;
+
+        private int NumberField;
+
+        private string PanelNameField;
+
+        private System.Nullable<bool> RestrictedAccessField;
+
+        private string StatisticCodeField;
+
+        private string StatusField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseCode
+        {
+            get
+            {
+                return this.CaseCodeField;
+            }
+            set
+            {
+                this.CaseCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseKindCode
+        {
+            get
+            {
+                return this.CaseKindCodeField;
+            }
+            set
+            {
+                this.CaseKindCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseTypeCode
+        {
+            get
+            {
+                return this.CaseTypeCodeField;
+            }
+            set
+            {
+                this.CaseTypeCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int CaseYear
+        {
+            get
+            {
+                return this.CaseYearField;
+            }
+            set
+            {
+                this.CaseYearField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CourtCode
+        {
+            get
+            {
+                return this.CourtCodeField;
+            }
+            set
+            {
+                this.CourtCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string DepartmentName
+        {
+            get
+            {
+                return this.DepartmentNameField;
+            }
+            set
+            {
+                this.DepartmentNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime FormationDate
+        {
+            get
+            {
+                return this.FormationDateField;
+            }
+            set
+            {
+                this.FormationDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> IncomingDocumentId
+        {
+            get
+            {
+                return this.IncomingDocumentIdField;
+            }
+            set
+            {
+                this.IncomingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string LegalSubject
+        {
+            get
+            {
+                return this.LegalSubjectField;
+            }
+            set
+            {
+                this.LegalSubjectField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int Number
+        {
+            get
+            {
+                return this.NumberField;
+            }
+            set
+            {
+                this.NumberField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string PanelName
+        {
+            get
+            {
+                return this.PanelNameField;
+            }
+            set
+            {
+                this.PanelNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<bool> RestrictedAccess
+        {
+            get
+            {
+                return this.RestrictedAccessField;
+            }
+            set
+            {
+                this.RestrictedAccessField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string StatisticCode
+        {
+            get
+            {
+                return this.StatisticCodeField;
+            }
+            set
+            {
+                this.StatisticCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Status
+        {
+            get
+            {
+                return this.StatusField;
+            }
+            set
+            {
+                this.StatusField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryCase", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummaryCase : Integration.Epep.Case
+    {
+
+        private Integration.Epep.SummaryAct[] ActsField;
+
+        private Integration.Epep.SummaryAssignment[] AssignmentsField;
+
+        private string CaseCodeNameField;
+
+        private string CaseKindNameField;
+
+        private string CaseTypeNameField;
+
+        private Integration.Epep.SummaryConnectedCaseVM[] ConnectedCasesField;
+
+        private string CourtNameField;
+
+        private Integration.Epep.SummaryDocument[] DocumentsField;
+
+        private Integration.Epep.SummaryHearing[] HearingsField;
+
+        private Integration.Epep.SummaryDocument IncomingDocumentField;
+
+        private Integration.Epep.SummaryFile[] ScannedFilesField;
+
+        private Integration.Epep.SummarySide[] SidesField;
+
+        private Integration.Epep.SummarySummon[] SummonsField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryAct[] Acts
+        {
+            get
+            {
+                return this.ActsField;
+            }
+            set
+            {
+                this.ActsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryAssignment[] Assignments
+        {
+            get
+            {
+                return this.AssignmentsField;
+            }
+            set
+            {
+                this.AssignmentsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseCodeName
+        {
+            get
+            {
+                return this.CaseCodeNameField;
+            }
+            set
+            {
+                this.CaseCodeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseKindName
+        {
+            get
+            {
+                return this.CaseKindNameField;
+            }
+            set
+            {
+                this.CaseKindNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseTypeName
+        {
+            get
+            {
+                return this.CaseTypeNameField;
+            }
+            set
+            {
+                this.CaseTypeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryConnectedCaseVM[] ConnectedCases
+        {
+            get
+            {
+                return this.ConnectedCasesField;
+            }
+            set
+            {
+                this.ConnectedCasesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CourtName
+        {
+            get
+            {
+                return this.CourtNameField;
+            }
+            set
+            {
+                this.CourtNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryDocument[] Documents
+        {
+            get
+            {
+                return this.DocumentsField;
+            }
+            set
+            {
+                this.DocumentsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryHearing[] Hearings
+        {
+            get
+            {
+                return this.HearingsField;
+            }
+            set
+            {
+                this.HearingsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryDocument IncomingDocument
+        {
+            get
+            {
+                return this.IncomingDocumentField;
+            }
+            set
+            {
+                this.IncomingDocumentField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] ScannedFiles
+        {
+            get
+            {
+                return this.ScannedFilesField;
+            }
+            set
+            {
+                this.ScannedFilesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummarySide[] Sides
+        {
+            get
+            {
+                return this.SidesField;
+            }
+            set
+            {
+                this.SidesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummarySummon[] Summons
+        {
+            get
+            {
+                return this.SummonsField;
+            }
+            set
+            {
+                this.SummonsField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryDocument", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummaryDocument : object
+    {
+
+        private System.DateTime DateField;
+
+        private int DirectionField;
+
+        private string DocumentTypeCodeField;
+
+        private string DocumentTypeNameField;
+
+        private Integration.Epep.Entity EntityField;
+
+        private Integration.Epep.SummaryFile[] FilesField;
+
+        private System.Guid GidField;
+
+        private int NumberField;
+
+        private Integration.Epep.Person PersonField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime Date
+        {
+            get
+            {
+                return this.DateField;
+            }
+            set
+            {
+                this.DateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int Direction
+        {
+            get
+            {
+                return this.DirectionField;
+            }
+            set
+            {
+                this.DirectionField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string DocumentTypeCode
+        {
+            get
+            {
+                return this.DocumentTypeCodeField;
+            }
+            set
+            {
+                this.DocumentTypeCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string DocumentTypeName
+        {
+            get
+            {
+                return this.DocumentTypeNameField;
+            }
+            set
+            {
+                this.DocumentTypeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Entity Entity
+        {
+            get
+            {
+                return this.EntityField;
+            }
+            set
+            {
+                this.EntityField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid Gid
+        {
+            get
+            {
+                return this.GidField;
+            }
+            set
+            {
+                this.GidField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int Number
+        {
+            get
+            {
+                return this.NumberField;
+            }
+            set
+            {
+                this.NumberField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Person Person
+        {
+            get
+            {
+                return this.PersonField;
+            }
+            set
+            {
+                this.PersonField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryAct", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummaryAct : Integration.Epep.Act
+    {
+
+        private string ActKindNameField;
+
+        private Integration.Epep.SummaryFile[] FilesField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ActKindName
+        {
+            get
+            {
+                return this.ActKindNameField;
+            }
+            set
+            {
+                this.ActKindNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryAssignment", Namespace = "http://schemas.datacontract.org/2004/07/eCase.Domain.Service.Entities.Upgrade")]
+    public partial class SummaryAssignment : Integration.Epep.Assignment
+    {
+
+        private Integration.Epep.SummaryFile[] FilesField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryConnectedCaseVM", Namespace = "http://schemas.datacontract.org/2004/07/eCase.Domain.Service.Entities.Upgrade")]
+    public partial class SummaryConnectedCaseVM : object
+    {
+
+        private string CaseKindNameField;
+
+        private int CaseYearField;
+
+        private string CourtNameField;
+
+        private System.Guid GidField;
+
+        private int NumberField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CaseKindName
+        {
+            get
+            {
+                return this.CaseKindNameField;
+            }
+            set
+            {
+                this.CaseKindNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int CaseYear
+        {
+            get
+            {
+                return this.CaseYearField;
+            }
+            set
+            {
+                this.CaseYearField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CourtName
+        {
+            get
+            {
+                return this.CourtNameField;
+            }
+            set
+            {
+                this.CourtNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid Gid
+        {
+            get
+            {
+                return this.GidField;
+            }
+            set
+            {
+                this.GidField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int Number
+        {
+            get
+            {
+                return this.NumberField;
+            }
+            set
+            {
+                this.NumberField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "SummaryHearing", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class SummaryHearing : Integration.Epep.Hearing
+    {
+
+        private Integration.Epep.SummaryFile[] FilesField;
+
+        private Integration.Epep.SummaryHearingDocument[] HearingDocumentsField;
+
+        private Integration.Epep.HearingParticipant[] ParticipantsField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryFile[] Files
+        {
+            get
+            {
+                return this.FilesField;
+            }
+            set
+            {
+                this.FilesField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.SummaryHearingDocument[] HearingDocuments
+        {
+            get
+            {
+                return this.HearingDocumentsField;
+            }
+            set
+            {
+                this.HearingDocumentsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.HearingParticipant[] Participants
+        {
+            get
+            {
+                return this.ParticipantsField;
+            }
+            set
+            {
+                this.ParticipantsField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Act", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummaryAct))]
+    public partial class Act : object
+    {
+
         private System.Nullable<System.Guid> ActIdField;
-        
+
+        private string ActKindCodeField;
+
         private System.Guid CaseIdField;
-        
-        private System.Nullable<System.Guid> CaseRulingIdField;
-        
-        private string CaseRulingKindCodeField;
-        
+
+        private System.Nullable<System.DateTime> DateInPowerField;
+
+        private System.DateTime DateSignedField;
+
         private System.Nullable<System.Guid> HearingIdField;
-        
+
+        private System.Nullable<System.DateTime> MotiveDateField;
+
+        private System.Nullable<int> NumberField;
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> ActId
         {
@@ -2927,7 +3533,20 @@ namespace Integration.Epep
                 this.ActIdField = value;
             }
         }
-        
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ActKindCode
+        {
+            get
+            {
+                return this.ActKindCodeField;
+            }
+            set
+            {
+                this.ActKindCodeField = value;
+            }
+        }
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Guid CaseId
         {
@@ -2940,7 +3559,1334 @@ namespace Integration.Epep
                 this.CaseIdField = value;
             }
         }
-        
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> DateInPower
+        {
+            get
+            {
+                return this.DateInPowerField;
+            }
+            set
+            {
+                this.DateInPowerField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime DateSigned
+        {
+            get
+            {
+                return this.DateSignedField;
+            }
+            set
+            {
+                this.DateSignedField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> HearingId
+        {
+            get
+            {
+                return this.HearingIdField;
+            }
+            set
+            {
+                this.HearingIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> MotiveDate
+        {
+            get
+            {
+                return this.MotiveDateField;
+            }
+            set
+            {
+                this.MotiveDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<int> Number
+        {
+            get
+            {
+                return this.NumberField;
+            }
+            set
+            {
+                this.NumberField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Assignment", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummaryAssignment))]
+    public partial class Assignment : object
+    {
+
+        private System.Nullable<System.Guid> AssignmentIdField;
+
+        private string AssignorField;
+
+        private System.Guid CaseIdField;
+
+        private System.DateTime DateField;
+
+        private System.Guid IncomingDocumentIdField;
+
+        private string JudgeNameField;
+
+        private string TypeField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> AssignmentId
+        {
+            get
+            {
+                return this.AssignmentIdField;
+            }
+            set
+            {
+                this.AssignmentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Assignor
+        {
+            get
+            {
+                return this.AssignorField;
+            }
+            set
+            {
+                this.AssignorField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime Date
+        {
+            get
+            {
+                return this.DateField;
+            }
+            set
+            {
+                this.DateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid IncomingDocumentId
+        {
+            get
+            {
+                return this.IncomingDocumentIdField;
+            }
+            set
+            {
+                this.IncomingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string JudgeName
+        {
+            get
+            {
+                return this.JudgeNameField;
+            }
+            set
+            {
+                this.JudgeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Type
+        {
+            get
+            {
+                return this.TypeField;
+            }
+            set
+            {
+                this.TypeField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Hearing", Namespace = "http://www.abbaty.com/eCase/v2")]
+    [System.Runtime.Serialization.KnownTypeAttribute(typeof(Integration.Epep.SummaryHearing))]
+    public partial class Hearing : object
+    {
+
+        private System.Guid CaseIdField;
+
+        private string CourtRoomField;
+
+        private System.DateTime DateField;
+
+        private System.Nullable<System.Guid> HearingIdField;
+
+        private string HearingResultField;
+
+        private string HearingTypeField;
+
+        private bool IsCanceledField;
+
+        private string ProsecutorNameField;
+
+        private string SecretaryNameField;
+
+        private string VideoUrlField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CourtRoom
+        {
+            get
+            {
+                return this.CourtRoomField;
+            }
+            set
+            {
+                this.CourtRoomField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime Date
+        {
+            get
+            {
+                return this.DateField;
+            }
+            set
+            {
+                this.DateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> HearingId
+        {
+            get
+            {
+                return this.HearingIdField;
+            }
+            set
+            {
+                this.HearingIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string HearingResult
+        {
+            get
+            {
+                return this.HearingResultField;
+            }
+            set
+            {
+                this.HearingResultField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string HearingType
+        {
+            get
+            {
+                return this.HearingTypeField;
+            }
+            set
+            {
+                this.HearingTypeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public bool IsCanceled
+        {
+            get
+            {
+                return this.IsCanceledField;
+            }
+            set
+            {
+                this.IsCanceledField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ProsecutorName
+        {
+            get
+            {
+                return this.ProsecutorNameField;
+            }
+            set
+            {
+                this.ProsecutorNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SecretaryName
+        {
+            get
+            {
+                return this.SecretaryNameField;
+            }
+            set
+            {
+                this.SecretaryNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string VideoUrl
+        {
+            get
+            {
+                return this.VideoUrlField;
+            }
+            set
+            {
+                this.VideoUrlField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "HearingParticipant", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class HearingParticipant : object
+    {
+
+        private System.Guid HearingIdField;
+
+        private System.Nullable<System.Guid> HearingParticipantIdField;
+
+        private string JudgeNameField;
+
+        private string RoleField;
+
+        private string SubstituteForField;
+
+        private string SubstituteReasonField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid HearingId
+        {
+            get
+            {
+                return this.HearingIdField;
+            }
+            set
+            {
+                this.HearingIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> HearingParticipantId
+        {
+            get
+            {
+                return this.HearingParticipantIdField;
+            }
+            set
+            {
+                this.HearingParticipantIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string JudgeName
+        {
+            get
+            {
+                return this.JudgeNameField;
+            }
+            set
+            {
+                this.JudgeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Role
+        {
+            get
+            {
+                return this.RoleField;
+            }
+            set
+            {
+                this.RoleField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SubstituteFor
+        {
+            get
+            {
+                return this.SubstituteForField;
+            }
+            set
+            {
+                this.SubstituteForField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SubstituteReason
+        {
+            get
+            {
+                return this.SubstituteReasonField;
+            }
+            set
+            {
+                this.SubstituteReasonField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "CaseMigrationRegistration", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class CaseMigrationRegistration : object
+    {
+
+        private System.Nullable<System.Guid> ActIdField;
+
+        private System.Guid CaseIdField;
+
+        private System.Nullable<System.DateTime> CreateDateField;
+
+        private string DescriptionField;
+
+        private string FromCourtField;
+
+        private System.Guid[] IncomingDocumentsField;
+
+        private string MigrationTypeField;
+
+        private System.Guid OutgoingDocumentIdField;
+
+        private string ToCourtField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> ActId
+        {
+            get
+            {
+                return this.ActIdField;
+            }
+            set
+            {
+                this.ActIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> CreateDate
+        {
+            get
+            {
+                return this.CreateDateField;
+            }
+            set
+            {
+                this.CreateDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Description
+        {
+            get
+            {
+                return this.DescriptionField;
+            }
+            set
+            {
+                this.DescriptionField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string FromCourt
+        {
+            get
+            {
+                return this.FromCourtField;
+            }
+            set
+            {
+                this.FromCourtField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid[] IncomingDocuments
+        {
+            get
+            {
+                return this.IncomingDocumentsField;
+            }
+            set
+            {
+                this.IncomingDocumentsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string MigrationType
+        {
+            get
+            {
+                return this.MigrationTypeField;
+            }
+            set
+            {
+                this.MigrationTypeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid OutgoingDocumentId
+        {
+            get
+            {
+                return this.OutgoingDocumentIdField;
+            }
+            set
+            {
+                this.OutgoingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ToCourt
+        {
+            get
+            {
+                return this.ToCourtField;
+            }
+            set
+            {
+                this.ToCourtField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "CaseMigrationResult", Namespace = "http://www.is-bg.net/eCase/v4")]
+    public partial class CaseMigrationResult : object
+    {
+
+        private System.Nullable<System.Guid> CaseIdField;
+
+        private System.Guid GidField;
+
+        private bool HasResultCaseField;
+
+        private System.Guid OutgoingDocumentIdField;
+
+        private System.Nullable<System.Guid> ResultActIdField;
+
+        private System.Nullable<System.DateTime> ResultDateField;
+
+        private string[] ResultsField;
+
+        private System.Nullable<System.DateTime> StartDateField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid Gid
+        {
+            get
+            {
+                return this.GidField;
+            }
+            set
+            {
+                this.GidField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public bool HasResultCase
+        {
+            get
+            {
+                return this.HasResultCaseField;
+            }
+            set
+            {
+                this.HasResultCaseField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid OutgoingDocumentId
+        {
+            get
+            {
+                return this.OutgoingDocumentIdField;
+            }
+            set
+            {
+                this.OutgoingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> ResultActId
+        {
+            get
+            {
+                return this.ResultActIdField;
+            }
+            set
+            {
+                this.ResultActIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> ResultDate
+        {
+            get
+            {
+                return this.ResultDateField;
+            }
+            set
+            {
+                this.ResultDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string[] Results
+        {
+            get
+            {
+                return this.ResultsField;
+            }
+            set
+            {
+                this.ResultsField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> StartDate
+        {
+            get
+            {
+                return this.StartDateField;
+            }
+            set
+            {
+                this.StartDateField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "IncomingDocument", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class IncomingDocument : object
+    {
+
+        private System.Nullable<System.Guid> CaseIdField;
+
+        private string CourtCodeField;
+
+        private System.Nullable<System.Guid> ElectronicDocumentIdField;
+
+        private Integration.Epep.Entity EntityField;
+
+        private System.DateTime IncomingDateField;
+
+        private System.Nullable<System.Guid> IncomingDocumentIdField;
+
+        private string IncomingDocumentTypeCodeField;
+
+        private int IncomingNumberField;
+
+        private Integration.Epep.Person PersonField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string CourtCode
+        {
+            get
+            {
+                return this.CourtCodeField;
+            }
+            set
+            {
+                this.CourtCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> ElectronicDocumentId
+        {
+            get
+            {
+                return this.ElectronicDocumentIdField;
+            }
+            set
+            {
+                this.ElectronicDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Entity Entity
+        {
+            get
+            {
+                return this.EntityField;
+            }
+            set
+            {
+                this.EntityField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime IncomingDate
+        {
+            get
+            {
+                return this.IncomingDateField;
+            }
+            set
+            {
+                this.IncomingDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> IncomingDocumentId
+        {
+            get
+            {
+                return this.IncomingDocumentIdField;
+            }
+            set
+            {
+                this.IncomingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string IncomingDocumentTypeCode
+        {
+            get
+            {
+                return this.IncomingDocumentTypeCodeField;
+            }
+            set
+            {
+                this.IncomingDocumentTypeCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int IncomingNumber
+        {
+            get
+            {
+                return this.IncomingNumberField;
+            }
+            set
+            {
+                this.IncomingNumberField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Person Person
+        {
+            get
+            {
+                return this.PersonField;
+            }
+            set
+            {
+                this.PersonField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "OutgoingDocument", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class OutgoingDocument : object
+    {
+
+        private System.Nullable<System.Guid> CaseIdField;
+
+        private Integration.Epep.Entity EntityField;
+
+        private System.Nullable<System.DateTime> OutgoingDateField;
+
+        private System.Nullable<System.Guid> OutgoingDocumentIdField;
+
+        private string OutgoingDocumentTypeCodeField;
+
+        private int OutgoingNumberField;
+
+        private Integration.Epep.Person PersonField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Entity Entity
+        {
+            get
+            {
+                return this.EntityField;
+            }
+            set
+            {
+                this.EntityField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> OutgoingDate
+        {
+            get
+            {
+                return this.OutgoingDateField;
+            }
+            set
+            {
+                this.OutgoingDateField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> OutgoingDocumentId
+        {
+            get
+            {
+                return this.OutgoingDocumentIdField;
+            }
+            set
+            {
+                this.OutgoingDocumentIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string OutgoingDocumentTypeCode
+        {
+            get
+            {
+                return this.OutgoingDocumentTypeCodeField;
+            }
+            set
+            {
+                this.OutgoingDocumentTypeCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public int OutgoingNumber
+        {
+            get
+            {
+                return this.OutgoingNumberField;
+            }
+            set
+            {
+                this.OutgoingNumberField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Person Person
+        {
+            get
+            {
+                return this.PersonField;
+            }
+            set
+            {
+                this.PersonField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "ConnectedCase", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class ConnectedCase : object
+    {
+
+        private System.Guid CaseIdField;
+
+        private string ConnectedCaseTypeCodeField;
+
+        private System.Guid PredecessorCaseIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ConnectedCaseTypeCode
+        {
+            get
+            {
+                return this.ConnectedCaseTypeCodeField;
+            }
+            set
+            {
+                this.ConnectedCaseTypeCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid PredecessorCaseId
+        {
+            get
+            {
+                return this.PredecessorCaseIdField;
+            }
+            set
+            {
+                this.PredecessorCaseIdField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Reporter", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class Reporter : object
+    {
+
+        private System.Guid CaseIdField;
+
+        private System.DateTime DateAssignedField;
+
+        private System.Nullable<System.DateTime> DateReplacedField;
+
+        private string JudgeNameField;
+
+        private string ReasonReplacedField;
+
+        private System.Nullable<System.Guid> ReporterIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime DateAssigned
+        {
+            get
+            {
+                return this.DateAssignedField;
+            }
+            set
+            {
+                this.DateAssignedField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> DateReplaced
+        {
+            get
+            {
+                return this.DateReplacedField;
+            }
+            set
+            {
+                this.DateReplacedField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string JudgeName
+        {
+            get
+            {
+                return this.JudgeNameField;
+            }
+            set
+            {
+                this.JudgeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ReasonReplaced
+        {
+            get
+            {
+                return this.ReasonReplacedField;
+            }
+            set
+            {
+                this.ReasonReplacedField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> ReporterId
+        {
+            get
+            {
+                return this.ReporterIdField;
+            }
+            set
+            {
+                this.ReporterIdField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "ActPreparator", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class ActPreparator : object
+    {
+
+        private System.Guid ActIdField;
+
+        private System.Nullable<System.Guid> ActPreparatorIdField;
+
+        private string JudgeNameField;
+
+        private string RoleField;
+
+        private string SubstituteForField;
+
+        private string SubstituteReasonField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid ActId
+        {
+            get
+            {
+                return this.ActIdField;
+            }
+            set
+            {
+                this.ActIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> ActPreparatorId
+        {
+            get
+            {
+                return this.ActPreparatorIdField;
+            }
+            set
+            {
+                this.ActPreparatorIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string JudgeName
+        {
+            get
+            {
+                return this.JudgeNameField;
+            }
+            set
+            {
+                this.JudgeNameField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Role
+        {
+            get
+            {
+                return this.RoleField;
+            }
+            set
+            {
+                this.RoleField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SubstituteFor
+        {
+            get
+            {
+                return this.SubstituteForField;
+            }
+            set
+            {
+                this.SubstituteForField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SubstituteReason
+        {
+            get
+            {
+                return this.SubstituteReasonField;
+            }
+            set
+            {
+                this.SubstituteReasonField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Appeal", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class Appeal : object
+    {
+
+        private System.Guid ActIdField;
+
+        private System.Nullable<System.Guid> AppealIdField;
+
+        private string AppealKindCodeField;
+
+        private System.DateTime DateFiledField;
+
+        private System.Guid SideIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid ActId
+        {
+            get
+            {
+                return this.ActIdField;
+            }
+            set
+            {
+                this.ActIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> AppealId
+        {
+            get
+            {
+                return this.AppealIdField;
+            }
+            set
+            {
+                this.AppealIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string AppealKindCode
+        {
+            get
+            {
+                return this.AppealKindCodeField;
+            }
+            set
+            {
+                this.AppealKindCodeField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime DateFiled
+        {
+            get
+            {
+                return this.DateFiledField;
+            }
+            set
+            {
+                this.DateFiledField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid SideId
+        {
+            get
+            {
+                return this.SideIdField;
+            }
+            set
+            {
+                this.SideIdField = value;
+            }
+        }
+    }
+
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "CaseRuling", Namespace = "http://www.abbaty.com/eCase/v2")]
+    public partial class CaseRuling : object
+    {
+
+        private System.Nullable<System.Guid> ActIdField;
+
+        private System.Guid CaseIdField;
+
+        private System.Nullable<System.Guid> CaseRulingIdField;
+
+        private string CaseRulingKindCodeField;
+
+        private System.Nullable<System.Guid> HearingIdField;
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> ActId
+        {
+            get
+            {
+                return this.ActIdField;
+            }
+            set
+            {
+                this.ActIdField = value;
+            }
+        }
+
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> CaseRulingId
         {
@@ -2953,7 +4899,7 @@ namespace Integration.Epep
                 this.CaseRulingIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string CaseRulingKindCode
         {
@@ -2966,7 +4912,7 @@ namespace Integration.Epep
                 this.CaseRulingKindCodeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> HearingId
         {
@@ -2980,21 +4926,21 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Lawyer", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "Lawyer", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class Lawyer : object
     {
-        
+
         private string CollegeField;
-        
+
         private System.Nullable<System.Guid> LawyerIdField;
-        
+
         private string NameField;
-        
+
         private string NumberField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string College
         {
@@ -3007,7 +4953,7 @@ namespace Integration.Epep
                 this.CollegeField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> LawyerId
         {
@@ -3020,7 +4966,7 @@ namespace Integration.Epep
                 this.LawyerIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Name
         {
@@ -3033,7 +4979,7 @@ namespace Integration.Epep
                 this.NameField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public string Number
         {
@@ -3047,19 +4993,19 @@ namespace Integration.Epep
             }
         }
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="UserRegistrationInfo", Namespace="http://www.abbaty.com/eCase/v2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name = "UserRegistrationInfo", Namespace = "http://www.abbaty.com/eCase/v2")]
     public partial class UserRegistrationInfo : object
     {
-        
+
         private bool IsRegisteredField;
-        
+
         private System.Nullable<System.Guid> LawyerRegistrationIdField;
-        
+
         private System.Nullable<System.Guid> PersonRegistrationIdField;
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public bool IsRegistered
         {
@@ -3072,7 +5018,7 @@ namespace Integration.Epep
                 this.IsRegisteredField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> LawyerRegistrationId
         {
@@ -3085,7 +5031,7 @@ namespace Integration.Epep
                 this.LawyerRegistrationIdField = value;
             }
         }
-        
+
         [System.Runtime.Serialization.DataMemberAttribute()]
         public System.Nullable<System.Guid> PersonRegistrationId
         {
@@ -3099,3065 +5045,3613 @@ namespace Integration.Epep
             }
         }
     }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.ServiceModel.ServiceContractAttribute(Namespace="http://www.abbaty.com/eCase/v2", ConfigurationName="Integration.Epep.IeCaseService")]
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
+    [System.ServiceModel.ServiceContractAttribute(Namespace = "http://www.abbaty.com/eCase/v2", ConfigurationName = "Integration.Epep.IeCaseService")]
     public interface IeCaseService
     {
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Side GetSideById(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Side> GetSideByIdAsync(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
         System.Guid[] GetSideIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetSideIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentByIdInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentByIdInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
         Integration.Epep.LawyerAssignment GetLawyerAssignmentById(System.Guid lawyerAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.LawyerAssignment> GetLawyerAssignmentByIdAsync(System.Guid lawyerAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
             "IdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
-            "IdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
+            "IdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetLawyerAssignmentIdentifiersBySideId(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerAssignmentIdentifiersBySide" +
             "IdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetLawyerAssignmentIdentifiersBySideIdAsync(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentByIdInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentByIdInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
         Integration.Epep.PersonAssignment GetPersonAssignmentById(System.Guid personAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PersonAssignment> GetPersonAssignmentByIdAsync(System.Guid personAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
             "IdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
-            "IdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
+            "IdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetPersonAssignmentIdentifiersBySideId(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonAssignmentIdentifiersBySide" +
             "IdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetPersonAssignmentIdentifiersBySideIdAsync(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationByIdInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationByIdInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
         Integration.Epep.LawyerRegistration GetLawyerRegistrationById(System.Guid lawyerRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.LawyerRegistration> GetLawyerRegistrationByIdAsync(System.Guid lawyerRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistrationInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistrationInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         Integration.Epep.LawyerRegistration SelectLawyerRegistration(string lawyerNumber);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistrationResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectLawyerRegistrationResponse")]
         System.Threading.Tasks.Task<Integration.Epep.LawyerRegistration> SelectLawyerRegistrationAsync(string lawyerNumber);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
-            "wyerId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
+            "wyerId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
             "wyerIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
-            "wyerIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
+            "wyerIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetLawyerRegistrationIdentifiersByLawyerId(System.Guid lawyerId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
-            "wyerId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
+            "wyerId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerRegistrationIdentifiersByLa" +
             "wyerIdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetLawyerRegistrationIdentifiersByLawyerIdAsync(System.Guid lawyerId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationByIdInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationByIdInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
         Integration.Epep.PersonRegistration GetPersonRegistrationById(System.Guid personRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PersonRegistration> GetPersonRegistrationByIdAsync(System.Guid personRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistrationInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistrationInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         Integration.Epep.PersonRegistration SelectPersonRegistration(string EGN);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistrationResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/SelectPersonRegistrationResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PersonRegistration> SelectPersonRegistrationAsync(string EGN);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
-            "sonAssignmentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
+            "sonAssignmentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
             "sonAssignmentIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
-            "sonAssignmentIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
+            "sonAssignmentIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPersonRegistrationIdentifierByPersonAssignmentId(System.Guid personassignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
-            "sonAssignmentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
+            "sonAssignmentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPersonRegistrationIdentifierByPer" +
             "sonAssignmentIdResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPersonRegistrationIdentifierByPersonAssignmentIdAsync(System.Guid personassignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Summon GetSummonById(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Summon> GetSummonByIdAsync(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentIdRespon" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentIdRespon" +
             "se")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentIdInfoca" +
-            "seFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentIdInfoca" +
+            "seFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetSummonIdentifiersByParentId(System.Guid parentId, string summonTypeCode);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentIdRespon" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonIdentifiersByParentIdRespon" +
             "se")]
         System.Threading.Tasks.Task<System.Guid[]> GetSummonIdentifiersByParentIdAsync(System.Guid parentId, string summonTypeCode);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentByIdInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentByIdInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
         Integration.Epep.ScannedDocument GetScannedDocumentById(System.Guid scannedDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.ScannedDocument> GetScannedDocumentByIdAsync(System.Guid scannedDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
-            "d", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
+            "d", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
             "dResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
-            "dInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
+            "dInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetScannedDocumentIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
-            "d", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
+            "d", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetScannedDocumentIdentifiersByCaseI" +
             "dResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetScannedDocumentIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileByIdInfocaseFaultFa" +
-            "ult", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileByIdInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
         Integration.Epep.AssignmentFile GetAssignmentFileById(System.Guid assignmentFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.AssignmentFile> GetAssignmentFileByIdAsync(System.Guid assignmentFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
-            "mentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
+            "mentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
             "mentIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
-            "mentIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
+            "mentIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetAssignmentFileIdentifiersByAssignmentId(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
-            "mentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
+            "mentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentFileIdentifiersByAssign" +
             "mentIdResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetAssignmentFileIdentifiersByAssignmentIdAsync(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileByIdInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileByIdInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
         Integration.Epep.PrivateProtocolFile GetPrivateProtocolFileById(System.Guid privateProtocolId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PrivateProtocolFile> GetPrivateProtocolFileByIdAsync(System.Guid privateProtocolId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
-            "aringId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
+            "aringId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
             "aringIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
-            "aringIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
+            "aringIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPrivateProtocolFileIdentifierByHearingId(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
-            "aringId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
+            "aringId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateProtocolFileIdentifierByHe" +
             "aringIdResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPrivateProtocolFileIdentifierByHearingIdAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileByIdInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileByIdInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
         Integration.Epep.PublicProtocolFile GetPublicProtocolFileById(System.Guid publicProtocolFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PublicProtocolFile> GetPublicProtocolFileByIdAsync(System.Guid publicProtocolFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
-            "ringId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
+            "ringId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
             "ringIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
-            "ringIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
+            "ringIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPublicProtocolFileIdentifierByHearingId(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
-            "ringId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
+            "ringId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicProtocolFileIdentifierByHea" +
             "ringIdResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPublicProtocolFileIdentifierByHearingIdAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileByIdInfocaseF" +
-            "aultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileByIdInfocaseF" +
+            "aultFault", Name = "InfocaseFault")]
         Integration.Epep.IncomingDocumentFile GetIncomingDocumentFileById(System.Guid incomingDocumentFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.IncomingDocumentFile> GetIncomingDocumentFileByIdAsync(System.Guid incomingDocumentFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
-            "ncomingDocumentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
+            "ncomingDocumentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
             "ncomingDocumentIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
-            "ncomingDocumentIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
+            "ncomingDocumentIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetIncomingDocumentFileIdentifierByIncomingDocumentId(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
-            "ncomingDocumentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
+            "ncomingDocumentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentFileIdentifierByI" +
             "ncomingDocumentIdResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetIncomingDocumentFileIdentifierByIncomingDocumentIdAsync(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileByIdInfocaseF" +
-            "aultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileByIdInfocaseF" +
+            "aultFault", Name = "InfocaseFault")]
         Integration.Epep.OutgoingDocumentFile GetOutgoingDocumentFileById(System.Guid outgoingDocumentFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.OutgoingDocumentFile> GetOutgoingDocumentFileByIdAsync(System.Guid outgoingDocumentFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
-            "utgoingDocumentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
+            "utgoingDocumentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
             "utgoingDocumentIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
-            "utgoingDocumentIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
+            "utgoingDocumentIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetOutgoingDocumentFileIdentifierByOutgoingDocumentId(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
-            "utgoingDocumentId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
+            "utgoingDocumentId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentFileIdentifierByO" +
             "utgoingDocumentIdResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetOutgoingDocumentFileIdentifierByOutgoingDocumentIdAsync(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.SummonFile GetSummonFileById(System.Guid summonFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.SummonFile> GetSummonFileByIdAsync(System.Guid summonFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonIdRes" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonIdRes" +
             "ponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonIdInf" +
-            "ocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonIdInf" +
+            "ocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetSummonFileIdentifierBySummonId(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonIdRes" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonFileIdentifierBySummonIdRes" +
             "ponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetSummonFileIdentifierBySummonIdAsync(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileByIdInfocaseFaultFa" +
-            "ult", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileByIdInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
         Integration.Epep.PrivateActFile GetPrivateActFileById(System.Guid privateActFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PrivateActFile> GetPrivateActFileByIdAsync(System.Guid privateActFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActIdR" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActIdR" +
             "esponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActIdI" +
-            "nfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActIdI" +
+            "nfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPrivateActFileIdentifiersByActId(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActIdR" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateActFileIdentifiersByActIdR" +
             "esponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPrivateActFileIdentifiersByActIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileByIdInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileByIdInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
         Integration.Epep.PublicActFile GetPublicActFileById(System.Guid publicActFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PublicActFile> GetPublicActFileByIdAsync(System.Guid publicActFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActIdRes" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActIdRes" +
             "ponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActIdInf" +
-            "ocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActIdInf" +
+            "ocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPublicActFileIdentifierByActId(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActIdRes" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicActFileIdentifierByActIdRes" +
             "ponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPublicActFileIdentifierByActIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileByIdInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileByIdInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         Integration.Epep.PrivateMotiveFile GetPrivateMotiveFileById(System.Guid privateMotiveFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PrivateMotiveFile> GetPrivateMotiveFileByIdAsync(System.Guid privateMotiveFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
-            "d", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
+            "d", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
             "dResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
-            "dInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
+            "dInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPrivateMotiveFileIdentifierByActId(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
-            "d", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
+            "d", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPrivateMotiveFileIdentifierByActI" +
             "dResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPrivateMotiveFileIdentifierByActIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileByIdInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileByIdInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
         Integration.Epep.PublicMotiveFile GetPublicMotiveFileById(System.Guid publicActFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.PublicMotiveFile> GetPublicMotiveFileByIdAsync(System.Guid publicActFileId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
-            "", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
+            "", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
             "Response")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
-            "InfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
+            "InfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> GetPublicMotiveFileIdentifierByActId(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
-            "", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
+            "", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetPublicMotiveFileIdentifierByActId" +
             "Response")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPublicMotiveFileIdentifierByActIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertIncomingDocument(Integration.Epep.IncomingDocument incomingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertIncomingDocumentAsync(Integration.Epep.IncomingDocument incomingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateIncomingDocument(Integration.Epep.IncomingDocument incomingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateIncomingDocumentAsync(Integration.Epep.IncomingDocument incomingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFileInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertIncomingDocumentFile(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertIncomingDocumentFileAsync(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFileInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateIncomingDocumentFile(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateIncomingDocumentFileAsync(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertOutgoingDocument(Integration.Epep.OutgoingDocument outgoingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertOutgoingDocumentAsync(Integration.Epep.OutgoingDocument outgoingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateOutgoingDocument(Integration.Epep.OutgoingDocument outgoingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateOutgoingDocumentAsync(Integration.Epep.OutgoingDocument outgoingDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFileInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertOutgoingDocumentFile(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertOutgoingDocumentFileAsync(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFileInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateOutgoingDocumentFile(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateOutgoingDocumentFileAsync(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertCase(Integration.Epep.Case c);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertCaseAsync(Integration.Epep.Case c);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateCase(Integration.Epep.Case c);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateCaseAsync(Integration.Epep.Case c);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> GetCaseId(int incDocumentNumber, int incDocumentYear, string courtCode);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetCaseIdAsync(int incDocumentNumber, int incDocumentYear, string courtCode);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCaseResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCaseInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertConnectedCase(Integration.Epep.ConnectedCase connectedCase);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCaseResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertConnectedCaseAsync(Integration.Epep.ConnectedCase connectedCase);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCaseResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCaseInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateConnectedCase(Integration.Epep.ConnectedCase connectedCase);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCaseResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateConnectedCaseAsync(Integration.Epep.ConnectedCase connectedCase);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporter", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporterResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporterInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertReporter(Integration.Epep.Reporter reporter);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporter", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporterResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertReporterAsync(Integration.Epep.Reporter reporter);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporter", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporterResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporterInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateReporter(Integration.Epep.Reporter reporter);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporter", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporterResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateReporterAsync(Integration.Epep.Reporter reporter);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertAssignment(Integration.Epep.Assignment assignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAssignmentAsync(Integration.Epep.Assignment assignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateAssignment(Integration.Epep.Assignment assignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAssignmentAsync(Integration.Epep.Assignment assignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFileInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertAssignmentFile(Integration.Epep.AssignmentFile assignmentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAssignmentFileAsync(Integration.Epep.AssignmentFile assignmentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFileInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateAssignmentFile(Integration.Epep.AssignmentFile assignmentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAssignmentFileAsync(Integration.Epep.AssignmentFile assignmentFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearing", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertHearing(Integration.Epep.Hearing hearing);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearing", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingAsync(Integration.Epep.Hearing hearing);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearing", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateHearing(Integration.Epep.Hearing hearing);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearing", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingAsync(Integration.Epep.Hearing hearing);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFileInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPrivateProtocolFile(Integration.Epep.PrivateProtocolFile privateProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateProtocolFileAsync(Integration.Epep.PrivateProtocolFile privateProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFileInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePrivateProtocolFile(Integration.Epep.PrivateProtocolFile privateProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateProtocolFileAsync(Integration.Epep.PrivateProtocolFile privateProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFileInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPublicProtocolFile(Integration.Epep.PublicProtocolFile publicProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicProtocolFileAsync(Integration.Epep.PublicProtocolFile publicProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFileInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePublicProtocolFile(Integration.Epep.PublicProtocolFile publicProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicProtocolFileAsync(Integration.Epep.PublicProtocolFile publicProtocolFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipant", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipantResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipantInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertHearingParticipant(Integration.Epep.HearingParticipant hearingParticipant);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipant", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipantResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingParticipantAsync(Integration.Epep.HearingParticipant hearingParticipant);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipant", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipantResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipantInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateHearingParticipant(Integration.Epep.HearingParticipant hearingParticipant);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipant", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipantResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingParticipantAsync(Integration.Epep.HearingParticipant hearingParticipant);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAct", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertAct(Integration.Epep.Act act);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAct", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertActAsync(Integration.Epep.Act act);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAct", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateAct(Integration.Epep.Act act);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAct", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateActAsync(Integration.Epep.Act act);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFileInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPublicActFile(Integration.Epep.PublicActFile publicActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicActFileAsync(Integration.Epep.PublicActFile publicActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFileInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePublicActFile(Integration.Epep.PublicActFile publicActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicActFileAsync(Integration.Epep.PublicActFile publicActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFileInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPrivateActFile(Integration.Epep.PrivateActFile privateActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateActFileAsync(Integration.Epep.PrivateActFile privateActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFileInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePrivateActFile(Integration.Epep.PrivateActFile privateActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateActFileAsync(Integration.Epep.PrivateActFile privateActFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFileInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPublicMotiveFile(Integration.Epep.PublicMotiveFile publicMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicMotiveFileAsync(Integration.Epep.PublicMotiveFile publicMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFileInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePublicMotiveFile(Integration.Epep.PublicMotiveFile publicMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicMotiveFileAsync(Integration.Epep.PublicMotiveFile publicMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFileInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPrivateMotiveFile(Integration.Epep.PrivateMotiveFile privateMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateMotiveFileAsync(Integration.Epep.PrivateMotiveFile privateMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFileInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePrivateMotiveFile(Integration.Epep.PrivateMotiveFile privateMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateMotiveFileAsync(Integration.Epep.PrivateMotiveFile privateMotiveFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparator", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparatorResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparatorInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertActPreparator(Integration.Epep.ActPreparator actPreparator);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparator", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparatorResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertActPreparatorAsync(Integration.Epep.ActPreparator actPreparator);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparator", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparatorResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparatorInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateActPreparator(Integration.Epep.ActPreparator actPreparator);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparator", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparatorResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateActPreparatorAsync(Integration.Epep.ActPreparator actPreparator);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppeal", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppealResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppealInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertAppeal(Integration.Epep.Appeal appeal);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppeal", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppealResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAppealAsync(Integration.Epep.Appeal appeal);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppeal", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppealResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppealInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateAppeal(Integration.Epep.Appeal appeal);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppeal", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppealResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAppealAsync(Integration.Epep.Appeal appeal);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRuling", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRulingResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRulingInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertCaseRuling(Integration.Epep.CaseRuling caseRuling);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRuling", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRulingResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertCaseRulingAsync(Integration.Epep.CaseRuling caseRuling);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRuling", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRulingResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRulingInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateCaseRuling(Integration.Epep.CaseRuling caseRuling);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRuling", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRulingResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateCaseRulingAsync(Integration.Epep.CaseRuling caseRuling);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSide", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSideResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSideInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertSide(Integration.Epep.Side side);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSide", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSideResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSideAsync(Integration.Epep.Side side);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSide", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSideResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSideInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateSide(Integration.Epep.Side side);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSide", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSideResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSideAsync(Integration.Epep.Side side);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignmentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertLawyerAssignment(Integration.Epep.LawyerAssignment lawyerAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignmentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertLawyerAssignmentAsync(Integration.Epep.LawyerAssignment lawyerAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignmentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateLawyerAssignment(Integration.Epep.LawyerAssignment lawyerAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignmentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateLawyerAssignmentAsync(Integration.Epep.LawyerAssignment lawyerAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummon", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertSummon(Integration.Epep.Summon summon, System.Guid userId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummon", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSummonAsync(Integration.Epep.Summon summon, System.Guid userId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummon", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateSummon(Integration.Epep.Summon summon);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummon", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSummonAsync(Integration.Epep.Summon summon);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFileInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertSummonFile(Integration.Epep.SummonFile summonFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSummonFileAsync(Integration.Epep.SummonFile summonFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFileInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateSummonFile(Integration.Epep.SummonFile summonFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFileResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSummonFileAsync(Integration.Epep.SummonFile summonFile);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyers", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyersResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyersInfocaseFaultFault", Name="InfocaseFault")]
-        Integration.Epep.Lawyer[] GetAllLawyers();
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyers", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyersResponse")]
-        System.Threading.Tasks.Task<Integration.Epep.Lawyer[]> GetAllLawyersAsync();
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyers", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyersResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyersInfocaseFaultFault", Name="InfocaseFault")]
-        Integration.Epep.Lawyer[] GetAllNewLawyers(System.DateTime from);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyers", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyersResponse")]
-        System.Threading.Tasks.Task<Integration.Epep.Lawyer[]> GetAllNewLawyersAsync(System.DateTime from);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumber", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumberResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumberInfocaseFaultFault", Name="InfocaseFault")]
-        Integration.Epep.Lawyer GetLawyerByNumber(string number);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumber", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumberResponse")]
-        System.Threading.Tasks.Task<Integration.Epep.Lawyer> GetLawyerByNumberAsync(string number);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourt", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourtResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourtInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
-        System.Guid[] GetAllServedSummonsByCourt(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourt", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourtResponse")]
-        System.Threading.Tasks.Task<System.Guid[]> GetAllServedSummonsByCourtAsync(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestamp", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestampResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestampInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
-        System.DateTime GetSummonsServedTimestamp(System.Guid guid);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestamp", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestampResponse")]
-        System.Threading.Tasks.Task<System.DateTime> GetSummonsServedTimestampAsync(System.Guid guid);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourt", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourtResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourtInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Guid[] GetAllReadSummonsByCourt(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourt", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourtResponse")]
-        System.Threading.Tasks.Task<System.Guid[]> GetAllReadSummonsByCourtAsync(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestamp", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
-        System.DateTime GetSummonsReadTimestamp(System.Guid guid);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestamp", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampResponse")]
-        System.Threading.Tasks.Task<System.DateTime> GetSummonsReadTimestampAsync(System.Guid guid);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsRead", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsReadResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsReadInfocaseFaultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> MarkSummonAsRead(System.Guid guid, System.Nullable<System.DateTime> date);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsRead", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsReadResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> MarkSummonAsReadAsync(System.Guid guid, System.Nullable<System.DateTime> date);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDay", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDayResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDayInfocaseF" +
-            "aultFault", Name="InfocaseFault")]
-        System.Guid[] GetReadSummonsForCertainDay(System.DateTime date);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDay", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDayResponse")]
-        System.Threading.Tasks.Task<System.Guid[]> GetReadSummonsForCertainDayAsync(System.DateTime date);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocumentInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
-        byte[] GetSummonReportDocument(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocumentResponse")]
-        System.Threading.Tasks.Task<byte[]> GetSummonReportDocumentAsync(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccess", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccessResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccessInfocaseFaultFa" +
-            "ult", Name="InfocaseFault")]
-        void ActivateSummonsAccess(System.Guid userId, System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccess", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccessResponse")]
-        System.Threading.Tasks.Task ActivateSummonsAccessAsync(System.Guid userId, System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccess", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccessResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccessInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
-        void DeactivateSummonsAccess(System.Guid userId, System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccess", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccessResponse")]
-        System.Threading.Tasks.Task DeactivateSummonsAccessAsync(System.Guid userId, System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignmentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertPersonAssignment(Integration.Epep.PersonAssignment personAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignmentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPersonAssignmentAsync(Integration.Epep.PersonAssignment personAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignmentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdatePersonAssignment(Integration.Epep.PersonAssignment personAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignmentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePersonAssignmentAsync(Integration.Epep.PersonAssignment personAssignment);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocumentInfocaseFaultFa" +
-            "ult", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertScannedDocument(Integration.Epep.ScannedDocument scannedDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocumentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertScannedDocumentAsync(Integration.Epep.ScannedDocument scannedDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocumentInfocaseFaultFa" +
-            "ult", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateScannedDocument(Integration.Epep.ScannedDocument scannedDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocumentResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateScannedDocumentAsync(Integration.Epep.ScannedDocument scannedDocument);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistrationInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> InsertLawyerRegistration(Integration.Epep.LawyerRegistration lawyerRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistrationResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertLawyerRegistrationAsync(Integration.Epep.LawyerRegistration lawyerRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistrationInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> UpdateLawyerRegistration(Integration.Epep.LawyerRegistration lawyerRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistrationResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateLawyerRegistrationAsync(Integration.Epep.LawyerRegistration lawyerRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistrationInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
-        System.Nullable<System.Guid> ActivateLawyerRegistration(System.Guid lawyerRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistrationResponse")]
-        System.Threading.Tasks.Task<System.Nullable<System.Guid>> ActivateLawyerRegistrationAsync(System.Guid lawyerRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistrationResponse" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAttachedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAttachedDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAttachedDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertAttachedDocument(Integration.Epep.AttachedDocument attachedDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAttachedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAttachedDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAttachedDocumentAsync(Integration.Epep.AttachedDocument attachedDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAttachedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAttachedDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAttachedDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        bool DeleteAttachedDocument(System.Guid attachedDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAttachedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAttachedDocumentResponse")]
+        System.Threading.Tasks.Task<bool> DeleteAttachedDocumentAsync(System.Guid attachedDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertHearingDocument(Integration.Epep.HearingDocument hearingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingDocumentAsync(Integration.Epep.HearingDocument hearingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateHearingDocument(Integration.Epep.HearingDocument hearingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingDocumentAsync(Integration.Epep.HearingDocument hearingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        bool DeleteHearingDocument(System.Guid hearingDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingDocumentResponse")]
+        System.Threading.Tasks.Task<bool> DeleteHearingDocumentAsync(System.Guid hearingDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertUserAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertUserAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertUserAssignmentInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertUserAssignment(Integration.Epep.UserAssignment userAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertUserAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertUserAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertUserAssignmentAsync(Integration.Epep.UserAssignment userAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUserAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUserAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUserAssignmentInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateUserAssignment(Integration.Epep.UserAssignment userAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUserAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUserAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateUserAssignmentAsync(Integration.Epep.UserAssignment userAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteUserAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteUserAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteUserAssignmentInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        bool DeleteUserAssignment(System.Guid userAssignmentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteUserAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteUserAssignmentResponse")]
+        System.Threading.Tasks.Task<bool> DeleteUserAssignmentAsync(System.Guid userAssignmentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrations", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationsResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationsInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        Integration.Epep.UserRegistration[] GetUserRegistrations(System.Nullable<System.DateTime> modifyFromDate);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrations", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationsResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.UserRegistration[]> GetUserRegistrationsAsync(System.Nullable<System.DateTime> modifyFromDate);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampV3", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampV3Response")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampV3InfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
+        Integration.Epep.SummonReadTimeResult GetSummonsReadTimestampV3(System.Guid guid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampV3", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampV3Response")]
+        System.Threading.Tasks.Task<Integration.Epep.SummonReadTimeResult> GetSummonsReadTimestampV3Async(System.Guid guid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateElectronicDocumentSetDateCourt" +
+            "Accept", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateElectronicDocumentSetDateCourt" +
+            "AcceptResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateElectronicDocumentSetDateCourt" +
+            "AcceptInfocaseFaultFault", Name = "InfocaseFault")]
+        bool UpdateElectronicDocumentSetDateCourtAccept(System.Guid electronicDocumentId, System.DateTime dateCourtAccept);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateElectronicDocumentSetDateCourt" +
+            "Accept", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateElectronicDocumentSetDateCourt" +
+            "AcceptResponse")]
+        System.Threading.Tasks.Task<bool> UpdateElectronicDocumentSetDateCourtAcceptAsync(System.Guid electronicDocumentId, System.DateTime dateCourtAccept);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewElectronicDocumentIdentifiers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewElectronicDocumentIdentifiersR" +
+            "esponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewElectronicDocumentIdentifiersI" +
+            "nfocaseFaultFault", Name = "InfocaseFault")]
+        System.Guid[] GetNewElectronicDocumentIdentifiers(string courtCode);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewElectronicDocumentIdentifiers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewElectronicDocumentIdentifiersR" +
+            "esponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetNewElectronicDocumentIdentifiersAsync(string courtCode);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetElectronicDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetElectronicDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetElectronicDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        Integration.Epep.ElectronicDocument GetElectronicDocument(System.Guid electronicDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetElectronicDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetElectronicDocumentResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.ElectronicDocument> GetElectronicDocumentAsync(System.Guid electronicDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsCourtRead", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsCourtReadResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsCourtReadInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> MarkSummonAsCourtRead(System.Guid summonId, System.DateTime courtReadDate, string courtDescription);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsCourtRead", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsCourtReadResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> MarkSummonAsCourtReadAsync(System.Guid summonId, System.DateTime courtReadDate, string courtDescription);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserAssignmentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserAssignmentByIdInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        Integration.Epep.UserAssignment GetUserAssignmentById(System.Guid userAssignmentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserAssignmentByIdResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.UserAssignment> GetUserAssignmentByIdAsync(System.Guid userAssignmentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersByNumber", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersByNumberResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersByNumberInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Guid[] GetCaseIdentifiersByNumber(string court, string caseType, int caseNumber, int caseYear);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersByNumber", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersByNumberResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetCaseIdentifiersByNumberAsync(string court, string caseType, int caseNumber, int caseYear);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentIdentifiers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentIdentifiersRespon" +
+            "se")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentIdentifiersInfoca" +
+            "seFaultFault", Name = "InfocaseFault")]
+        System.Guid[] GetAttachedDocumentIdentifiers(int type, System.Guid parentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentIdentifiers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentIdentifiersRespon" +
+            "se")]
+        System.Threading.Tasks.Task<System.Guid[]> GetAttachedDocumentIdentifiersAsync(int type, System.Guid parentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentByIdInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        Integration.Epep.AttachedDocument GetAttachedDocumentById(System.Guid attachedDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAttachedDocumentByIdResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.AttachedDocument> GetAttachedDocumentByIdAsync(System.Guid attachedDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentIdentifiersByHeari" +
+            "ngId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentIdentifiersByHeari" +
+            "ngIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentIdentifiersByHeari" +
+            "ngIdInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Guid[] GetHearingDocumentIdentifiersByHearingId(System.Guid hearingId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentIdentifiersByHeari" +
+            "ngId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentIdentifiersByHeari" +
+            "ngIdResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetHearingDocumentIdentifiersByHearingIdAsync(System.Guid hearingId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentByIdInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        Integration.Epep.HearingDocument GetHearingDocumentById(System.Guid hearingDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingDocumentByIdResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.HearingDocument> GetHearingDocumentByIdAsync(System.Guid hearingDocumentId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummaryCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummaryCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummaryCaseInfocaseFaultFault", Name = "InfocaseFault")]
+        Integration.Epep.SummaryCase GetSummaryCase(System.Guid gid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummaryCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummaryCaseResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.SummaryCase> GetSummaryCaseAsync(System.Guid gid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseMigrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseMigrationInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Guid InsertCaseMigration(Integration.Epep.CaseMigrationRegistration caseMigrationRegistration);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseMigrationResponse")]
+        System.Threading.Tasks.Task<System.Guid> InsertCaseMigrationAsync(Integration.Epep.CaseMigrationRegistration caseMigrationRegistration);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewCaseMigrations", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewCaseMigrationsResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewCaseMigrationsInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Guid[] GetNewCaseMigrations(string courtCode, System.Nullable<System.DateTime> fromDate);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewCaseMigrations", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetNewCaseMigrationsResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetNewCaseMigrationsAsync(string courtCode, System.Nullable<System.DateTime> fromDate);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetRegistrationCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetRegistrationCaseMigrationResponse" +
             "")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistrationInfocase" +
-            "FaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetRegistrationCaseMigrationInfocase" +
+            "FaultFault", Name = "InfocaseFault")]
+        Integration.Epep.CaseMigrationRegistration GetRegistrationCaseMigration(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetRegistrationCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetRegistrationCaseMigrationResponse" +
+            "")]
+        System.Threading.Tasks.Task<Integration.Epep.CaseMigrationRegistration> GetRegistrationCaseMigrationAsync(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/StartProcessCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/StartProcessCaseMigrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/StartProcessCaseMigrationInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
+        bool StartProcessCaseMigration(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/StartProcessCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/StartProcessCaseMigrationResponse")]
+        System.Threading.Tasks.Task<bool> StartProcessCaseMigrationAsync(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SaveResultCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/SaveResultCaseMigrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SaveResultCaseMigrationInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        bool SaveResultCaseMigration(Integration.Epep.CaseMigrationResult caseMigrationResult);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/SaveResultCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/SaveResultCaseMigrationResponse")]
+        System.Threading.Tasks.Task<bool> SaveResultCaseMigrationAsync(Integration.Epep.CaseMigrationResult caseMigrationResult);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFinishedCaseMigrations", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFinishedCaseMigrationsResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFinishedCaseMigrationsInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
+        System.Guid[] GetFinishedCaseMigrations(string courtCode, System.Nullable<System.DateTime> fromDate);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFinishedCaseMigrations", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFinishedCaseMigrationsResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetFinishedCaseMigrationsAsync(string courtCode, System.Nullable<System.DateTime> fromDate);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetResultCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetResultCaseMigrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetResultCaseMigrationInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        Integration.Epep.CaseMigrationResult GetResultCaseMigration(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetResultCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetResultCaseMigrationResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.CaseMigrationResult> GetResultCaseMigrationAsync(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/EndProcessCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/EndProcessCaseMigrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/EndProcessCaseMigrationInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        bool EndProcessCaseMigration(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/EndProcessCaseMigration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/EndProcessCaseMigrationResponse")]
+        System.Threading.Tasks.Task<bool> EndProcessCaseMigrationAsync(System.Guid caseMigrationGid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFileContentByKey", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFileContentByKeyResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFileContentByKeyInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        byte[] GetFileContentByKey(System.Guid key);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFileContentByKey", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetFileContentByKeyResponse")]
+        System.Threading.Tasks.Task<byte[]> GetFileContentByKeyAsync(System.Guid key);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertIncomingDocument(Integration.Epep.IncomingDocument incomingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertIncomingDocumentAsync(Integration.Epep.IncomingDocument incomingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateIncomingDocument(Integration.Epep.IncomingDocument incomingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateIncomingDocumentAsync(Integration.Epep.IncomingDocument incomingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFileInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertIncomingDocumentFile(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertIncomingDocumentFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertIncomingDocumentFileAsync(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFileInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateIncomingDocumentFile(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateIncomingDocumentFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateIncomingDocumentFileAsync(Integration.Epep.IncomingDocumentFile incomingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertOutgoingDocument(Integration.Epep.OutgoingDocument outgoingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertOutgoingDocumentAsync(Integration.Epep.OutgoingDocument outgoingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateOutgoingDocument(Integration.Epep.OutgoingDocument outgoingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateOutgoingDocumentAsync(Integration.Epep.OutgoingDocument outgoingDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFileInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertOutgoingDocumentFile(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertOutgoingDocumentFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertOutgoingDocumentFileAsync(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFileInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateOutgoingDocumentFile(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateOutgoingDocumentFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateOutgoingDocumentFileAsync(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertCase(Integration.Epep.Case c);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertCaseAsync(Integration.Epep.Case c);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateCase(Integration.Epep.Case c);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateCaseAsync(Integration.Epep.Case c);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> GetCaseId(int incDocumentNumber, int incDocumentYear, string courtCode);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetCaseIdAsync(int incDocumentNumber, int incDocumentYear, string courtCode);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCaseInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertConnectedCase(Integration.Epep.ConnectedCase connectedCase);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertConnectedCaseResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertConnectedCaseAsync(Integration.Epep.ConnectedCase connectedCase);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCaseInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateConnectedCase(Integration.Epep.ConnectedCase connectedCase);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateConnectedCaseResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateConnectedCaseAsync(Integration.Epep.ConnectedCase connectedCase);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporter", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporterResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporterInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertReporter(Integration.Epep.Reporter reporter);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporter", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertReporterResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertReporterAsync(Integration.Epep.Reporter reporter);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporter", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporterResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporterInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateReporter(Integration.Epep.Reporter reporter);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporter", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateReporterResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateReporterAsync(Integration.Epep.Reporter reporter);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertAssignment(Integration.Epep.Assignment assignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAssignmentAsync(Integration.Epep.Assignment assignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateAssignment(Integration.Epep.Assignment assignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAssignmentAsync(Integration.Epep.Assignment assignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFileInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertAssignmentFile(Integration.Epep.AssignmentFile assignmentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAssignmentFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAssignmentFileAsync(Integration.Epep.AssignmentFile assignmentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFileInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateAssignmentFile(Integration.Epep.AssignmentFile assignmentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAssignmentFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAssignmentFileAsync(Integration.Epep.AssignmentFile assignmentFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearing", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertHearing(Integration.Epep.Hearing hearing);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearing", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingAsync(Integration.Epep.Hearing hearing);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearing", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateHearing(Integration.Epep.Hearing hearing);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearing", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingAsync(Integration.Epep.Hearing hearing);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFileInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPrivateProtocolFile(Integration.Epep.PrivateProtocolFile privateProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateProtocolFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateProtocolFileAsync(Integration.Epep.PrivateProtocolFile privateProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFileInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePrivateProtocolFile(Integration.Epep.PrivateProtocolFile privateProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateProtocolFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateProtocolFileAsync(Integration.Epep.PrivateProtocolFile privateProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFileInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPublicProtocolFile(Integration.Epep.PublicProtocolFile publicProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicProtocolFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicProtocolFileAsync(Integration.Epep.PublicProtocolFile publicProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFileInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePublicProtocolFile(Integration.Epep.PublicProtocolFile publicProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicProtocolFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicProtocolFileAsync(Integration.Epep.PublicProtocolFile publicProtocolFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipant", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipantResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipantInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertHearingParticipant(Integration.Epep.HearingParticipant hearingParticipant);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipant", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertHearingParticipantResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingParticipantAsync(Integration.Epep.HearingParticipant hearingParticipant);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipant", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipantResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipantInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateHearingParticipant(Integration.Epep.HearingParticipant hearingParticipant);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipant", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateHearingParticipantResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingParticipantAsync(Integration.Epep.HearingParticipant hearingParticipant);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAct", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertAct(Integration.Epep.Act act);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAct", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertActAsync(Integration.Epep.Act act);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAct", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateAct(Integration.Epep.Act act);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAct", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateActAsync(Integration.Epep.Act act);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFileInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPublicActFile(Integration.Epep.PublicActFile publicActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicActFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicActFileAsync(Integration.Epep.PublicActFile publicActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFileInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePublicActFile(Integration.Epep.PublicActFile publicActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicActFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicActFileAsync(Integration.Epep.PublicActFile publicActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFileInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPrivateActFile(Integration.Epep.PrivateActFile privateActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateActFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateActFileAsync(Integration.Epep.PrivateActFile privateActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFileInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePrivateActFile(Integration.Epep.PrivateActFile privateActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateActFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateActFileAsync(Integration.Epep.PrivateActFile privateActFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFileInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPublicMotiveFile(Integration.Epep.PublicMotiveFile publicMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPublicMotiveFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicMotiveFileAsync(Integration.Epep.PublicMotiveFile publicMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFileInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePublicMotiveFile(Integration.Epep.PublicMotiveFile publicMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePublicMotiveFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicMotiveFileAsync(Integration.Epep.PublicMotiveFile publicMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFileInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPrivateMotiveFile(Integration.Epep.PrivateMotiveFile privateMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPrivateMotiveFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateMotiveFileAsync(Integration.Epep.PrivateMotiveFile privateMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFileInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePrivateMotiveFile(Integration.Epep.PrivateMotiveFile privateMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePrivateMotiveFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateMotiveFileAsync(Integration.Epep.PrivateMotiveFile privateMotiveFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparator", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparatorResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparatorInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertActPreparator(Integration.Epep.ActPreparator actPreparator);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparator", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertActPreparatorResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertActPreparatorAsync(Integration.Epep.ActPreparator actPreparator);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparator", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparatorResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparatorInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateActPreparator(Integration.Epep.ActPreparator actPreparator);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparator", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateActPreparatorResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateActPreparatorAsync(Integration.Epep.ActPreparator actPreparator);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppeal", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppealResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppealInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertAppeal(Integration.Epep.Appeal appeal);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppeal", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertAppealResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAppealAsync(Integration.Epep.Appeal appeal);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppeal", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppealResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppealInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateAppeal(Integration.Epep.Appeal appeal);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppeal", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateAppealResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAppealAsync(Integration.Epep.Appeal appeal);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRuling", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRulingResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRulingInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertCaseRuling(Integration.Epep.CaseRuling caseRuling);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRuling", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertCaseRulingResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertCaseRulingAsync(Integration.Epep.CaseRuling caseRuling);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRuling", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRulingResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRulingInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateCaseRuling(Integration.Epep.CaseRuling caseRuling);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRuling", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateCaseRulingResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateCaseRulingAsync(Integration.Epep.CaseRuling caseRuling);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSide", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSideResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSideInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertSide(Integration.Epep.Side side);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSide", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSideResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSideAsync(Integration.Epep.Side side);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSide", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSideResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSideInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateSide(Integration.Epep.Side side);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSide", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSideResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSideAsync(Integration.Epep.Side side);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignmentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertLawyerAssignment(Integration.Epep.LawyerAssignment lawyerAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertLawyerAssignmentAsync(Integration.Epep.LawyerAssignment lawyerAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignmentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateLawyerAssignment(Integration.Epep.LawyerAssignment lawyerAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateLawyerAssignmentAsync(Integration.Epep.LawyerAssignment lawyerAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummon", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertSummon(Integration.Epep.Summon summon, System.Guid userId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummon", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSummonAsync(Integration.Epep.Summon summon, System.Guid userId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummon", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateSummon(Integration.Epep.Summon summon);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummon", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSummonAsync(Integration.Epep.Summon summon);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFileInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertSummonFile(Integration.Epep.SummonFile summonFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertSummonFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSummonFileAsync(Integration.Epep.SummonFile summonFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFileInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateSummonFile(Integration.Epep.SummonFile summonFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateSummonFileResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSummonFileAsync(Integration.Epep.SummonFile summonFile);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyersResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyersInfocaseFaultFault", Name = "InfocaseFault")]
+        Integration.Epep.Lawyer[] GetAllLawyers();
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllLawyersResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.Lawyer[]> GetAllLawyersAsync();
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyersResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyersInfocaseFaultFault", Name = "InfocaseFault")]
+        Integration.Epep.Lawyer[] GetAllNewLawyers(System.DateTime from);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllNewLawyersResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.Lawyer[]> GetAllNewLawyersAsync(System.DateTime from);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumber", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumberResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumberInfocaseFaultFault", Name = "InfocaseFault")]
+        Integration.Epep.Lawyer GetLawyerByNumber(string number);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumber", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetLawyerByNumberResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.Lawyer> GetLawyerByNumberAsync(string number);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourt", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourtResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourtInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Guid[] GetAllServedSummonsByCourt(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourt", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllServedSummonsByCourtResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetAllServedSummonsByCourtAsync(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestamp", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestampResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestampInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
+        System.DateTime GetSummonsServedTimestamp(System.Guid guid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestamp", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsServedTimestampResponse")]
+        System.Threading.Tasks.Task<System.DateTime> GetSummonsServedTimestampAsync(System.Guid guid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourt", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourtResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourtInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Guid[] GetAllReadSummonsByCourt(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourt", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAllReadSummonsByCourtResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetAllReadSummonsByCourtAsync(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestamp", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        System.DateTime GetSummonsReadTimestamp(System.Guid guid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestamp", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonsReadTimestampResponse")]
+        System.Threading.Tasks.Task<System.DateTime> GetSummonsReadTimestampAsync(System.Guid guid);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsRead", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsReadResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsReadInfocaseFaultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> MarkSummonAsRead(System.Guid guid, System.Nullable<System.DateTime> date);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsRead", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/MarkSummonAsReadResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> MarkSummonAsReadAsync(System.Guid guid, System.Nullable<System.DateTime> date);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDay", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDayResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDayInfocaseF" +
+            "aultFault", Name = "InfocaseFault")]
+        System.Guid[] GetReadSummonsForCertainDay(System.DateTime date);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDay", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReadSummonsForCertainDayResponse")]
+        System.Threading.Tasks.Task<System.Guid[]> GetReadSummonsForCertainDayAsync(System.DateTime date);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocumentInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        byte[] GetSummonReportDocument(System.Guid summonId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetSummonReportDocumentResponse")]
+        System.Threading.Tasks.Task<byte[]> GetSummonReportDocumentAsync(System.Guid summonId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccess", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccessResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccessInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        void ActivateSummonsAccess(System.Guid userId, System.Guid caseId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccess", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateSummonsAccessResponse")]
+        System.Threading.Tasks.Task ActivateSummonsAccessAsync(System.Guid userId, System.Guid caseId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccess", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccessResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccessInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
+        void DeactivateSummonsAccess(System.Guid userId, System.Guid caseId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccess", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateSummonsAccessResponse")]
+        System.Threading.Tasks.Task DeactivateSummonsAccessAsync(System.Guid userId, System.Guid caseId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignmentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertPersonAssignment(Integration.Epep.PersonAssignment personAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPersonAssignmentAsync(Integration.Epep.PersonAssignment personAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignmentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdatePersonAssignment(Integration.Epep.PersonAssignment personAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonAssignmentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePersonAssignmentAsync(Integration.Epep.PersonAssignment personAssignment);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertScannedDocument(Integration.Epep.ScannedDocument scannedDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertScannedDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertScannedDocumentAsync(Integration.Epep.ScannedDocument scannedDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateScannedDocument(Integration.Epep.ScannedDocument scannedDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateScannedDocumentResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateScannedDocumentAsync(Integration.Epep.ScannedDocument scannedDocument);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistrationInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> InsertLawyerRegistration(Integration.Epep.LawyerRegistration lawyerRegistration);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertLawyerRegistrationResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertLawyerRegistrationAsync(Integration.Epep.LawyerRegistration lawyerRegistration);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistrationInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> UpdateLawyerRegistration(Integration.Epep.LawyerRegistration lawyerRegistration);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateLawyerRegistrationResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateLawyerRegistrationAsync(Integration.Epep.LawyerRegistration lawyerRegistration);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistrationInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
+        System.Nullable<System.Guid> ActivateLawyerRegistration(System.Guid lawyerRegistrationId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivateLawyerRegistrationResponse")]
+        System.Threading.Tasks.Task<System.Nullable<System.Guid>> ActivateLawyerRegistrationAsync(System.Guid lawyerRegistrationId);
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistrationResponse" +
+            "")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistrationInfocase" +
+            "FaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> DeactivateLawyerRegistration(System.Guid lawyerRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistrationResponse" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivateLawyerRegistrationResponse" +
             "")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> DeactivateLawyerRegistrationAsync(System.Guid lawyerRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistrationInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistrationInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> InsertPersonRegistration(Integration.Epep.PersonRegistration personRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistrationResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/InsertPersonRegistrationResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPersonRegistrationAsync(Integration.Epep.PersonRegistration personRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistrationInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistrationInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> UpdatePersonRegistration(Integration.Epep.PersonRegistration personRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistrationResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdatePersonRegistrationResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePersonRegistrationAsync(Integration.Epep.PersonRegistration personRegistration);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistrationResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistrationInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistrationResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistrationInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> ActivatePersonRegistration(System.Guid personRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistrationResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/ActivatePersonRegistrationResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> ActivatePersonRegistrationAsync(System.Guid personRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistrationResponse" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistrationResponse" +
             "")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistrationInfocase" +
-            "FaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistrationInfocase" +
+            "FaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> DeactivatePersonRegistration(System.Guid personRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistration", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistrationResponse" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistration", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeactivatePersonRegistrationResponse" +
             "")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> DeactivatePersonRegistrationAsync(System.Guid personRegistrationId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameRes" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsername", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameRes" +
             "ponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameInf" +
-            "ocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameInf" +
+            "ocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.UserRegistrationInfo GetUserRegistrationInfoByUsername(string username);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameRes" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsername", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameRes" +
             "ponse")]
         System.Threading.Tasks.Task<Integration.Epep.UserRegistrationInfo> GetUserRegistrationInfoByUsernameAsync(string username);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsername", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameInfocaseFaultFault", Name = "InfocaseFault")]
         System.Nullable<System.Guid> UpdateUsername(string oldUsername, string newUsername, string courtCode);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsername", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameResponse")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateUsernameAsync(string oldUsername, string newUsername, string courtCode);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiers", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersInfocaseFaultFault" +
-            "", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersInfocaseFaultFault" +
+            "", Name = "InfocaseFault")]
         System.Guid[] GetCaseIdentifiers(System.Nullable<int> caseNumber, string caseKindCode, System.Nullable<int> caseYear, string department);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiers", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiers", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseIdentifiersResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetCaseIdentifiersAsync(System.Nullable<int> caseNumber, string caseKindCode, System.Nullable<int> caseYear, string department);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
         bool DeleteIncomingDocument(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentResponse")]
         System.Threading.Tasks.Task<bool> DeleteIncomingDocumentAsync(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
         bool DeleteOutgoingDocument(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentResponse")]
         System.Threading.Tasks.Task<bool> DeleteOutgoingDocumentAsync(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteCase(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseResponse")]
         System.Threading.Tasks.Task<bool> DeleteCaseAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCaseResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCaseInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCaseResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCaseInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
         bool DeleteConnectedCase(System.Guid connectedCaseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCase", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCaseResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCase", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteConnectedCaseResponse")]
         System.Threading.Tasks.Task<bool> DeleteConnectedCaseAsync(System.Guid connectedCaseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporter", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporterResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporterInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporter", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporterResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporterInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteReporter(System.Guid reporterId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporter", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporterResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporter", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteReporterResponse")]
         System.Threading.Tasks.Task<bool> DeleteReporterAsync(System.Guid reporterId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteAssignment(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentResponse")]
         System.Threading.Tasks.Task<bool> DeleteAssignmentAsync(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearing", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearing", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteHearing(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearing", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearing", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingResponse")]
         System.Threading.Tasks.Task<bool> DeleteHearingAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipant", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipantResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipantInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipant", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipantResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipantInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         bool DeleteHearingParticipant(System.Guid hearingParticipantId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipant", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipantResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipant", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteHearingParticipantResponse")]
         System.Threading.Tasks.Task<bool> DeleteHearingParticipantAsync(System.Guid hearingParticipantId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAct", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAct", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteAct(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAct", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAct", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActResponse")]
         System.Threading.Tasks.Task<bool> DeleteActAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparator", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparatorResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparatorInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparator", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparatorResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparatorInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
         bool DeleteActPreparator(System.Guid actPreparatorId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparator", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparatorResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparator", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteActPreparatorResponse")]
         System.Threading.Tasks.Task<bool> DeleteActPreparatorAsync(System.Guid actPreparatorId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppeal", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppealResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppealInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppeal", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppealResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppealInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteAppeal(System.Guid appealId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppeal", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppealResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppeal", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAppealResponse")]
         System.Threading.Tasks.Task<bool> DeleteAppealAsync(System.Guid appealId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRuling", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRulingResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRulingInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRuling", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRulingResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRulingInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteCaseRuling(System.Guid caseRulingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRuling", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRulingResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRuling", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteCaseRulingResponse")]
         System.Threading.Tasks.Task<bool> DeleteCaseRulingAsync(System.Guid caseRulingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSide", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSideResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSideInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSide", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSideResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSideInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteSide(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSide", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSideResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSide", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSideResponse")]
         System.Threading.Tasks.Task<bool> DeleteSideAsync(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignmentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignmentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
         bool DeleteLawyerAssignment(System.Guid lawyerAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignmentResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteLawyerAssignmentResponse")]
         System.Threading.Tasks.Task<bool> DeleteLawyerAssignmentAsync(System.Guid lawyerAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummon", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummon", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteSummon(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummon", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummon", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonResponse")]
         System.Threading.Tasks.Task<bool> DeleteSummonAsync(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignmentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignmentInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignmentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignmentInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
         bool DeletePersonAssignment(System.Guid personAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignment", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignmentResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignment", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePersonAssignmentResponse")]
         System.Threading.Tasks.Task<bool> DeletePersonAssignmentAsync(System.Guid personAssignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocumentResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocumentInfocaseFaultFa" +
-            "ult", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocumentResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocumentInfocaseFaultFa" +
+            "ult", Name = "InfocaseFault")]
         bool DeleteScannedDocument(System.Guid scannedDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocument", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocumentResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocument", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteScannedDocumentResponse")]
         System.Threading.Tasks.Task<bool> DeleteScannedDocumentAsync(System.Guid scannedDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFileInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFileInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
         bool DeleteAssignmentFile(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteAssignmentFileResponse")]
         System.Threading.Tasks.Task<bool> DeleteAssignmentFileAsync(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFileInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFileInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
         bool DeletePrivateProtocolFile(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateProtocolFileResponse")]
         System.Threading.Tasks.Task<bool> DeletePrivateProtocolFileAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFileInfocaseFaul" +
-            "tFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFileInfocaseFaul" +
+            "tFault", Name = "InfocaseFault")]
         bool DeletePublicProtocolFile(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicProtocolFileResponse")]
         System.Threading.Tasks.Task<bool> DeletePublicProtocolFileAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFileInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFileInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
         bool DeleteIncomingDocumentFile(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteIncomingDocumentFileResponse")]
         System.Threading.Tasks.Task<bool> DeleteIncomingDocumentFileAsync(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFileInfocaseFa" +
-            "ultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFileInfocaseFa" +
+            "ultFault", Name = "InfocaseFault")]
         bool DeleteOutgoingDocumentFile(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteOutgoingDocumentFileResponse")]
         System.Threading.Tasks.Task<bool> DeleteOutgoingDocumentFileAsync(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFileInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFileInfocaseFaultFault", Name = "InfocaseFault")]
         bool DeleteSummonFile(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeleteSummonFileResponse")]
         System.Threading.Tasks.Task<bool> DeleteSummonFileAsync(System.Guid summonId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFileInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFileInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
         bool DeletePrivateActFile(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateActFileResponse")]
         System.Threading.Tasks.Task<bool> DeletePrivateActFileAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFileInfocaseFaultFaul" +
-            "t", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFileInfocaseFaultFaul" +
+            "t", Name = "InfocaseFault")]
         bool DeletePublicActFile(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicActFileResponse")]
         System.Threading.Tasks.Task<bool> DeletePublicActFileAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFileInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFileInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
         bool DeletePrivateMotiveFile(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePrivateMotiveFileResponse")]
         System.Threading.Tasks.Task<bool> DeletePrivateMotiveFileAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFileResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFileInfocaseFaultF" +
-            "ault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFileResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFileInfocaseFaultF" +
+            "ault", Name = "InfocaseFault")]
         bool DeletePublicMotiveFile(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFile", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFileResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFile", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/DeletePublicMotiveFileResponse")]
         System.Threading.Tasks.Task<bool> DeletePublicMotiveFileAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentByIdInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentByIdInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
         Integration.Epep.IncomingDocument GetIncomingDocumentById(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.IncomingDocument> GetIncomingDocumentByIdAsync(System.Guid incomingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
             "IdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
-            "IdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
+            "IdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetIncomingDocumentIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetIncomingDocumentIdentifiersByCase" +
             "IdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetIncomingDocumentIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentByIdInfocaseFault" +
-            "Fault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentByIdInfocaseFault" +
+            "Fault", Name = "InfocaseFault")]
         Integration.Epep.OutgoingDocument GetOutgoingDocumentById(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.OutgoingDocument> GetOutgoingDocumentByIdAsync(System.Guid outgoingDocumentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
             "IdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
-            "IdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
+            "IdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetOutgoingDocumentIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
-            "Id", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
+            "Id", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetOutgoingDocumentIdentifiersByCase" +
             "IdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetOutgoingDocumentIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Case GetCaseById(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Case> GetCaseByIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseByIdInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseByIdInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
         Integration.Epep.ConnectedCase GetConnectedCaseById(System.Guid connectedCaseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.ConnectedCase> GetConnectedCaseByIdAsync(System.Guid connectedCaseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseIdR" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseIdR" +
             "esponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseIdI" +
-            "nfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseIdI" +
+            "nfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetConnectedCaseIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseIdR" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetConnectedCaseIdentifiersByCaseIdR" +
             "esponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetConnectedCaseIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Reporter GetReporterById(System.Guid reporterId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Reporter> GetReporterByIdAsync(System.Guid reporterId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseIdRespon" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseIdRespon" +
             "se")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseIdInfoca" +
-            "seFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseIdInfoca" +
+            "seFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetReporterIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseIdRespon" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetReporterIdentifiersByCaseIdRespon" +
             "se")]
         System.Threading.Tasks.Task<System.Guid[]> GetReporterIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Assignment GetAssignmentById(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Assignment> GetAssignmentByIdAsync(System.Guid assignmentId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseIdResp" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseIdResp" +
             "onse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseIdInfo" +
-            "caseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseIdInfo" +
+            "caseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetAssignmentIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseIdResp" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAssignmentIdentifiersByCaseIdResp" +
             "onse")]
         System.Threading.Tasks.Task<System.Guid[]> GetAssignmentIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Hearing GetHearingById(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Hearing> GetHearingByIdAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseIdRespons" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseIdRespons" +
             "e")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseIdInfocas" +
-            "eFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseIdInfocas" +
+            "eFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetHearingIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseIdRespons" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingIdentifiersByCaseIdRespons" +
             "e")]
         System.Threading.Tasks.Task<System.Guid[]> GetHearingIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantByIdInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantByIdInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
         Integration.Epep.HearingParticipant GetHearingParticipantById(System.Guid hearingParticipantId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.HearingParticipant> GetHearingParticipantByIdAsync(System.Guid hearingParticipantId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
-            "aringId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
+            "aringId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
             "aringIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
-            "aringIdInfocaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
+            "aringIdInfocaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetHearingParticipantIdentifiersByHearingId(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
-            "aringId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
+            "aringId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetHearingParticipantIdentifiersByHe" +
             "aringIdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetHearingParticipantIdentifiersByHearingIdAsync(System.Guid hearingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Act GetActById(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Act> GetActByIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseIdInfocaseFau" +
-            "ltFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseIdInfocaseFau" +
+            "ltFault", Name = "InfocaseFault")]
         System.Guid[] GetActIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActIdentifiersByCaseIdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetActIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorByIdInfocaseFaultFau" +
-            "lt", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorByIdInfocaseFaultFau" +
+            "lt", Name = "InfocaseFault")]
         Integration.Epep.ActPreparator GetActPreparatorById(System.Guid actPreparatorId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.ActPreparator> GetActPreparatorByIdAsync(System.Guid actPreparatorId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActIdRe" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActIdRe" +
             "sponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActIdIn" +
-            "focaseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActIdIn" +
+            "focaseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetActPreparatorIdentifiersByActId(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActIdRe" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetActPreparatorIdentifiersByActIdRe" +
             "sponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetActPreparatorIdentifiersByActIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.Appeal GetAppealById(System.Guid appealId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.Appeal> GetAppealByIdAsync(System.Guid appealId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActIdInfocaseF" +
-            "aultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActIdInfocaseF" +
+            "aultFault", Name = "InfocaseFault")]
         System.Guid[] GetAppealIdentifiersByActId(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetAppealIdentifiersByActIdResponse")]
         System.Threading.Tasks.Task<System.Guid[]> GetAppealIdentifiersByActIdAsync(System.Guid actId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingByIdInfocaseFaultFault", Name="InfocaseFault")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingByIdInfocaseFaultFault", Name = "InfocaseFault")]
         Integration.Epep.CaseRuling GetCaseRulingById(System.Guid caseRulingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingByIdResponse")]
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingById", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingByIdResponse")]
         System.Threading.Tasks.Task<Integration.Epep.CaseRuling> GetCaseRulingByIdAsync(System.Guid caseRulingId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdResp" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdResp" +
             "onse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdInfo" +
-            "caseFaultFault", Name="InfocaseFault")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdInfo" +
+            "caseFaultFault", Name = "InfocaseFault")]
         System.Guid[] GetCaseRulingIdentifiersByCaseId(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdResp" +
+
+        [System.ServiceModel.OperationContractAttribute(Action = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseId", ReplyAction = "http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdResp" +
             "onse")]
         System.Threading.Tasks.Task<System.Guid[]> GetCaseRulingIdentifiersByCaseIdAsync(System.Guid caseId);
     }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
     public interface IeCaseServiceChannel : Integration.Epep.IeCaseService, System.ServiceModel.IClientChannel
     {
     }
-    
+
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.1.0")]
     public partial class IeCaseServiceClient : System.ServiceModel.ClientBase<Integration.Epep.IeCaseService>, Integration.Epep.IeCaseService
     {
-        
+
         /// <summary>
         /// Implement this partial method to configure the service endpoint.
         /// </summary>
         /// <param name="serviceEndpoint">The endpoint to configure</param>
         /// <param name="clientCredentials">The client credentials</param>
         static partial void ConfigureEndpoint(System.ServiceModel.Description.ServiceEndpoint serviceEndpoint, System.ServiceModel.Description.ClientCredentials clientCredentials);
-        
-        public IeCaseServiceClient() : 
+
+        public IeCaseServiceClient() :
                 base(IeCaseServiceClient.GetDefaultBinding(), IeCaseServiceClient.GetDefaultEndpointAddress())
         {
             this.Endpoint.Name = EndpointConfiguration.BasicHttpBinding_IeCaseService.ToString();
             ConfigureEndpoint(this.Endpoint, this.ClientCredentials);
         }
-        
-        public IeCaseServiceClient(EndpointConfiguration endpointConfiguration) : 
+
+        public IeCaseServiceClient(EndpointConfiguration endpointConfiguration) :
                 base(IeCaseServiceClient.GetBindingForEndpoint(endpointConfiguration), IeCaseServiceClient.GetEndpointAddress(endpointConfiguration))
         {
             this.Endpoint.Name = endpointConfiguration.ToString();
             ConfigureEndpoint(this.Endpoint, this.ClientCredentials);
         }
-        
-        public IeCaseServiceClient(EndpointConfiguration endpointConfiguration, string remoteAddress) : 
+
+        public IeCaseServiceClient(EndpointConfiguration endpointConfiguration, string remoteAddress) :
                 base(IeCaseServiceClient.GetBindingForEndpoint(endpointConfiguration), new System.ServiceModel.EndpointAddress(remoteAddress))
         {
             this.Endpoint.Name = endpointConfiguration.ToString();
             ConfigureEndpoint(this.Endpoint, this.ClientCredentials);
         }
-        
-        public IeCaseServiceClient(EndpointConfiguration endpointConfiguration, System.ServiceModel.EndpointAddress remoteAddress) : 
+
+        public IeCaseServiceClient(EndpointConfiguration endpointConfiguration, System.ServiceModel.EndpointAddress remoteAddress) :
                 base(IeCaseServiceClient.GetBindingForEndpoint(endpointConfiguration), remoteAddress)
         {
             this.Endpoint.Name = endpointConfiguration.ToString();
             ConfigureEndpoint(this.Endpoint, this.ClientCredentials);
         }
-        
-        public IeCaseServiceClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) : 
+
+        public IeCaseServiceClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) :
                 base(binding, remoteAddress)
         {
         }
-        
+
         public Integration.Epep.Side GetSideById(System.Guid sideId)
         {
             return base.Channel.GetSideById(sideId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Side> GetSideByIdAsync(System.Guid sideId)
         {
             return base.Channel.GetSideByIdAsync(sideId);
         }
-        
+
         public System.Guid[] GetSideIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetSideIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetSideIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetSideIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.LawyerAssignment GetLawyerAssignmentById(System.Guid lawyerAssignmentId)
         {
             return base.Channel.GetLawyerAssignmentById(lawyerAssignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.LawyerAssignment> GetLawyerAssignmentByIdAsync(System.Guid lawyerAssignmentId)
         {
             return base.Channel.GetLawyerAssignmentByIdAsync(lawyerAssignmentId);
         }
-        
+
         public System.Guid[] GetLawyerAssignmentIdentifiersBySideId(System.Guid sideId)
         {
             return base.Channel.GetLawyerAssignmentIdentifiersBySideId(sideId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetLawyerAssignmentIdentifiersBySideIdAsync(System.Guid sideId)
         {
             return base.Channel.GetLawyerAssignmentIdentifiersBySideIdAsync(sideId);
         }
-        
+
         public Integration.Epep.PersonAssignment GetPersonAssignmentById(System.Guid personAssignmentId)
         {
             return base.Channel.GetPersonAssignmentById(personAssignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PersonAssignment> GetPersonAssignmentByIdAsync(System.Guid personAssignmentId)
         {
             return base.Channel.GetPersonAssignmentByIdAsync(personAssignmentId);
         }
-        
+
         public System.Guid[] GetPersonAssignmentIdentifiersBySideId(System.Guid sideId)
         {
             return base.Channel.GetPersonAssignmentIdentifiersBySideId(sideId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetPersonAssignmentIdentifiersBySideIdAsync(System.Guid sideId)
         {
             return base.Channel.GetPersonAssignmentIdentifiersBySideIdAsync(sideId);
         }
-        
+
         public Integration.Epep.LawyerRegistration GetLawyerRegistrationById(System.Guid lawyerRegistrationId)
         {
             return base.Channel.GetLawyerRegistrationById(lawyerRegistrationId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.LawyerRegistration> GetLawyerRegistrationByIdAsync(System.Guid lawyerRegistrationId)
         {
             return base.Channel.GetLawyerRegistrationByIdAsync(lawyerRegistrationId);
         }
-        
+
         public Integration.Epep.LawyerRegistration SelectLawyerRegistration(string lawyerNumber)
         {
             return base.Channel.SelectLawyerRegistration(lawyerNumber);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.LawyerRegistration> SelectLawyerRegistrationAsync(string lawyerNumber)
         {
             return base.Channel.SelectLawyerRegistrationAsync(lawyerNumber);
         }
-        
+
         public System.Guid[] GetLawyerRegistrationIdentifiersByLawyerId(System.Guid lawyerId)
         {
             return base.Channel.GetLawyerRegistrationIdentifiersByLawyerId(lawyerId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetLawyerRegistrationIdentifiersByLawyerIdAsync(System.Guid lawyerId)
         {
             return base.Channel.GetLawyerRegistrationIdentifiersByLawyerIdAsync(lawyerId);
         }
-        
+
         public Integration.Epep.PersonRegistration GetPersonRegistrationById(System.Guid personRegistrationId)
         {
             return base.Channel.GetPersonRegistrationById(personRegistrationId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PersonRegistration> GetPersonRegistrationByIdAsync(System.Guid personRegistrationId)
         {
             return base.Channel.GetPersonRegistrationByIdAsync(personRegistrationId);
         }
-        
+
         public Integration.Epep.PersonRegistration SelectPersonRegistration(string EGN)
         {
             return base.Channel.SelectPersonRegistration(EGN);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PersonRegistration> SelectPersonRegistrationAsync(string EGN)
         {
             return base.Channel.SelectPersonRegistrationAsync(EGN);
         }
-        
+
         public System.Nullable<System.Guid> GetPersonRegistrationIdentifierByPersonAssignmentId(System.Guid personassignmentId)
         {
             return base.Channel.GetPersonRegistrationIdentifierByPersonAssignmentId(personassignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPersonRegistrationIdentifierByPersonAssignmentIdAsync(System.Guid personassignmentId)
         {
             return base.Channel.GetPersonRegistrationIdentifierByPersonAssignmentIdAsync(personassignmentId);
         }
-        
+
         public Integration.Epep.Summon GetSummonById(System.Guid summonId)
         {
             return base.Channel.GetSummonById(summonId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Summon> GetSummonByIdAsync(System.Guid summonId)
         {
             return base.Channel.GetSummonByIdAsync(summonId);
         }
-        
+
         public System.Guid[] GetSummonIdentifiersByParentId(System.Guid parentId, string summonTypeCode)
         {
             return base.Channel.GetSummonIdentifiersByParentId(parentId, summonTypeCode);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetSummonIdentifiersByParentIdAsync(System.Guid parentId, string summonTypeCode)
         {
             return base.Channel.GetSummonIdentifiersByParentIdAsync(parentId, summonTypeCode);
         }
-        
+
         public Integration.Epep.ScannedDocument GetScannedDocumentById(System.Guid scannedDocumentId)
         {
             return base.Channel.GetScannedDocumentById(scannedDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.ScannedDocument> GetScannedDocumentByIdAsync(System.Guid scannedDocumentId)
         {
             return base.Channel.GetScannedDocumentByIdAsync(scannedDocumentId);
         }
-        
+
         public System.Guid[] GetScannedDocumentIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetScannedDocumentIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetScannedDocumentIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetScannedDocumentIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.AssignmentFile GetAssignmentFileById(System.Guid assignmentFileId)
         {
             return base.Channel.GetAssignmentFileById(assignmentFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.AssignmentFile> GetAssignmentFileByIdAsync(System.Guid assignmentFileId)
         {
             return base.Channel.GetAssignmentFileByIdAsync(assignmentFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetAssignmentFileIdentifiersByAssignmentId(System.Guid assignmentId)
         {
             return base.Channel.GetAssignmentFileIdentifiersByAssignmentId(assignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetAssignmentFileIdentifiersByAssignmentIdAsync(System.Guid assignmentId)
         {
             return base.Channel.GetAssignmentFileIdentifiersByAssignmentIdAsync(assignmentId);
         }
-        
+
         public Integration.Epep.PrivateProtocolFile GetPrivateProtocolFileById(System.Guid privateProtocolId)
         {
             return base.Channel.GetPrivateProtocolFileById(privateProtocolId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PrivateProtocolFile> GetPrivateProtocolFileByIdAsync(System.Guid privateProtocolId)
         {
             return base.Channel.GetPrivateProtocolFileByIdAsync(privateProtocolId);
         }
-        
+
         public System.Nullable<System.Guid> GetPrivateProtocolFileIdentifierByHearingId(System.Guid hearingId)
         {
             return base.Channel.GetPrivateProtocolFileIdentifierByHearingId(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPrivateProtocolFileIdentifierByHearingIdAsync(System.Guid hearingId)
         {
             return base.Channel.GetPrivateProtocolFileIdentifierByHearingIdAsync(hearingId);
         }
-        
+
         public Integration.Epep.PublicProtocolFile GetPublicProtocolFileById(System.Guid publicProtocolFileId)
         {
             return base.Channel.GetPublicProtocolFileById(publicProtocolFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PublicProtocolFile> GetPublicProtocolFileByIdAsync(System.Guid publicProtocolFileId)
         {
             return base.Channel.GetPublicProtocolFileByIdAsync(publicProtocolFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetPublicProtocolFileIdentifierByHearingId(System.Guid hearingId)
         {
             return base.Channel.GetPublicProtocolFileIdentifierByHearingId(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPublicProtocolFileIdentifierByHearingIdAsync(System.Guid hearingId)
         {
             return base.Channel.GetPublicProtocolFileIdentifierByHearingIdAsync(hearingId);
         }
-        
+
         public Integration.Epep.IncomingDocumentFile GetIncomingDocumentFileById(System.Guid incomingDocumentFileId)
         {
             return base.Channel.GetIncomingDocumentFileById(incomingDocumentFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.IncomingDocumentFile> GetIncomingDocumentFileByIdAsync(System.Guid incomingDocumentFileId)
         {
             return base.Channel.GetIncomingDocumentFileByIdAsync(incomingDocumentFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetIncomingDocumentFileIdentifierByIncomingDocumentId(System.Guid incomingDocumentId)
         {
             return base.Channel.GetIncomingDocumentFileIdentifierByIncomingDocumentId(incomingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetIncomingDocumentFileIdentifierByIncomingDocumentIdAsync(System.Guid incomingDocumentId)
         {
             return base.Channel.GetIncomingDocumentFileIdentifierByIncomingDocumentIdAsync(incomingDocumentId);
         }
-        
+
         public Integration.Epep.OutgoingDocumentFile GetOutgoingDocumentFileById(System.Guid outgoingDocumentFileId)
         {
             return base.Channel.GetOutgoingDocumentFileById(outgoingDocumentFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.OutgoingDocumentFile> GetOutgoingDocumentFileByIdAsync(System.Guid outgoingDocumentFileId)
         {
             return base.Channel.GetOutgoingDocumentFileByIdAsync(outgoingDocumentFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetOutgoingDocumentFileIdentifierByOutgoingDocumentId(System.Guid outgoingDocumentId)
         {
             return base.Channel.GetOutgoingDocumentFileIdentifierByOutgoingDocumentId(outgoingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetOutgoingDocumentFileIdentifierByOutgoingDocumentIdAsync(System.Guid outgoingDocumentId)
         {
             return base.Channel.GetOutgoingDocumentFileIdentifierByOutgoingDocumentIdAsync(outgoingDocumentId);
         }
-        
+
         public Integration.Epep.SummonFile GetSummonFileById(System.Guid summonFileId)
         {
             return base.Channel.GetSummonFileById(summonFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.SummonFile> GetSummonFileByIdAsync(System.Guid summonFileId)
         {
             return base.Channel.GetSummonFileByIdAsync(summonFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetSummonFileIdentifierBySummonId(System.Guid summonId)
         {
             return base.Channel.GetSummonFileIdentifierBySummonId(summonId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetSummonFileIdentifierBySummonIdAsync(System.Guid summonId)
         {
             return base.Channel.GetSummonFileIdentifierBySummonIdAsync(summonId);
         }
-        
+
         public Integration.Epep.PrivateActFile GetPrivateActFileById(System.Guid privateActFileId)
         {
             return base.Channel.GetPrivateActFileById(privateActFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PrivateActFile> GetPrivateActFileByIdAsync(System.Guid privateActFileId)
         {
             return base.Channel.GetPrivateActFileByIdAsync(privateActFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetPrivateActFileIdentifiersByActId(System.Guid actId)
         {
             return base.Channel.GetPrivateActFileIdentifiersByActId(actId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPrivateActFileIdentifiersByActIdAsync(System.Guid actId)
         {
             return base.Channel.GetPrivateActFileIdentifiersByActIdAsync(actId);
         }
-        
+
         public Integration.Epep.PublicActFile GetPublicActFileById(System.Guid publicActFileId)
         {
             return base.Channel.GetPublicActFileById(publicActFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PublicActFile> GetPublicActFileByIdAsync(System.Guid publicActFileId)
         {
             return base.Channel.GetPublicActFileByIdAsync(publicActFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetPublicActFileIdentifierByActId(System.Guid actId)
         {
             return base.Channel.GetPublicActFileIdentifierByActId(actId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPublicActFileIdentifierByActIdAsync(System.Guid actId)
         {
             return base.Channel.GetPublicActFileIdentifierByActIdAsync(actId);
         }
-        
+
         public Integration.Epep.PrivateMotiveFile GetPrivateMotiveFileById(System.Guid privateMotiveFileId)
         {
             return base.Channel.GetPrivateMotiveFileById(privateMotiveFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PrivateMotiveFile> GetPrivateMotiveFileByIdAsync(System.Guid privateMotiveFileId)
         {
             return base.Channel.GetPrivateMotiveFileByIdAsync(privateMotiveFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetPrivateMotiveFileIdentifierByActId(System.Guid actId)
         {
             return base.Channel.GetPrivateMotiveFileIdentifierByActId(actId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPrivateMotiveFileIdentifierByActIdAsync(System.Guid actId)
         {
             return base.Channel.GetPrivateMotiveFileIdentifierByActIdAsync(actId);
         }
-        
+
         public Integration.Epep.PublicMotiveFile GetPublicMotiveFileById(System.Guid publicActFileId)
         {
             return base.Channel.GetPublicMotiveFileById(publicActFileId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.PublicMotiveFile> GetPublicMotiveFileByIdAsync(System.Guid publicActFileId)
         {
             return base.Channel.GetPublicMotiveFileByIdAsync(publicActFileId);
         }
-        
+
         public System.Nullable<System.Guid> GetPublicMotiveFileIdentifierByActId(System.Guid actId)
         {
             return base.Channel.GetPublicMotiveFileIdentifierByActId(actId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetPublicMotiveFileIdentifierByActIdAsync(System.Guid actId)
         {
             return base.Channel.GetPublicMotiveFileIdentifierByActIdAsync(actId);
         }
-        
+
+        public System.Nullable<System.Guid> InsertAttachedDocument(Integration.Epep.AttachedDocument attachedDocument)
+        {
+            return base.Channel.InsertAttachedDocument(attachedDocument);
+        }
+
+        public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAttachedDocumentAsync(Integration.Epep.AttachedDocument attachedDocument)
+        {
+            return base.Channel.InsertAttachedDocumentAsync(attachedDocument);
+        }
+
+        public bool DeleteAttachedDocument(System.Guid attachedDocumentId)
+        {
+            return base.Channel.DeleteAttachedDocument(attachedDocumentId);
+        }
+
+        public System.Threading.Tasks.Task<bool> DeleteAttachedDocumentAsync(System.Guid attachedDocumentId)
+        {
+            return base.Channel.DeleteAttachedDocumentAsync(attachedDocumentId);
+        }
+
+        public System.Nullable<System.Guid> InsertHearingDocument(Integration.Epep.HearingDocument hearingDocument)
+        {
+            return base.Channel.InsertHearingDocument(hearingDocument);
+        }
+
+        public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingDocumentAsync(Integration.Epep.HearingDocument hearingDocument)
+        {
+            return base.Channel.InsertHearingDocumentAsync(hearingDocument);
+        }
+
+        public System.Nullable<System.Guid> UpdateHearingDocument(Integration.Epep.HearingDocument hearingDocument)
+        {
+            return base.Channel.UpdateHearingDocument(hearingDocument);
+        }
+
+        public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingDocumentAsync(Integration.Epep.HearingDocument hearingDocument)
+        {
+            return base.Channel.UpdateHearingDocumentAsync(hearingDocument);
+        }
+
+        public bool DeleteHearingDocument(System.Guid hearingDocumentId)
+        {
+            return base.Channel.DeleteHearingDocument(hearingDocumentId);
+        }
+
+        public System.Threading.Tasks.Task<bool> DeleteHearingDocumentAsync(System.Guid hearingDocumentId)
+        {
+            return base.Channel.DeleteHearingDocumentAsync(hearingDocumentId);
+        }
+
+        public System.Nullable<System.Guid> InsertUserAssignment(Integration.Epep.UserAssignment userAssignment)
+        {
+            return base.Channel.InsertUserAssignment(userAssignment);
+        }
+
+        public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertUserAssignmentAsync(Integration.Epep.UserAssignment userAssignment)
+        {
+            return base.Channel.InsertUserAssignmentAsync(userAssignment);
+        }
+
+        public System.Nullable<System.Guid> UpdateUserAssignment(Integration.Epep.UserAssignment userAssignment)
+        {
+            return base.Channel.UpdateUserAssignment(userAssignment);
+        }
+
+        public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateUserAssignmentAsync(Integration.Epep.UserAssignment userAssignment)
+        {
+            return base.Channel.UpdateUserAssignmentAsync(userAssignment);
+        }
+
+        public bool DeleteUserAssignment(System.Guid userAssignmentId)
+        {
+            return base.Channel.DeleteUserAssignment(userAssignmentId);
+        }
+
+        public System.Threading.Tasks.Task<bool> DeleteUserAssignmentAsync(System.Guid userAssignmentId)
+        {
+            return base.Channel.DeleteUserAssignmentAsync(userAssignmentId);
+        }
+
+        public Integration.Epep.UserRegistration[] GetUserRegistrations(System.Nullable<System.DateTime> modifyFromDate)
+        {
+            return base.Channel.GetUserRegistrations(modifyFromDate);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.UserRegistration[]> GetUserRegistrationsAsync(System.Nullable<System.DateTime> modifyFromDate)
+        {
+            return base.Channel.GetUserRegistrationsAsync(modifyFromDate);
+        }
+
+        public Integration.Epep.SummonReadTimeResult GetSummonsReadTimestampV3(System.Guid guid)
+        {
+            return base.Channel.GetSummonsReadTimestampV3(guid);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.SummonReadTimeResult> GetSummonsReadTimestampV3Async(System.Guid guid)
+        {
+            return base.Channel.GetSummonsReadTimestampV3Async(guid);
+        }
+
+        public bool UpdateElectronicDocumentSetDateCourtAccept(System.Guid electronicDocumentId, System.DateTime dateCourtAccept)
+        {
+            return base.Channel.UpdateElectronicDocumentSetDateCourtAccept(electronicDocumentId, dateCourtAccept);
+        }
+
+        public System.Threading.Tasks.Task<bool> UpdateElectronicDocumentSetDateCourtAcceptAsync(System.Guid electronicDocumentId, System.DateTime dateCourtAccept)
+        {
+            return base.Channel.UpdateElectronicDocumentSetDateCourtAcceptAsync(electronicDocumentId, dateCourtAccept);
+        }
+
+        public System.Guid[] GetNewElectronicDocumentIdentifiers(string courtCode)
+        {
+            return base.Channel.GetNewElectronicDocumentIdentifiers(courtCode);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid[]> GetNewElectronicDocumentIdentifiersAsync(string courtCode)
+        {
+            return base.Channel.GetNewElectronicDocumentIdentifiersAsync(courtCode);
+        }
+
+        public Integration.Epep.ElectronicDocument GetElectronicDocument(System.Guid electronicDocumentId)
+        {
+            return base.Channel.GetElectronicDocument(electronicDocumentId);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.ElectronicDocument> GetElectronicDocumentAsync(System.Guid electronicDocumentId)
+        {
+            return base.Channel.GetElectronicDocumentAsync(electronicDocumentId);
+        }
+
+        public System.Nullable<System.Guid> MarkSummonAsCourtRead(System.Guid summonId, System.DateTime courtReadDate, string courtDescription)
+        {
+            return base.Channel.MarkSummonAsCourtRead(summonId, courtReadDate, courtDescription);
+        }
+
+        public System.Threading.Tasks.Task<System.Nullable<System.Guid>> MarkSummonAsCourtReadAsync(System.Guid summonId, System.DateTime courtReadDate, string courtDescription)
+        {
+            return base.Channel.MarkSummonAsCourtReadAsync(summonId, courtReadDate, courtDescription);
+        }
+
+        public Integration.Epep.UserAssignment GetUserAssignmentById(System.Guid userAssignmentId)
+        {
+            return base.Channel.GetUserAssignmentById(userAssignmentId);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.UserAssignment> GetUserAssignmentByIdAsync(System.Guid userAssignmentId)
+        {
+            return base.Channel.GetUserAssignmentByIdAsync(userAssignmentId);
+        }
+
+        public System.Guid[] GetCaseIdentifiersByNumber(string court, string caseType, int caseNumber, int caseYear)
+        {
+            return base.Channel.GetCaseIdentifiersByNumber(court, caseType, caseNumber, caseYear);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid[]> GetCaseIdentifiersByNumberAsync(string court, string caseType, int caseNumber, int caseYear)
+        {
+            return base.Channel.GetCaseIdentifiersByNumberAsync(court, caseType, caseNumber, caseYear);
+        }
+
+        public System.Guid[] GetAttachedDocumentIdentifiers(int type, System.Guid parentId)
+        {
+            return base.Channel.GetAttachedDocumentIdentifiers(type, parentId);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid[]> GetAttachedDocumentIdentifiersAsync(int type, System.Guid parentId)
+        {
+            return base.Channel.GetAttachedDocumentIdentifiersAsync(type, parentId);
+        }
+
+        public Integration.Epep.AttachedDocument GetAttachedDocumentById(System.Guid attachedDocumentId)
+        {
+            return base.Channel.GetAttachedDocumentById(attachedDocumentId);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.AttachedDocument> GetAttachedDocumentByIdAsync(System.Guid attachedDocumentId)
+        {
+            return base.Channel.GetAttachedDocumentByIdAsync(attachedDocumentId);
+        }
+
+        public System.Guid[] GetHearingDocumentIdentifiersByHearingId(System.Guid hearingId)
+        {
+            return base.Channel.GetHearingDocumentIdentifiersByHearingId(hearingId);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid[]> GetHearingDocumentIdentifiersByHearingIdAsync(System.Guid hearingId)
+        {
+            return base.Channel.GetHearingDocumentIdentifiersByHearingIdAsync(hearingId);
+        }
+
+        public Integration.Epep.HearingDocument GetHearingDocumentById(System.Guid hearingDocumentId)
+        {
+            return base.Channel.GetHearingDocumentById(hearingDocumentId);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.HearingDocument> GetHearingDocumentByIdAsync(System.Guid hearingDocumentId)
+        {
+            return base.Channel.GetHearingDocumentByIdAsync(hearingDocumentId);
+        }
+
+        public Integration.Epep.SummaryCase GetSummaryCase(System.Guid gid)
+        {
+            return base.Channel.GetSummaryCase(gid);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.SummaryCase> GetSummaryCaseAsync(System.Guid gid)
+        {
+            return base.Channel.GetSummaryCaseAsync(gid);
+        }
+
+        public System.Guid InsertCaseMigration(Integration.Epep.CaseMigrationRegistration caseMigrationRegistration)
+        {
+            return base.Channel.InsertCaseMigration(caseMigrationRegistration);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid> InsertCaseMigrationAsync(Integration.Epep.CaseMigrationRegistration caseMigrationRegistration)
+        {
+            return base.Channel.InsertCaseMigrationAsync(caseMigrationRegistration);
+        }
+
+        public System.Guid[] GetNewCaseMigrations(string courtCode, System.Nullable<System.DateTime> fromDate)
+        {
+            return base.Channel.GetNewCaseMigrations(courtCode, fromDate);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid[]> GetNewCaseMigrationsAsync(string courtCode, System.Nullable<System.DateTime> fromDate)
+        {
+            return base.Channel.GetNewCaseMigrationsAsync(courtCode, fromDate);
+        }
+
+        public Integration.Epep.CaseMigrationRegistration GetRegistrationCaseMigration(System.Guid caseMigrationGid)
+        {
+            return base.Channel.GetRegistrationCaseMigration(caseMigrationGid);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.CaseMigrationRegistration> GetRegistrationCaseMigrationAsync(System.Guid caseMigrationGid)
+        {
+            return base.Channel.GetRegistrationCaseMigrationAsync(caseMigrationGid);
+        }
+
+        public bool StartProcessCaseMigration(System.Guid caseMigrationGid)
+        {
+            return base.Channel.StartProcessCaseMigration(caseMigrationGid);
+        }
+
+        public System.Threading.Tasks.Task<bool> StartProcessCaseMigrationAsync(System.Guid caseMigrationGid)
+        {
+            return base.Channel.StartProcessCaseMigrationAsync(caseMigrationGid);
+        }
+
+        public bool SaveResultCaseMigration(Integration.Epep.CaseMigrationResult caseMigrationResult)
+        {
+            return base.Channel.SaveResultCaseMigration(caseMigrationResult);
+        }
+
+        public System.Threading.Tasks.Task<bool> SaveResultCaseMigrationAsync(Integration.Epep.CaseMigrationResult caseMigrationResult)
+        {
+            return base.Channel.SaveResultCaseMigrationAsync(caseMigrationResult);
+        }
+
+        public System.Guid[] GetFinishedCaseMigrations(string courtCode, System.Nullable<System.DateTime> fromDate)
+        {
+            return base.Channel.GetFinishedCaseMigrations(courtCode, fromDate);
+        }
+
+        public System.Threading.Tasks.Task<System.Guid[]> GetFinishedCaseMigrationsAsync(string courtCode, System.Nullable<System.DateTime> fromDate)
+        {
+            return base.Channel.GetFinishedCaseMigrationsAsync(courtCode, fromDate);
+        }
+
+        public Integration.Epep.CaseMigrationResult GetResultCaseMigration(System.Guid caseMigrationGid)
+        {
+            return base.Channel.GetResultCaseMigration(caseMigrationGid);
+        }
+
+        public System.Threading.Tasks.Task<Integration.Epep.CaseMigrationResult> GetResultCaseMigrationAsync(System.Guid caseMigrationGid)
+        {
+            return base.Channel.GetResultCaseMigrationAsync(caseMigrationGid);
+        }
+
+        public bool EndProcessCaseMigration(System.Guid caseMigrationGid)
+        {
+            return base.Channel.EndProcessCaseMigration(caseMigrationGid);
+        }
+
+        public System.Threading.Tasks.Task<bool> EndProcessCaseMigrationAsync(System.Guid caseMigrationGid)
+        {
+            return base.Channel.EndProcessCaseMigrationAsync(caseMigrationGid);
+        }
+
+        public byte[] GetFileContentByKey(System.Guid key)
+        {
+            return base.Channel.GetFileContentByKey(key);
+        }
+
+        public System.Threading.Tasks.Task<byte[]> GetFileContentByKeyAsync(System.Guid key)
+        {
+            return base.Channel.GetFileContentByKeyAsync(key);
+        }
+
         public System.Nullable<System.Guid> InsertIncomingDocument(Integration.Epep.IncomingDocument incomingDocument)
         {
             return base.Channel.InsertIncomingDocument(incomingDocument);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertIncomingDocumentAsync(Integration.Epep.IncomingDocument incomingDocument)
         {
             return base.Channel.InsertIncomingDocumentAsync(incomingDocument);
         }
-        
+
         public System.Nullable<System.Guid> UpdateIncomingDocument(Integration.Epep.IncomingDocument incomingDocument)
         {
             return base.Channel.UpdateIncomingDocument(incomingDocument);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateIncomingDocumentAsync(Integration.Epep.IncomingDocument incomingDocument)
         {
             return base.Channel.UpdateIncomingDocumentAsync(incomingDocument);
         }
-        
+
         public System.Nullable<System.Guid> InsertIncomingDocumentFile(Integration.Epep.IncomingDocumentFile incomingDocumentFile)
         {
             return base.Channel.InsertIncomingDocumentFile(incomingDocumentFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertIncomingDocumentFileAsync(Integration.Epep.IncomingDocumentFile incomingDocumentFile)
         {
             return base.Channel.InsertIncomingDocumentFileAsync(incomingDocumentFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdateIncomingDocumentFile(Integration.Epep.IncomingDocumentFile incomingDocumentFile)
         {
             return base.Channel.UpdateIncomingDocumentFile(incomingDocumentFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateIncomingDocumentFileAsync(Integration.Epep.IncomingDocumentFile incomingDocumentFile)
         {
             return base.Channel.UpdateIncomingDocumentFileAsync(incomingDocumentFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertOutgoingDocument(Integration.Epep.OutgoingDocument outgoingDocument)
         {
             return base.Channel.InsertOutgoingDocument(outgoingDocument);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertOutgoingDocumentAsync(Integration.Epep.OutgoingDocument outgoingDocument)
         {
             return base.Channel.InsertOutgoingDocumentAsync(outgoingDocument);
         }
-        
+
         public System.Nullable<System.Guid> UpdateOutgoingDocument(Integration.Epep.OutgoingDocument outgoingDocument)
         {
             return base.Channel.UpdateOutgoingDocument(outgoingDocument);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateOutgoingDocumentAsync(Integration.Epep.OutgoingDocument outgoingDocument)
         {
             return base.Channel.UpdateOutgoingDocumentAsync(outgoingDocument);
         }
-        
+
         public System.Nullable<System.Guid> InsertOutgoingDocumentFile(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile)
         {
             return base.Channel.InsertOutgoingDocumentFile(outgoingDocumentFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertOutgoingDocumentFileAsync(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile)
         {
             return base.Channel.InsertOutgoingDocumentFileAsync(outgoingDocumentFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdateOutgoingDocumentFile(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile)
         {
             return base.Channel.UpdateOutgoingDocumentFile(outgoingDocumentFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateOutgoingDocumentFileAsync(Integration.Epep.OutgoingDocumentFile outgoingDocumentFile)
         {
             return base.Channel.UpdateOutgoingDocumentFileAsync(outgoingDocumentFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertCase(Integration.Epep.Case c)
         {
             return base.Channel.InsertCase(c);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertCaseAsync(Integration.Epep.Case c)
         {
             return base.Channel.InsertCaseAsync(c);
         }
-        
+
         public System.Nullable<System.Guid> UpdateCase(Integration.Epep.Case c)
         {
             return base.Channel.UpdateCase(c);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateCaseAsync(Integration.Epep.Case c)
         {
             return base.Channel.UpdateCaseAsync(c);
         }
-        
+
         public System.Nullable<System.Guid> GetCaseId(int incDocumentNumber, int incDocumentYear, string courtCode)
         {
             return base.Channel.GetCaseId(incDocumentNumber, incDocumentYear, courtCode);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> GetCaseIdAsync(int incDocumentNumber, int incDocumentYear, string courtCode)
         {
             return base.Channel.GetCaseIdAsync(incDocumentNumber, incDocumentYear, courtCode);
         }
-        
+
         public System.Nullable<System.Guid> InsertConnectedCase(Integration.Epep.ConnectedCase connectedCase)
         {
             return base.Channel.InsertConnectedCase(connectedCase);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertConnectedCaseAsync(Integration.Epep.ConnectedCase connectedCase)
         {
             return base.Channel.InsertConnectedCaseAsync(connectedCase);
         }
-        
+
         public System.Nullable<System.Guid> UpdateConnectedCase(Integration.Epep.ConnectedCase connectedCase)
         {
             return base.Channel.UpdateConnectedCase(connectedCase);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateConnectedCaseAsync(Integration.Epep.ConnectedCase connectedCase)
         {
             return base.Channel.UpdateConnectedCaseAsync(connectedCase);
         }
-        
+
         public System.Nullable<System.Guid> InsertReporter(Integration.Epep.Reporter reporter)
         {
             return base.Channel.InsertReporter(reporter);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertReporterAsync(Integration.Epep.Reporter reporter)
         {
             return base.Channel.InsertReporterAsync(reporter);
         }
-        
+
         public System.Nullable<System.Guid> UpdateReporter(Integration.Epep.Reporter reporter)
         {
             return base.Channel.UpdateReporter(reporter);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateReporterAsync(Integration.Epep.Reporter reporter)
         {
             return base.Channel.UpdateReporterAsync(reporter);
         }
-        
+
         public System.Nullable<System.Guid> InsertAssignment(Integration.Epep.Assignment assignment)
         {
             return base.Channel.InsertAssignment(assignment);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAssignmentAsync(Integration.Epep.Assignment assignment)
         {
             return base.Channel.InsertAssignmentAsync(assignment);
         }
-        
+
         public System.Nullable<System.Guid> UpdateAssignment(Integration.Epep.Assignment assignment)
         {
             return base.Channel.UpdateAssignment(assignment);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAssignmentAsync(Integration.Epep.Assignment assignment)
         {
             return base.Channel.UpdateAssignmentAsync(assignment);
         }
-        
+
         public System.Nullable<System.Guid> InsertAssignmentFile(Integration.Epep.AssignmentFile assignmentFile)
         {
             return base.Channel.InsertAssignmentFile(assignmentFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAssignmentFileAsync(Integration.Epep.AssignmentFile assignmentFile)
         {
             return base.Channel.InsertAssignmentFileAsync(assignmentFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdateAssignmentFile(Integration.Epep.AssignmentFile assignmentFile)
         {
             return base.Channel.UpdateAssignmentFile(assignmentFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAssignmentFileAsync(Integration.Epep.AssignmentFile assignmentFile)
         {
             return base.Channel.UpdateAssignmentFileAsync(assignmentFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertHearing(Integration.Epep.Hearing hearing)
         {
             return base.Channel.InsertHearing(hearing);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingAsync(Integration.Epep.Hearing hearing)
         {
             return base.Channel.InsertHearingAsync(hearing);
         }
-        
+
         public System.Nullable<System.Guid> UpdateHearing(Integration.Epep.Hearing hearing)
         {
             return base.Channel.UpdateHearing(hearing);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingAsync(Integration.Epep.Hearing hearing)
         {
             return base.Channel.UpdateHearingAsync(hearing);
         }
-        
+
         public System.Nullable<System.Guid> InsertPrivateProtocolFile(Integration.Epep.PrivateProtocolFile privateProtocolFile)
         {
             return base.Channel.InsertPrivateProtocolFile(privateProtocolFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateProtocolFileAsync(Integration.Epep.PrivateProtocolFile privateProtocolFile)
         {
             return base.Channel.InsertPrivateProtocolFileAsync(privateProtocolFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePrivateProtocolFile(Integration.Epep.PrivateProtocolFile privateProtocolFile)
         {
             return base.Channel.UpdatePrivateProtocolFile(privateProtocolFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateProtocolFileAsync(Integration.Epep.PrivateProtocolFile privateProtocolFile)
         {
             return base.Channel.UpdatePrivateProtocolFileAsync(privateProtocolFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertPublicProtocolFile(Integration.Epep.PublicProtocolFile publicProtocolFile)
         {
             return base.Channel.InsertPublicProtocolFile(publicProtocolFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicProtocolFileAsync(Integration.Epep.PublicProtocolFile publicProtocolFile)
         {
             return base.Channel.InsertPublicProtocolFileAsync(publicProtocolFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePublicProtocolFile(Integration.Epep.PublicProtocolFile publicProtocolFile)
         {
             return base.Channel.UpdatePublicProtocolFile(publicProtocolFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicProtocolFileAsync(Integration.Epep.PublicProtocolFile publicProtocolFile)
         {
             return base.Channel.UpdatePublicProtocolFileAsync(publicProtocolFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertHearingParticipant(Integration.Epep.HearingParticipant hearingParticipant)
         {
             return base.Channel.InsertHearingParticipant(hearingParticipant);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertHearingParticipantAsync(Integration.Epep.HearingParticipant hearingParticipant)
         {
             return base.Channel.InsertHearingParticipantAsync(hearingParticipant);
         }
-        
+
         public System.Nullable<System.Guid> UpdateHearingParticipant(Integration.Epep.HearingParticipant hearingParticipant)
         {
             return base.Channel.UpdateHearingParticipant(hearingParticipant);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateHearingParticipantAsync(Integration.Epep.HearingParticipant hearingParticipant)
         {
             return base.Channel.UpdateHearingParticipantAsync(hearingParticipant);
         }
-        
+
         public System.Nullable<System.Guid> InsertAct(Integration.Epep.Act act)
         {
             return base.Channel.InsertAct(act);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertActAsync(Integration.Epep.Act act)
         {
             return base.Channel.InsertActAsync(act);
         }
-        
+
         public System.Nullable<System.Guid> UpdateAct(Integration.Epep.Act act)
         {
             return base.Channel.UpdateAct(act);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateActAsync(Integration.Epep.Act act)
         {
             return base.Channel.UpdateActAsync(act);
         }
-        
+
         public System.Nullable<System.Guid> InsertPublicActFile(Integration.Epep.PublicActFile publicActFile)
         {
             return base.Channel.InsertPublicActFile(publicActFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicActFileAsync(Integration.Epep.PublicActFile publicActFile)
         {
             return base.Channel.InsertPublicActFileAsync(publicActFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePublicActFile(Integration.Epep.PublicActFile publicActFile)
         {
             return base.Channel.UpdatePublicActFile(publicActFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicActFileAsync(Integration.Epep.PublicActFile publicActFile)
         {
             return base.Channel.UpdatePublicActFileAsync(publicActFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertPrivateActFile(Integration.Epep.PrivateActFile privateActFile)
         {
             return base.Channel.InsertPrivateActFile(privateActFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateActFileAsync(Integration.Epep.PrivateActFile privateActFile)
         {
             return base.Channel.InsertPrivateActFileAsync(privateActFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePrivateActFile(Integration.Epep.PrivateActFile privateActFile)
         {
             return base.Channel.UpdatePrivateActFile(privateActFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateActFileAsync(Integration.Epep.PrivateActFile privateActFile)
         {
             return base.Channel.UpdatePrivateActFileAsync(privateActFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertPublicMotiveFile(Integration.Epep.PublicMotiveFile publicMotiveFile)
         {
             return base.Channel.InsertPublicMotiveFile(publicMotiveFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPublicMotiveFileAsync(Integration.Epep.PublicMotiveFile publicMotiveFile)
         {
             return base.Channel.InsertPublicMotiveFileAsync(publicMotiveFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePublicMotiveFile(Integration.Epep.PublicMotiveFile publicMotiveFile)
         {
             return base.Channel.UpdatePublicMotiveFile(publicMotiveFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePublicMotiveFileAsync(Integration.Epep.PublicMotiveFile publicMotiveFile)
         {
             return base.Channel.UpdatePublicMotiveFileAsync(publicMotiveFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertPrivateMotiveFile(Integration.Epep.PrivateMotiveFile privateMotiveFile)
         {
             return base.Channel.InsertPrivateMotiveFile(privateMotiveFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPrivateMotiveFileAsync(Integration.Epep.PrivateMotiveFile privateMotiveFile)
         {
             return base.Channel.InsertPrivateMotiveFileAsync(privateMotiveFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePrivateMotiveFile(Integration.Epep.PrivateMotiveFile privateMotiveFile)
         {
             return base.Channel.UpdatePrivateMotiveFile(privateMotiveFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePrivateMotiveFileAsync(Integration.Epep.PrivateMotiveFile privateMotiveFile)
         {
             return base.Channel.UpdatePrivateMotiveFileAsync(privateMotiveFile);
         }
-        
+
         public System.Nullable<System.Guid> InsertActPreparator(Integration.Epep.ActPreparator actPreparator)
         {
             return base.Channel.InsertActPreparator(actPreparator);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertActPreparatorAsync(Integration.Epep.ActPreparator actPreparator)
         {
             return base.Channel.InsertActPreparatorAsync(actPreparator);
         }
-        
+
         public System.Nullable<System.Guid> UpdateActPreparator(Integration.Epep.ActPreparator actPreparator)
         {
             return base.Channel.UpdateActPreparator(actPreparator);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateActPreparatorAsync(Integration.Epep.ActPreparator actPreparator)
         {
             return base.Channel.UpdateActPreparatorAsync(actPreparator);
         }
-        
+
         public System.Nullable<System.Guid> InsertAppeal(Integration.Epep.Appeal appeal)
         {
             return base.Channel.InsertAppeal(appeal);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertAppealAsync(Integration.Epep.Appeal appeal)
         {
             return base.Channel.InsertAppealAsync(appeal);
         }
-        
+
         public System.Nullable<System.Guid> UpdateAppeal(Integration.Epep.Appeal appeal)
         {
             return base.Channel.UpdateAppeal(appeal);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateAppealAsync(Integration.Epep.Appeal appeal)
         {
             return base.Channel.UpdateAppealAsync(appeal);
         }
-        
+
         public System.Nullable<System.Guid> InsertCaseRuling(Integration.Epep.CaseRuling caseRuling)
         {
             return base.Channel.InsertCaseRuling(caseRuling);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertCaseRulingAsync(Integration.Epep.CaseRuling caseRuling)
         {
             return base.Channel.InsertCaseRulingAsync(caseRuling);
         }
-        
+
         public System.Nullable<System.Guid> UpdateCaseRuling(Integration.Epep.CaseRuling caseRuling)
         {
             return base.Channel.UpdateCaseRuling(caseRuling);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateCaseRulingAsync(Integration.Epep.CaseRuling caseRuling)
         {
             return base.Channel.UpdateCaseRulingAsync(caseRuling);
         }
-        
+
         public System.Nullable<System.Guid> InsertSide(Integration.Epep.Side side)
         {
             return base.Channel.InsertSide(side);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSideAsync(Integration.Epep.Side side)
         {
             return base.Channel.InsertSideAsync(side);
         }
-        
+
         public System.Nullable<System.Guid> UpdateSide(Integration.Epep.Side side)
         {
             return base.Channel.UpdateSide(side);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSideAsync(Integration.Epep.Side side)
         {
             return base.Channel.UpdateSideAsync(side);
         }
-        
+
         public System.Nullable<System.Guid> InsertLawyerAssignment(Integration.Epep.LawyerAssignment lawyerAssignment)
         {
             return base.Channel.InsertLawyerAssignment(lawyerAssignment);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertLawyerAssignmentAsync(Integration.Epep.LawyerAssignment lawyerAssignment)
         {
             return base.Channel.InsertLawyerAssignmentAsync(lawyerAssignment);
         }
-        
+
         public System.Nullable<System.Guid> UpdateLawyerAssignment(Integration.Epep.LawyerAssignment lawyerAssignment)
         {
             return base.Channel.UpdateLawyerAssignment(lawyerAssignment);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateLawyerAssignmentAsync(Integration.Epep.LawyerAssignment lawyerAssignment)
         {
             return base.Channel.UpdateLawyerAssignmentAsync(lawyerAssignment);
         }
-        
+
         public System.Nullable<System.Guid> InsertSummon(Integration.Epep.Summon summon, System.Guid userId)
         {
             return base.Channel.InsertSummon(summon, userId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSummonAsync(Integration.Epep.Summon summon, System.Guid userId)
         {
             return base.Channel.InsertSummonAsync(summon, userId);
         }
-        
+
         public System.Nullable<System.Guid> UpdateSummon(Integration.Epep.Summon summon)
         {
             return base.Channel.UpdateSummon(summon);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSummonAsync(Integration.Epep.Summon summon)
         {
             return base.Channel.UpdateSummonAsync(summon);
         }
-        
+
         public System.Nullable<System.Guid> InsertSummonFile(Integration.Epep.SummonFile summonFile)
         {
             return base.Channel.InsertSummonFile(summonFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertSummonFileAsync(Integration.Epep.SummonFile summonFile)
         {
             return base.Channel.InsertSummonFileAsync(summonFile);
         }
-        
+
         public System.Nullable<System.Guid> UpdateSummonFile(Integration.Epep.SummonFile summonFile)
         {
             return base.Channel.UpdateSummonFile(summonFile);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateSummonFileAsync(Integration.Epep.SummonFile summonFile)
         {
             return base.Channel.UpdateSummonFileAsync(summonFile);
         }
-        
+
         public Integration.Epep.Lawyer[] GetAllLawyers()
         {
             return base.Channel.GetAllLawyers();
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Lawyer[]> GetAllLawyersAsync()
         {
             return base.Channel.GetAllLawyersAsync();
         }
-        
+
         public Integration.Epep.Lawyer[] GetAllNewLawyers(System.DateTime from)
         {
             return base.Channel.GetAllNewLawyers(from);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Lawyer[]> GetAllNewLawyersAsync(System.DateTime from)
         {
             return base.Channel.GetAllNewLawyersAsync(from);
         }
-        
+
         public Integration.Epep.Lawyer GetLawyerByNumber(string number)
         {
             return base.Channel.GetLawyerByNumber(number);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Lawyer> GetLawyerByNumberAsync(string number)
         {
             return base.Channel.GetLawyerByNumberAsync(number);
         }
-        
+
         public System.Guid[] GetAllServedSummonsByCourt(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to)
         {
             return base.Channel.GetAllServedSummonsByCourt(courtcode, from, to);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetAllServedSummonsByCourtAsync(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to)
         {
             return base.Channel.GetAllServedSummonsByCourtAsync(courtcode, from, to);
         }
-        
+
         public System.DateTime GetSummonsServedTimestamp(System.Guid guid)
         {
             return base.Channel.GetSummonsServedTimestamp(guid);
         }
-        
+
         public System.Threading.Tasks.Task<System.DateTime> GetSummonsServedTimestampAsync(System.Guid guid)
         {
             return base.Channel.GetSummonsServedTimestampAsync(guid);
         }
-        
+
         public System.Guid[] GetAllReadSummonsByCourt(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to)
         {
             return base.Channel.GetAllReadSummonsByCourt(courtcode, from, to);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetAllReadSummonsByCourtAsync(string courtcode, System.Nullable<System.DateTime> from, System.Nullable<System.DateTime> to)
         {
             return base.Channel.GetAllReadSummonsByCourtAsync(courtcode, from, to);
         }
-        
+
         public System.DateTime GetSummonsReadTimestamp(System.Guid guid)
         {
             return base.Channel.GetSummonsReadTimestamp(guid);
         }
-        
+
         public System.Threading.Tasks.Task<System.DateTime> GetSummonsReadTimestampAsync(System.Guid guid)
         {
             return base.Channel.GetSummonsReadTimestampAsync(guid);
         }
-        
+
         public System.Nullable<System.Guid> MarkSummonAsRead(System.Guid guid, System.Nullable<System.DateTime> date)
         {
             return base.Channel.MarkSummonAsRead(guid, date);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> MarkSummonAsReadAsync(System.Guid guid, System.Nullable<System.DateTime> date)
         {
             return base.Channel.MarkSummonAsReadAsync(guid, date);
         }
-        
+
         public System.Guid[] GetReadSummonsForCertainDay(System.DateTime date)
         {
             return base.Channel.GetReadSummonsForCertainDay(date);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetReadSummonsForCertainDayAsync(System.DateTime date)
         {
             return base.Channel.GetReadSummonsForCertainDayAsync(date);
         }
-        
+
         public byte[] GetSummonReportDocument(System.Guid summonId)
         {
             return base.Channel.GetSummonReportDocument(summonId);
         }
-        
+
         public System.Threading.Tasks.Task<byte[]> GetSummonReportDocumentAsync(System.Guid summonId)
         {
             return base.Channel.GetSummonReportDocumentAsync(summonId);
         }
-        
+
         public void ActivateSummonsAccess(System.Guid userId, System.Guid caseId)
         {
             base.Channel.ActivateSummonsAccess(userId, caseId);
         }
-        
+
         public System.Threading.Tasks.Task ActivateSummonsAccessAsync(System.Guid userId, System.Guid caseId)
         {
             return base.Channel.ActivateSummonsAccessAsync(userId, caseId);
         }
-        
+
         public void DeactivateSummonsAccess(System.Guid userId, System.Guid caseId)
         {
             base.Channel.DeactivateSummonsAccess(userId, caseId);
         }
-        
+
         public System.Threading.Tasks.Task DeactivateSummonsAccessAsync(System.Guid userId, System.Guid caseId)
         {
             return base.Channel.DeactivateSummonsAccessAsync(userId, caseId);
         }
-        
+
         public System.Nullable<System.Guid> InsertPersonAssignment(Integration.Epep.PersonAssignment personAssignment)
         {
             return base.Channel.InsertPersonAssignment(personAssignment);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPersonAssignmentAsync(Integration.Epep.PersonAssignment personAssignment)
         {
             return base.Channel.InsertPersonAssignmentAsync(personAssignment);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePersonAssignment(Integration.Epep.PersonAssignment personAssignment)
         {
             return base.Channel.UpdatePersonAssignment(personAssignment);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePersonAssignmentAsync(Integration.Epep.PersonAssignment personAssignment)
         {
             return base.Channel.UpdatePersonAssignmentAsync(personAssignment);
         }
-        
+
         public System.Nullable<System.Guid> InsertScannedDocument(Integration.Epep.ScannedDocument scannedDocument)
         {
             return base.Channel.InsertScannedDocument(scannedDocument);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertScannedDocumentAsync(Integration.Epep.ScannedDocument scannedDocument)
         {
             return base.Channel.InsertScannedDocumentAsync(scannedDocument);
         }
-        
+
         public System.Nullable<System.Guid> UpdateScannedDocument(Integration.Epep.ScannedDocument scannedDocument)
         {
             return base.Channel.UpdateScannedDocument(scannedDocument);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateScannedDocumentAsync(Integration.Epep.ScannedDocument scannedDocument)
         {
             return base.Channel.UpdateScannedDocumentAsync(scannedDocument);
         }
-        
+
         public System.Nullable<System.Guid> InsertLawyerRegistration(Integration.Epep.LawyerRegistration lawyerRegistration)
         {
             return base.Channel.InsertLawyerRegistration(lawyerRegistration);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertLawyerRegistrationAsync(Integration.Epep.LawyerRegistration lawyerRegistration)
         {
             return base.Channel.InsertLawyerRegistrationAsync(lawyerRegistration);
         }
-        
+
         public System.Nullable<System.Guid> UpdateLawyerRegistration(Integration.Epep.LawyerRegistration lawyerRegistration)
         {
             return base.Channel.UpdateLawyerRegistration(lawyerRegistration);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateLawyerRegistrationAsync(Integration.Epep.LawyerRegistration lawyerRegistration)
         {
             return base.Channel.UpdateLawyerRegistrationAsync(lawyerRegistration);
         }
-        
+
         public System.Nullable<System.Guid> ActivateLawyerRegistration(System.Guid lawyerRegistrationId)
         {
             return base.Channel.ActivateLawyerRegistration(lawyerRegistrationId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> ActivateLawyerRegistrationAsync(System.Guid lawyerRegistrationId)
         {
             return base.Channel.ActivateLawyerRegistrationAsync(lawyerRegistrationId);
         }
-        
+
         public System.Nullable<System.Guid> DeactivateLawyerRegistration(System.Guid lawyerRegistrationId)
         {
             return base.Channel.DeactivateLawyerRegistration(lawyerRegistrationId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> DeactivateLawyerRegistrationAsync(System.Guid lawyerRegistrationId)
         {
             return base.Channel.DeactivateLawyerRegistrationAsync(lawyerRegistrationId);
         }
-        
+
         public System.Nullable<System.Guid> InsertPersonRegistration(Integration.Epep.PersonRegistration personRegistration)
         {
             return base.Channel.InsertPersonRegistration(personRegistration);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> InsertPersonRegistrationAsync(Integration.Epep.PersonRegistration personRegistration)
         {
             return base.Channel.InsertPersonRegistrationAsync(personRegistration);
         }
-        
+
         public System.Nullable<System.Guid> UpdatePersonRegistration(Integration.Epep.PersonRegistration personRegistration)
         {
             return base.Channel.UpdatePersonRegistration(personRegistration);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdatePersonRegistrationAsync(Integration.Epep.PersonRegistration personRegistration)
         {
             return base.Channel.UpdatePersonRegistrationAsync(personRegistration);
         }
-        
+
         public System.Nullable<System.Guid> ActivatePersonRegistration(System.Guid personRegistrationId)
         {
             return base.Channel.ActivatePersonRegistration(personRegistrationId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> ActivatePersonRegistrationAsync(System.Guid personRegistrationId)
         {
             return base.Channel.ActivatePersonRegistrationAsync(personRegistrationId);
         }
-        
+
         public System.Nullable<System.Guid> DeactivatePersonRegistration(System.Guid personRegistrationId)
         {
             return base.Channel.DeactivatePersonRegistration(personRegistrationId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> DeactivatePersonRegistrationAsync(System.Guid personRegistrationId)
         {
             return base.Channel.DeactivatePersonRegistrationAsync(personRegistrationId);
         }
-        
+
         public Integration.Epep.UserRegistrationInfo GetUserRegistrationInfoByUsername(string username)
         {
             return base.Channel.GetUserRegistrationInfoByUsername(username);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.UserRegistrationInfo> GetUserRegistrationInfoByUsernameAsync(string username)
         {
             return base.Channel.GetUserRegistrationInfoByUsernameAsync(username);
         }
-        
+
         public System.Nullable<System.Guid> UpdateUsername(string oldUsername, string newUsername, string courtCode)
         {
             return base.Channel.UpdateUsername(oldUsername, newUsername, courtCode);
         }
-        
+
         public System.Threading.Tasks.Task<System.Nullable<System.Guid>> UpdateUsernameAsync(string oldUsername, string newUsername, string courtCode)
         {
             return base.Channel.UpdateUsernameAsync(oldUsername, newUsername, courtCode);
         }
-        
+
         public System.Guid[] GetCaseIdentifiers(System.Nullable<int> caseNumber, string caseKindCode, System.Nullable<int> caseYear, string department)
         {
             return base.Channel.GetCaseIdentifiers(caseNumber, caseKindCode, caseYear, department);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetCaseIdentifiersAsync(System.Nullable<int> caseNumber, string caseKindCode, System.Nullable<int> caseYear, string department)
         {
             return base.Channel.GetCaseIdentifiersAsync(caseNumber, caseKindCode, caseYear, department);
         }
-        
+
         public bool DeleteIncomingDocument(System.Guid incomingDocumentId)
         {
             return base.Channel.DeleteIncomingDocument(incomingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteIncomingDocumentAsync(System.Guid incomingDocumentId)
         {
             return base.Channel.DeleteIncomingDocumentAsync(incomingDocumentId);
         }
-        
+
         public bool DeleteOutgoingDocument(System.Guid outgoingDocumentId)
         {
             return base.Channel.DeleteOutgoingDocument(outgoingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteOutgoingDocumentAsync(System.Guid outgoingDocumentId)
         {
             return base.Channel.DeleteOutgoingDocumentAsync(outgoingDocumentId);
         }
-        
+
         public bool DeleteCase(System.Guid caseId)
         {
             return base.Channel.DeleteCase(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteCaseAsync(System.Guid caseId)
         {
             return base.Channel.DeleteCaseAsync(caseId);
         }
-        
+
         public bool DeleteConnectedCase(System.Guid connectedCaseId)
         {
             return base.Channel.DeleteConnectedCase(connectedCaseId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteConnectedCaseAsync(System.Guid connectedCaseId)
         {
             return base.Channel.DeleteConnectedCaseAsync(connectedCaseId);
         }
-        
+
         public bool DeleteReporter(System.Guid reporterId)
         {
             return base.Channel.DeleteReporter(reporterId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteReporterAsync(System.Guid reporterId)
         {
             return base.Channel.DeleteReporterAsync(reporterId);
         }
-        
+
         public bool DeleteAssignment(System.Guid assignmentId)
         {
             return base.Channel.DeleteAssignment(assignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteAssignmentAsync(System.Guid assignmentId)
         {
             return base.Channel.DeleteAssignmentAsync(assignmentId);
         }
-        
+
         public bool DeleteHearing(System.Guid hearingId)
         {
             return base.Channel.DeleteHearing(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteHearingAsync(System.Guid hearingId)
         {
             return base.Channel.DeleteHearingAsync(hearingId);
         }
-        
+
         public bool DeleteHearingParticipant(System.Guid hearingParticipantId)
         {
             return base.Channel.DeleteHearingParticipant(hearingParticipantId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteHearingParticipantAsync(System.Guid hearingParticipantId)
         {
             return base.Channel.DeleteHearingParticipantAsync(hearingParticipantId);
         }
-        
+
         public bool DeleteAct(System.Guid actId)
         {
             return base.Channel.DeleteAct(actId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteActAsync(System.Guid actId)
         {
             return base.Channel.DeleteActAsync(actId);
         }
-        
+
         public bool DeleteActPreparator(System.Guid actPreparatorId)
         {
             return base.Channel.DeleteActPreparator(actPreparatorId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteActPreparatorAsync(System.Guid actPreparatorId)
         {
             return base.Channel.DeleteActPreparatorAsync(actPreparatorId);
         }
-        
+
         public bool DeleteAppeal(System.Guid appealId)
         {
             return base.Channel.DeleteAppeal(appealId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteAppealAsync(System.Guid appealId)
         {
             return base.Channel.DeleteAppealAsync(appealId);
         }
-        
+
         public bool DeleteCaseRuling(System.Guid caseRulingId)
         {
             return base.Channel.DeleteCaseRuling(caseRulingId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteCaseRulingAsync(System.Guid caseRulingId)
         {
             return base.Channel.DeleteCaseRulingAsync(caseRulingId);
         }
-        
+
         public bool DeleteSide(System.Guid sideId)
         {
             return base.Channel.DeleteSide(sideId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteSideAsync(System.Guid sideId)
         {
             return base.Channel.DeleteSideAsync(sideId);
         }
-        
+
         public bool DeleteLawyerAssignment(System.Guid lawyerAssignmentId)
         {
             return base.Channel.DeleteLawyerAssignment(lawyerAssignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteLawyerAssignmentAsync(System.Guid lawyerAssignmentId)
         {
             return base.Channel.DeleteLawyerAssignmentAsync(lawyerAssignmentId);
         }
-        
+
         public bool DeleteSummon(System.Guid summonId)
         {
             return base.Channel.DeleteSummon(summonId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteSummonAsync(System.Guid summonId)
         {
             return base.Channel.DeleteSummonAsync(summonId);
         }
-        
+
         public bool DeletePersonAssignment(System.Guid personAssignmentId)
         {
             return base.Channel.DeletePersonAssignment(personAssignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePersonAssignmentAsync(System.Guid personAssignmentId)
         {
             return base.Channel.DeletePersonAssignmentAsync(personAssignmentId);
         }
-        
+
         public bool DeleteScannedDocument(System.Guid scannedDocumentId)
         {
             return base.Channel.DeleteScannedDocument(scannedDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteScannedDocumentAsync(System.Guid scannedDocumentId)
         {
             return base.Channel.DeleteScannedDocumentAsync(scannedDocumentId);
         }
-        
+
         public bool DeleteAssignmentFile(System.Guid assignmentId)
         {
             return base.Channel.DeleteAssignmentFile(assignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteAssignmentFileAsync(System.Guid assignmentId)
         {
             return base.Channel.DeleteAssignmentFileAsync(assignmentId);
         }
-        
+
         public bool DeletePrivateProtocolFile(System.Guid hearingId)
         {
             return base.Channel.DeletePrivateProtocolFile(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePrivateProtocolFileAsync(System.Guid hearingId)
         {
             return base.Channel.DeletePrivateProtocolFileAsync(hearingId);
         }
-        
+
         public bool DeletePublicProtocolFile(System.Guid hearingId)
         {
             return base.Channel.DeletePublicProtocolFile(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePublicProtocolFileAsync(System.Guid hearingId)
         {
             return base.Channel.DeletePublicProtocolFileAsync(hearingId);
         }
-        
+
         public bool DeleteIncomingDocumentFile(System.Guid incomingDocumentId)
         {
             return base.Channel.DeleteIncomingDocumentFile(incomingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteIncomingDocumentFileAsync(System.Guid incomingDocumentId)
         {
             return base.Channel.DeleteIncomingDocumentFileAsync(incomingDocumentId);
         }
-        
+
         public bool DeleteOutgoingDocumentFile(System.Guid outgoingDocumentId)
         {
             return base.Channel.DeleteOutgoingDocumentFile(outgoingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteOutgoingDocumentFileAsync(System.Guid outgoingDocumentId)
         {
             return base.Channel.DeleteOutgoingDocumentFileAsync(outgoingDocumentId);
         }
-        
+
         public bool DeleteSummonFile(System.Guid summonId)
         {
             return base.Channel.DeleteSummonFile(summonId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeleteSummonFileAsync(System.Guid summonId)
         {
             return base.Channel.DeleteSummonFileAsync(summonId);
         }
-        
+
         public bool DeletePrivateActFile(System.Guid actId)
         {
             return base.Channel.DeletePrivateActFile(actId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePrivateActFileAsync(System.Guid actId)
         {
             return base.Channel.DeletePrivateActFileAsync(actId);
         }
-        
+
         public bool DeletePublicActFile(System.Guid actId)
         {
             return base.Channel.DeletePublicActFile(actId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePublicActFileAsync(System.Guid actId)
         {
             return base.Channel.DeletePublicActFileAsync(actId);
         }
-        
+
         public bool DeletePrivateMotiveFile(System.Guid actId)
         {
             return base.Channel.DeletePrivateMotiveFile(actId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePrivateMotiveFileAsync(System.Guid actId)
         {
             return base.Channel.DeletePrivateMotiveFileAsync(actId);
         }
-        
+
         public bool DeletePublicMotiveFile(System.Guid actId)
         {
             return base.Channel.DeletePublicMotiveFile(actId);
         }
-        
+
         public System.Threading.Tasks.Task<bool> DeletePublicMotiveFileAsync(System.Guid actId)
         {
             return base.Channel.DeletePublicMotiveFileAsync(actId);
         }
-        
+
         public Integration.Epep.IncomingDocument GetIncomingDocumentById(System.Guid incomingDocumentId)
         {
             return base.Channel.GetIncomingDocumentById(incomingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.IncomingDocument> GetIncomingDocumentByIdAsync(System.Guid incomingDocumentId)
         {
             return base.Channel.GetIncomingDocumentByIdAsync(incomingDocumentId);
         }
-        
+
         public System.Guid[] GetIncomingDocumentIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetIncomingDocumentIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetIncomingDocumentIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetIncomingDocumentIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.OutgoingDocument GetOutgoingDocumentById(System.Guid outgoingDocumentId)
         {
             return base.Channel.GetOutgoingDocumentById(outgoingDocumentId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.OutgoingDocument> GetOutgoingDocumentByIdAsync(System.Guid outgoingDocumentId)
         {
             return base.Channel.GetOutgoingDocumentByIdAsync(outgoingDocumentId);
         }
-        
+
         public System.Guid[] GetOutgoingDocumentIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetOutgoingDocumentIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetOutgoingDocumentIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetOutgoingDocumentIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.Case GetCaseById(System.Guid caseId)
         {
             return base.Channel.GetCaseById(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Case> GetCaseByIdAsync(System.Guid caseId)
         {
             return base.Channel.GetCaseByIdAsync(caseId);
         }
-        
+
         public Integration.Epep.ConnectedCase GetConnectedCaseById(System.Guid connectedCaseId)
         {
             return base.Channel.GetConnectedCaseById(connectedCaseId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.ConnectedCase> GetConnectedCaseByIdAsync(System.Guid connectedCaseId)
         {
             return base.Channel.GetConnectedCaseByIdAsync(connectedCaseId);
         }
-        
+
         public System.Guid[] GetConnectedCaseIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetConnectedCaseIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetConnectedCaseIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetConnectedCaseIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.Reporter GetReporterById(System.Guid reporterId)
         {
             return base.Channel.GetReporterById(reporterId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Reporter> GetReporterByIdAsync(System.Guid reporterId)
         {
             return base.Channel.GetReporterByIdAsync(reporterId);
         }
-        
+
         public System.Guid[] GetReporterIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetReporterIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetReporterIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetReporterIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.Assignment GetAssignmentById(System.Guid assignmentId)
         {
             return base.Channel.GetAssignmentById(assignmentId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Assignment> GetAssignmentByIdAsync(System.Guid assignmentId)
         {
             return base.Channel.GetAssignmentByIdAsync(assignmentId);
         }
-        
+
         public System.Guid[] GetAssignmentIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetAssignmentIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetAssignmentIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetAssignmentIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.Hearing GetHearingById(System.Guid hearingId)
         {
             return base.Channel.GetHearingById(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Hearing> GetHearingByIdAsync(System.Guid hearingId)
         {
             return base.Channel.GetHearingByIdAsync(hearingId);
         }
-        
+
         public System.Guid[] GetHearingIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetHearingIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetHearingIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetHearingIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.HearingParticipant GetHearingParticipantById(System.Guid hearingParticipantId)
         {
             return base.Channel.GetHearingParticipantById(hearingParticipantId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.HearingParticipant> GetHearingParticipantByIdAsync(System.Guid hearingParticipantId)
         {
             return base.Channel.GetHearingParticipantByIdAsync(hearingParticipantId);
         }
-        
+
         public System.Guid[] GetHearingParticipantIdentifiersByHearingId(System.Guid hearingId)
         {
             return base.Channel.GetHearingParticipantIdentifiersByHearingId(hearingId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetHearingParticipantIdentifiersByHearingIdAsync(System.Guid hearingId)
         {
             return base.Channel.GetHearingParticipantIdentifiersByHearingIdAsync(hearingId);
         }
-        
+
         public Integration.Epep.Act GetActById(System.Guid actId)
         {
             return base.Channel.GetActById(actId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Act> GetActByIdAsync(System.Guid actId)
         {
             return base.Channel.GetActByIdAsync(actId);
         }
-        
+
         public System.Guid[] GetActIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetActIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetActIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetActIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public Integration.Epep.ActPreparator GetActPreparatorById(System.Guid actPreparatorId)
         {
             return base.Channel.GetActPreparatorById(actPreparatorId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.ActPreparator> GetActPreparatorByIdAsync(System.Guid actPreparatorId)
         {
             return base.Channel.GetActPreparatorByIdAsync(actPreparatorId);
         }
-        
+
         public System.Guid[] GetActPreparatorIdentifiersByActId(System.Guid actId)
         {
             return base.Channel.GetActPreparatorIdentifiersByActId(actId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetActPreparatorIdentifiersByActIdAsync(System.Guid actId)
         {
             return base.Channel.GetActPreparatorIdentifiersByActIdAsync(actId);
         }
-        
+
         public Integration.Epep.Appeal GetAppealById(System.Guid appealId)
         {
             return base.Channel.GetAppealById(appealId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.Appeal> GetAppealByIdAsync(System.Guid appealId)
         {
             return base.Channel.GetAppealByIdAsync(appealId);
         }
-        
+
         public System.Guid[] GetAppealIdentifiersByActId(System.Guid actId)
         {
             return base.Channel.GetAppealIdentifiersByActId(actId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetAppealIdentifiersByActIdAsync(System.Guid actId)
         {
             return base.Channel.GetAppealIdentifiersByActIdAsync(actId);
         }
-        
+
         public Integration.Epep.CaseRuling GetCaseRulingById(System.Guid caseRulingId)
         {
             return base.Channel.GetCaseRulingById(caseRulingId);
         }
-        
+
         public System.Threading.Tasks.Task<Integration.Epep.CaseRuling> GetCaseRulingByIdAsync(System.Guid caseRulingId)
         {
             return base.Channel.GetCaseRulingByIdAsync(caseRulingId);
         }
-        
+
         public System.Guid[] GetCaseRulingIdentifiersByCaseId(System.Guid caseId)
         {
             return base.Channel.GetCaseRulingIdentifiersByCaseId(caseId);
         }
-        
+
         public System.Threading.Tasks.Task<System.Guid[]> GetCaseRulingIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetCaseRulingIdentifiersByCaseIdAsync(caseId);
         }
-        
+
         public virtual System.Threading.Tasks.Task OpenAsync()
         {
             return System.Threading.Tasks.Task.Factory.FromAsync(((System.ServiceModel.ICommunicationObject)(this)).BeginOpen(null, null), new System.Action<System.IAsyncResult>(((System.ServiceModel.ICommunicationObject)(this)).EndOpen));
         }
-        
-        public virtual System.Threading.Tasks.Task CloseAsync()
-        {
-            return System.Threading.Tasks.Task.Factory.FromAsync(((System.ServiceModel.ICommunicationObject)(this)).BeginClose(null, null), new System.Action<System.IAsyncResult>(((System.ServiceModel.ICommunicationObject)(this)).EndClose));
-        }
-        
+
         private static System.ServiceModel.Channels.Binding GetBindingForEndpoint(EndpointConfiguration endpointConfiguration)
         {
             if ((endpointConfiguration == EndpointConfiguration.BasicHttpBinding_IeCaseService))
@@ -6168,34 +8662,33 @@ namespace Integration.Epep
                 result.MaxReceivedMessageSize = int.MaxValue;
                 result.AllowCookies = true;
                 result.Security.Mode = System.ServiceModel.BasicHttpSecurityMode.Transport;
-                result.Security.Transport.ClientCredentialType = System.ServiceModel.HttpClientCredentialType.Certificate;
                 return result;
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
         }
-        
+
         private static System.ServiceModel.EndpointAddress GetEndpointAddress(EndpointConfiguration endpointConfiguration)
         {
             if ((endpointConfiguration == EndpointConfiguration.BasicHttpBinding_IeCaseService))
             {
-                return new System.ServiceModel.EndpointAddress("https://ecase-test.justice.bg/Service/eCaseService.svc");
+                return new System.ServiceModel.EndpointAddress("$$SECRET$$");
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
         }
-        
+
         private static System.ServiceModel.Channels.Binding GetDefaultBinding()
         {
             return IeCaseServiceClient.GetBindingForEndpoint(EndpointConfiguration.BasicHttpBinding_IeCaseService);
         }
-        
+
         private static System.ServiceModel.EndpointAddress GetDefaultEndpointAddress()
         {
             return IeCaseServiceClient.GetEndpointAddress(EndpointConfiguration.BasicHttpBinding_IeCaseService);
         }
-        
+
         public enum EndpointConfiguration
         {
-            
+
             BasicHttpBinding_IeCaseService,
         }
     }

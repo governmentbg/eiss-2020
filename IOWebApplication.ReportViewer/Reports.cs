@@ -1,18 +1,12 @@
 ﻿using IOWebApplication.ReportViewer.Data.Context;
 using IOWebApplication.ReportViewer.Models.Context;
-using Microsoft.Reporting.WebForms;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using System.Net;
-using System.Security.Principal;
-using System.Web;
 
 namespace IOWebApplication.ReportViewer
 {
-  
-  public class ManageReport
+
+    public class ManageReport
   {
     public ReportRequest GetCurrentRequest(string requestGUID)
     {

@@ -1,0 +1,68 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial,Verdana, Geneva, sans-serif;
+            font-size: 10pt;
+            padding-top: 10pt;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24pt;
+            margin-top: 50pt;
+            margin-bottom: 50pt;
+        }
+
+        h3, h4 {
+            margin-bottom: 5px;
+        }
+
+        .sm {
+            font-size: 90%;
+            color: #555;
+        }
+
+        .pad-left {
+            padding-left: 20px;
+        }
+
+        table.grid {
+            border-collapse: collapse;
+        }
+
+            table.grid thead {
+                font-size: 85%;
+                font-weight: 400;
+                text-align: left;
+                border-bottom: 1px solid #aaa;
+            }
+
+            table.grid td {
+                padding: 2px 0;
+            }
+
+        table, tr, td, th, tbody, thead, tfoot {
+            page-break-inside: avoid !important;
+        }
+
+        .w100 {
+            width: 100%;
+        }
+
+        .w75 {
+            width: 75%;
+        }
+    </style>
+</head>
+<body>
+    @RenderBody()
+</body>
+
+</html>

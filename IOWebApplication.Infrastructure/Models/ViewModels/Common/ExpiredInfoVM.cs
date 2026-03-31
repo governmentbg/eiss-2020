@@ -1,9 +1,6 @@
-﻿using IOWebApplication.Infrastructure.Attributes;
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 {
@@ -25,5 +22,26 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string ReturnUrl { get; set; }
         public bool OtherBool { get; set; }
         public int? OtherId { get; set; }
+
+        public string KeyString
+        {
+            get
+            {
+                return $"{Id}-{LongId}-{StringId}";
+            }
+        }
+
+        public bool IsValidDescription
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(DescriptionExpired) || DescriptionExpired?.Length < 5)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
     }
 }

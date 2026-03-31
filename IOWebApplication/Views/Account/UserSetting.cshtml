@@ -11,7 +11,7 @@
     };
     ViewBag.CalendarStyle_ddl = calStyles;
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -25,16 +25,25 @@
             <div id="saveContainer">
                 <fieldset class="is-fieldset">
                     <legend class="legend_1">Начален екран</legend>
+                    @Html.EditorFor(x => x.CaseFastSearchVisible, "bool")
+                    @Html.EditorFor(x => x.NewsVisible, "bool")
                     @Html.EditorFor(x => x.CalendarVisible, "bool")
                     @Html.EditorFor(x => x.CalendarStyle, "GenericDropDownString")
                     @Html.EditorFor(x => x.WorkTaskVisible, "bool")
                     @Html.EditorFor(x => x.CaseMoveVisible, "bool")
-                    @Html.EditorFor(x => x.NewsVisible, "bool")
+                    @Html.EditorFor(x => x.FPnotificationsVisible, "bool")
+                    @Html.DisplayFor(x => x.LastSelectedScaner, "obj")
                 </fieldset>
             </div>
             <div class="form-group">
                 <input type="submit" value="Запис" class="btn btn-success" />
             </div>
         </form>
+    </div>
+    <div class="col-md-4">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Инструменти</legend>
+            <a asp-controller="LawUnitTemplate" asp-action="Index" class="btn btn-warning" title="Създаване на шаблони за актове">Шаблони</a>
+        </fieldset>
     </div>
 </div>

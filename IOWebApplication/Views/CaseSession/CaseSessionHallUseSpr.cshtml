@@ -84,8 +84,8 @@
                             searchable: true
                         },
                         {
-                            name: 'caseName',
-                            data: 'caseName',
+                            name: 'caseDate',
+                            data: 'caseDate',
                             title: 'Дело',
                             "render": function (item, type, row, meta) {
                                 var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
@@ -103,11 +103,15 @@
                             searchable: true
                         },
                         {
-                            name: 'sessionLabel',
-                            data: 'sessionLabel',
+                            name: 'sessionDate',
+                            data: 'sessionDate',
                             title: 'Заседание',
                             sortable: true,
-                            searchable: true
+                            searchable: true,
+                            "render": function (item, type, row, meta) {
+                                return row.sessionLabel;
+                            },
+
                         },
                         {
                             className: "text-center",

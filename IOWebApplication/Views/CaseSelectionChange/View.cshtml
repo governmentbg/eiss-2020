@@ -1,0 +1,74 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSelectionChangePrintVM
+@{
+    ViewData["Title"] = "Преглед на протокол";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        @if (Model.ChangeTypeId==NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+    {
+           <li><a href="@Url.Action("Index")" title="Начало">Масово преразпределение на съдия-докладчик</a></li>
+    }
+             @if (Model.ChangeTypeId==NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge)
+    {
+           <li><a href="@Url.Action("IndexJudge")" title="Начало">Масово преразпределение на съдия-член на състав</a></li>
+    }
+     
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        @switch (Model.ChangeTypeId)
+        {
+            case NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie:
+                {
+                    <partial name="ReplaceJudge_Protokol" model="@Model" />
+                    break;
+                }
+                   case NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge:
+                {
+                    <partial name="ReplaceJudge_Protokol" model="@Model" />
+                    break;
+                }
+        }
+
+    </div>
+    <div class="col-lg-4">
+        @if (Model.ChangeStateId != NomenclatureConstants.CaseSelectionChangeStates.Saved)
+        {
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">
+                    Действия
+                </legend>
+
+                @if (Model.ChangeStateId == NomenclatureConstants.CaseSelectionChangeStates.New)
+                {
+                    <a href="@Url.Action("SendForSign", new { id = Model.Id })" class="btn btn-primary" title="Подписване на протокола за масово преразпределение.">Подпиши</a>
+                }
+                @if (Model.ChangeStateId == NomenclatureConstants.CaseSelectionChangeStates.Declared)
+                {
+                    <div class="callout callout-danger">
+                        <h5>Проблем при запис на преразпределение</h5>
+                        <p>
+                            Възникна проблем при запис на част от данните при запис на преразпределение. Моля повторете записа.
+                        </p>
+                    </div>
+                    <a href="@Url.Action("EnforceChange", new { id = Model.Id })" class="btn btn-danger" title="Повтори записа на преразпределението след постановяване на протокола.">Запис на преразпределение</a>
+                }
+
+            </fieldset>
+        }
+        else
+        {
+            <div class="cdn-files" data-label="Протокол" data-sourcetype="@SourceTypeSelectVM.CaseSelectionChangeProtokol" data-sourceid="@Model.Id" data-editmode="none"></div>
+
+            <partial name="_CdnScript" />
+        }
+    </div>
+
+</div>

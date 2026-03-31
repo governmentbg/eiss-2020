@@ -1,0 +1,28 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@model DocumentPersonLinkVM
+
+<form id="frmUpdateRepresentatives" action="@Url.Action("UpdateRepresentatives")" method="post">
+    @Html.HiddenFor(x => x.DocumentId)
+    <div class="row" >
+        <div class="col-lg-6">
+            <strong>Представители</strong>
+        </div>
+        <div class="col-lg-6">
+            <strong>Представлявани страни</strong>
+        </div>
+    </div>
+    @for (int i = 0; i < Model.Representatives.Length; i++)
+    {
+        <div class="row" style="margin-bottom:10px;">
+            <div class="col-lg-6">
+                @Html.HiddenFor(x => x.Representatives[i].DocumentPersonId)
+                @Html.HiddenFor(x => x.Representatives[i].SavedRepresentsGid)
+                @Model.Representatives[i].PersonName
+            </div>
+            <div class="col-lg-6">
+                <select asp-for="@Model.Representatives[i].RepresentsGid" class="form-control" asp-items="@Model.MainSides"></select>
+            </div>
+        </div>
+    }
+    <button type="submit" class="btn btn-success">Потвърди</button>
+</form>

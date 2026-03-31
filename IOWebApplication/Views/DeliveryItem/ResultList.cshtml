@@ -1,15 +1,14 @@
-﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 @model DeliveryItemListVM;
 @using IOWebApplication.Infrastructure.Constants
 @inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Книга за получени и върнати призовки и други съдебни книжа";
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+<partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 <form id="formFilter" asp-action="Edit" method="post">
@@ -39,28 +38,18 @@
         </div>
     </div>
     <div class="row">
-        @if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ReqBooks))
-        {
-            <div class="col-md-4 text-left pb-15">
-                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResultNew()" value="Експорт в Excel " title="Експорт в Excel">
-                    Експорт в Excel
-                    <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
-                </button>
-                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel стар">
-                    Експорт в Excel  стар
-                    <i class="fa fa-file-excel-o" title="Експорт в Excel стар"></i>
-                </button>
-            </div>
-        }
-        else
-        {
-            <div class="col-md-4 text-left pb-15">
-                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel">
-                    Експорт в Excel
-                    <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
-                </button>
-            </div>
-        }
+
+        <div class="col-md-4 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResultNew()" value="Експорт в Excel " title="Експорт в Excel">
+                Експорт в Excel
+                <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
+            </button>
+            <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel стар">
+                Експорт в Excel  стар
+                <i class="fa fa-file-excel-o" title="Експорт в Excel стар"></i>
+            </button>
+        </div>
+
     </div>
     <hr>
 </form>
@@ -71,36 +60,36 @@
 
 @section scripts {
 
-    <script>
-        $('#FromCourtId').select2({
-            language: "bg"
-        });
+<script>
+    $('#FromCourtId').select2({
+        language: "bg"
+    });
 
-        $('#LawUnitId').select2({
-            language: "bg"
-        });
+    $('#LawUnitId').select2({
+        language: "bg"
+    });
 
-        $(document).ready(function () {
-             $('#CaseGroupId').change(function () {
-                requestCombo(
-                    '@Url.Action("GetDDL_CaseType","Ajax")',
-                    { CaseGroupId: $(this).val() },
-                    '#CaseTypeId',
-                    @Model.CaseTypeId,
-                    function () {
-                        $('#CaseTypeId').trigger('change')
-                    });
-             });
-        });
-        function ExcelDataResult() {
-             $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
-             $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResult")');
-             $("#formPostEdit").submit();
-        }
-        function ExcelDataResultNew() {
-             $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
-             $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResultNew")');
-             $("#formPostEdit").submit();
-        }
-    </script>
+    $(document).ready(function () {
+         $('#CaseGroupId').change(function () {
+            requestCombo(
+                '@Url.Action("GetDDL_CaseType","Ajax")',
+                { CaseGroupId: $(this).val() },
+                '#CaseTypeId',
+                @Model.CaseTypeId,
+                function () {
+                    $('#CaseTypeId').trigger('change')
+                });
+         });
+    });
+    function ExcelDataResult() {
+         $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+         $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResult")');
+         $("#formPostEdit").submit();
+    }
+    function ExcelDataResultNew() {
+         $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+         $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResultNew")');
+         $("#formPostEdit").submit();
+    }
+</script>
 }

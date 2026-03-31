@@ -27,7 +27,7 @@ namespace IOWebApplication.Core.Services
         private DateTime DefaultDateTo = new DateTime(2019, 12, 31);
         private readonly UserManager<ApplicationUser> userManager;
         public MigrationDataService(
-            ILogger<DocumentService> _logger,
+            ILogger<MigrationDataService> _logger,
             IRepository _repo,
             IUserContext _userContext,
             UserManager<ApplicationUser> _userManager
@@ -692,6 +692,7 @@ namespace IOWebApplication.Core.Services
             {
                 int groupId = repo.AllReadonly<CourtGroup>().Where(x => x.CourtId == item.CourtId
                                                                     && x.Description == item.ParentCode.Trim())
+                                                            .Where(x => x.GroupKind == NomenclatureConstants.CourtGroupKinds.JudgeSelection)
                                                             .Select(x => x.Id).FirstOrDefault();
 
                 int caseCodeId = getCaseCodeByCode(item.Code);

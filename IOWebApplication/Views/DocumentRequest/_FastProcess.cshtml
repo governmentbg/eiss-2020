@@ -1,0 +1,102 @@
+﻿@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@model FastProcessRequestVM
+@inject IUserContext userContext
+@{
+
+    ViewData["IsInEuro"] = userContext.IsPeriodEuro;
+    bool is417 = Model.RequestTypeCode == FastProcessRequestVM.FastProcess417;
+
+    var allDocuments = (List<SelectListItem>)ViewBag.selectDocument_SelectDocumentRequestId_ddl;
+    SelectDocumentRequestVM selectDocument = new SelectDocumentRequestVM();
+    string taxAmountText = string.Empty;
+    if (Model.TaxAmount > 0M)
+    {
+        taxAmountText = $"{Model.TaxAmount:N2} EUR";
+    }
+}
+
+<div class="row fastprocess-controls">
+    <div class="col-md-2">
+        @if (!string.IsNullOrEmpty(taxAmountText))
+        {
+            <center><h4>Такса <strong>@taxAmountText</strong></h4></center>
+        }
+
+        <nav class="timeline__nav" aria-label="Заявление по чл 410">
+            <ul class="timeline__list">
+                <li><a href="#fp-applicant" class="timeline__btn btn">Заявител / Длъжник</a></li>
+                <li><a href="#fp-claimstype" class="timeline__btn btn">Предмет на вземането</a></li>
+                <li><a href="#fp-circumstances" class="timeline__btn btn">Обстоятелства</a></li>
+                <li><a href="#fp-debtdistribution" class="timeline__btn btn">Разпределение на отговорност</a></li>
+                <li><a href="#fp-bankaccount" class="timeline__btn btn">Плащане</a></li>
+                <li><a href="#fp-expense" class="timeline__btn btn">Разноски</a></li>
+            </ul>
+        </nav>
+        <hr />
+        <center><a href="#" class="modal-loader" data-modal-title="Калкулатори" data-modal-url="@Url.Action("Calculators", "Tools")"><b>Калкулатори</b></a></center>
+    </div>
+    <div class="col-md-10 timeline active " style="padding-right: 1.5rem;">
+        <div id="timeline1" class="timeline__container active">
+            @if (allDocuments != null && allDocuments.Count > 1)
+            {
+                <h3 class="section-title section-title--xxs mb-3 select-document-toggle" style="color:#FE9900;cursor:pointer" title="Моля, натиснете тук за избор на данни">По делото съществуват подадени съпровождащи документи</h3>
+                <div class="row select-document-container" style="display:none;">
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => selectDocument.SelectDocumentRequestId, "GenericDropDownLong")
+                    </div>
+                    <div class="col-lg-2">
+                        @Html.EditorFor(x => selectDocument.SelectDocumentConscent, "Bool")
+                    </div>
+                    <div class="col-lg-2">
+                        <a id="btnConfirmSelectDocumentData" href="#" onclick="saveSelectedDocument();return false;" class="btn btn-danger" style="display:none;">Потвърди</a>
+                    </div>
+                </div>
+            }
+            <div id="divPersonContainer">
+                <partial name="_FastProcessSidesDisplay" model="@Model" />
+            </div>
+            <span class="text-danger text-bold" style="font-size:150%;" asp-validation-for="SideValidations"></span>
+
+            @if (is417)
+            {
+                <partial name="_FastProcessCompetencyBases417" model="@Model" />
+            }
+            <h3 class="section-title section-title--xxs mb-3">Описание на вземането</h3>
+            @Html.EditorFor(x => x.ClaimDescription, "Textarea")
+
+            <partial name="_FastProcessClaimType" model="@Model" />
+
+            <partial name="_FastProcessMoneyClaims" model="@Model" />
+            <partial name="_FastProcessItemSubstitutions" model="@Model" />
+
+            <partial name="_FastProcessItemClaim" model="@Model" />
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.ClaimCircumstances);
+            }
+            <partial name="_FastProcessClaimCircumstances" model="@Model.ClaimCircumstances" />
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = string.Empty;
+            }
+            <partial name="_FastProcessClaimCeded" model="@Model" />
+            <partial name="_FastProcessDebtDistributions" model="@Model" />
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.BankAccount);
+            }
+            <partial name="_FastProcessBankAccount" model="@Model.BankAccount" />
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = string.Empty;
+            }
+            @* <h3 class="section-title section-title--xxs mb-3">5. Допълнителни изявления и допълнителна информация (при необходимост)</h3> *@
+            @Html.EditorFor(x => x.OtherInfo, "Textarea")
+            <partial name="_FastProcessExpenses" model="@Model" />
+            @* <div>
+                С настоящото моля съдът да:<br />
+                - да издаде заповед за @(is417 ? "незабавно " : "")изпълнение,<br />
+                - да издаде изпълнителен лист.<br />
+                Декларирам, че доколкото ми е известно, предоставената информация е вярна.
+            </div> *@
+        </div>
+    </div>
+</div>

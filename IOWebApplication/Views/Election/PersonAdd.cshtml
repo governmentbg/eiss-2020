@@ -1,0 +1,40 @@
+﻿@model ElectionPersonAddVM
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Election;
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    ViewData["Title"] = $"Добавяне на съдия за избор";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="PersonAdd" method="post">
+            @Html.HiddenFor(x => x.ElectionGroupId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.CourtLawunitId, "SelectElectionLawunit")
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="ElectionPersons" asp-route-id="@Model.ElectionGroupId" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        initElectionLawunit();
+    });
+</script>

@@ -3,7 +3,7 @@
 @model CaseFinishListFilterReportVM
 
 @{
-    ViewData["Title"] = "Справка свършени дела за период – въззивни дела";
+    ViewData["Title"] = "Справка свършени дела за период – въззивни/касационни дела";
 }
 
 @section breadcrumb{
@@ -16,16 +16,20 @@
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    </div>
+     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
     </div>
     <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.InitialCourtId, "SelectCourt")</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterFinalActId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
     </div>
     <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
     </div>
 </form>
 
@@ -56,7 +60,7 @@
                     "type": "POST",
                     "datatype": "json",
                     data: function (d) {
-                        d.model = {
+                        d.filter = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
@@ -64,10 +68,13 @@
                             JudgeReporterId: $("#JudgeReporterId").val(),
                             InitialCourtId: $("#InitialCourtId").val(),
                             SessionResultId: $("#SessionResultId").val(),
-                            CaseCodeId: $("#CaseCodeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            JudgeReporterFinalActId: $("#JudgeReporterFinalActId").val(),
+                            CourtDepartmentId: $("#CourtDepartmentId").val(),
                         };
                     }
                 },
+                scrollX: true,
                 filter: false,
                 columns: [
                     {
@@ -81,6 +88,60 @@
                         name: 'caseRegNumber',
                         data: 'caseRegNumber',
                         title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'caseRegDate',
+                        data: 'caseRegDate',
+                        title: 'Дата на образуване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: "text-center",
+                        name: 'caseInforcedDate',
+                        data: 'caseInforcedDate',
+                        title: 'Дата на влизане в сила на делото',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateAnnouncedForResolution',
+                        data: 'dateAnnouncedForResolution',
+                        title: 'Дата на обявяване за решаване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'documentTypeLabel',
+                        data: 'documentTypeLabel',
+                        title: 'Иницииращ документ',
                         sortable: true,
                         searchable: true
                     },
@@ -92,10 +153,17 @@
                         searchable: true
                     },
                     {
+                        name: 'judgeReporterFinalActName',
+                        data: 'judgeReporterFinalActName',
+                        title: 'Съдия-докладчик (по фин. акт.)',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'initialCourtName',
                         data: 'initialCourtName',
                         title: 'Първоинстанционен съд',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                     },
                     {
@@ -113,26 +181,39 @@
                         searchable: false,
                     },
                     {
-                        name: 'sessionResultName',
-                        data: 'sessionResultName',
+                        className: "session-result",
+                        name: 'SessionResultNameFirst',
+                        data: 'SessionResultNameFirst',
                         title: 'Резултат от заседанието',
                         sortable: true,
                         searchable: false,
+                        "render": function (item, type, row, meta) {
+                            return row.sessionResultName;
+                        },
                     },
                     {
-                        name: 'sessionResultStopBaseName',
-                        data: 'sessionResultStopBaseName',
+                        name: 'sessionResultStopBaseNameFirst',
+                        data: 'sessionResultStopBaseNameFirst',
                         title: 'Причина за прекратяване',
                         sortable: true,
                         searchable: false,
+                        "render": function (item, type, row, meta) {
+                            return row.sessionResultStopBaseName;
+                        },
                     },
                     {
                         className: "text-center",
-                        name: 'caseDateFinish',
-                        data: 'caseDateFinish',
+                        name: 'caseDateFinishDate',
+                        data: 'caseDateFinishDate',
                         title: 'Дата на приключване на делото',
                         sortable: true,
                         searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
                     },
                     {
                         className: "text-right",
@@ -142,14 +223,30 @@
                         sortable: true,
                         searchable: false,
                     },
+                    {
+                        className: "text-right",
+                        name: 'numberMonths',
+                        data: 'numberMonths',
+                        title: 'Продължителност от дата на образуване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value == '0')
+                                return "";
+                            else
+                                return value;
+                        }
+                    },
                 ]
-            });
+            }).order([[1, "asc"]]);
         }
     }
 </script>
 <script>
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
+        $('#CaseTypeId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
 
         $.fn.dataTable.ext.buttons.io_excel.action = function () {
             $("#formFilter").submit();
@@ -157,8 +254,14 @@
     });
 
     $('#CaseGroupId').change(function () {
+        var instances = '@NomenclatureConstants.CaseInstanceType.SecondInstance' + "," + '@NomenclatureConstants.CaseInstanceType.ThirdInstance';
         var caseGroupId = $(this).val();
-        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId);
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val(), caseInstanceIds: instances }, '#CaseTypeId', @Model.CaseTypeId);
+    });
+
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeUnits", "Ajax")', { caseTypeId: $(this).val()}, '#CaseTypeUnitId', @Model.CaseTypeUnitId);
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
     });
 </script>
 

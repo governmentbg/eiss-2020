@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite.Internal;
 using Rotativa.AspNetCore;
 using Rotativa.AspNetCore.Options;
 using System.Threading.Tasks;
@@ -14,10 +13,10 @@ namespace Rotativa.Extensions
             //PageMargins = new Margins(20, 20, 10, 30);
             PageSize = Size.A4;
 
-            this.CustomSwitches = "--disable-smart-shrinking --margin-top 16mm --margin-right 12mm  --margin-left 25mm";
+            this.CustomSwitches = "--disable-smart-shrinking --margin-top 16mm --margin-right 12mm  --margin-left 25mm --encoding utf-8";
             if (addPaging || !string.IsNullOrEmpty(footerUrl))
             {
-                this.CustomSwitches += " --margin-bottom 20mm --page-offset 0  --encoding utf-8";
+                this.CustomSwitches += " --margin-bottom 20mm --page-offset 0 ";
                 if (!string.IsNullOrEmpty(footerUrl))
                 {
                     var pageInfo = "";
@@ -25,7 +24,7 @@ namespace Rotativa.Extensions
                     {
                         pageInfo = "--footer-right [page]";
                     }
-                    this.CustomSwitches += $" --margin-bottom 20mm --page-offset 0 --footer-html \"{footerUrl}\" {pageInfo} ";
+                    this.CustomSwitches += $" --margin-bottom 20mm --page-offset 0 --load-error-handling ignore --footer-html \"{footerUrl}\" {pageInfo} ";
                 }
                 else
                 {

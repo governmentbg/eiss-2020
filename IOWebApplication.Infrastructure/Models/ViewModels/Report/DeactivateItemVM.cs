@@ -11,7 +11,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public long SourceId { get; set; }
 
         public string SourceInfo { get; set; }
-        public DateTime? SourceDate { get; set; }
+        public DateTime SourceDate { get; set; }
         public string DeactivateUserName { get; set; }
         public DateTime DeactivateDate { get; set; }
         public string DeactivateDescription { get; set; }
@@ -29,7 +29,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     {
         [Display(Name = "Вид обект")]
         public int SourceType { get; set; }
-        [Display(Name = "Описание")]
+        [Display(Name = "Номер документ/дело")]
         public string SourceInfo { get; set; }
         [Display(Name = "От дата")]
         public DateTime? SourceDateFrom { get; set; }

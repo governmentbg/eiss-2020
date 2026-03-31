@@ -1,0 +1,40 @@
+﻿<form action="@Url.Action("StampCertificateAdd")" enctype="multipart/form-data" id="cdnUploadCert" method="post">
+    <input name="courtId" value="@ViewBag.courtId" type="hidden">
+    <div class="form-group">
+        <label class="control-label" for="file">Изберете сертификат</label>
+        <input id="file" name="file" type="file">
+    </div>
+    <div class="form-group">
+        <label class="control-label" for="files">Парола</label>
+        <input class="form-control margin-top-5" name="passHash" placeholder="Паролата на сертификата" type="password">
+    </div>
+    <div class="form-group">
+        <input type="hidden" id="nocheck" name="nocheck" />
+        <label><input type="checkbox" onclick="$('#cdnUploadCert #nocheck').val($(this).is(':checked'));" />&nbsp;Без проверка</label>
+    </div>
+    <div class="form-group">
+        <input class="btn btn-success" id="cdnUploadButton" value="Добави сертификат" type="submit">
+    </div>
+    <span id="errorMessage" class="text-danger"></span>
+</form>
+
+<script>
+    $(function () {
+        $('form#cdnUploadCert').ajaxForm({
+            beforeSend: function () {
+                $('#cdnUploadButton').hide();
+            },
+            complete: function (xhr) {
+                debugger;
+                $('#cdnUploadButton').show();
+                if (xhr.responseJSON.result == true) {
+                    LoadTable();
+                    $('#cdnUploadButton').parents('div.modal:first').modal("hide");
+                } else {
+                    $('#errorMessage').text(xhr.responseJSON.errorMessage);
+                }
+            }
+
+        });
+    });
+</script>

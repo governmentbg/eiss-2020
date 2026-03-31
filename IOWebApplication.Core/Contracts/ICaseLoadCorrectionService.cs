@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -17,12 +18,33 @@ namespace IOWebApplication.Core.Contracts
         bool CaseLoadCorrectionActivity_SaveData(CaseLoadCorrectionActivity model);
         bool IsExistCaseLoadCorrection(int ModelId, int CaseId, int CaseLoadCorrectionActivityId);
         List<SelectListItem> GetDDL_CaseLoadCorrectionActivity(int CaseGroupId, int CaseInstanceId, bool addDefaultElement = true, bool addAllElement = false);
+
+        /// <summary>
+        /// Зареждане в комбо на Коригиращи индекси за трудност на дело
+        /// </summary>
+        /// <param name="CaseGroupId"></param>
+        /// <param name="CaseInstanceId"></param>
+        /// <param name="addDefaultElement"></param>
+        /// <param name="addAllElement"></param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> GetDDL_CaseLoadCorrectionActivityAsync(int CaseGroupId, int CaseInstanceId, bool addDefaultElement = true, bool addAllElement = false);
+
         IQueryable<CaseLoadCorrectionActivityIndexVM> CaseLoadCorrectionActivityIndex_Select(int CaseLoadCorrectionActivityId);
         bool CaseLoadCorrectionActivityIndex_SaveData(CaseLoadCorrectionActivityIndex model);
         IQueryable<CaseLoadCorrectionVM> CaseLoadCorrection_Select(int CaseId);
-        bool CaseLoadCorrection_SaveData(CaseLoadCorrection model);
+
+        /// <summary>
+        /// Запис на Коригиращи коефициенти по дело
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        Task<bool> CaseLoadCorrection_SaveData(CaseLoadCorrection model);
+
         decimal GetCaseLoadCorrection(int CaseId);
+        Task<decimal> GetCaseLoadCorrectionAsync(int CaseId);
         decimal GetCaseLoadCorrectionToDate(int CaseId, DateTime dateTime);
+        Task<decimal> GetCaseLoadCorrectionToDateAsync(int CaseId, DateTime dateTime);
+        decimal GetCaseLoadCorrectionToDateFromList(List<CaseLoadCorrection> models, DateTime dateTime);
         bool IsExistCaseLoadIndex(int CaseId, DateTime dateTime);
     }
 }

@@ -21,6 +21,12 @@
     }
     <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
     <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    @if (NomenclatureConstants.LawUnitTypes.CanActAsPersons.Contains(lawUnitType.Id))
+    {
+        <div class="col-lg-2">
+            @Html.EditorFor(m => m.CourtId, "GenericDropDown")
+        </div>
+    }
     @if (NomenclatureConstants.LawUnitTypes.LocalViewOnly.Contains(lawUnitType.Id))
     {
         <div class="col-lg-4" style="text-align:right;">
@@ -63,6 +69,9 @@
 @section scripts {
     <script>
         $(function () {
+            $('#CourtId').select2({
+                    language: "bg"
+                });
             var table = $('#mainTable').DataTable({
                 ajax: {
                     "url": "@Url.Action("ListData")",
@@ -75,6 +84,7 @@
                         d.fullName = $("#FullName").val();
                         d.specialityId = $("#SpecialityId").val();
                         d.showFree = $("#ShowFree").is(':checked');
+                        d.courtId = $("#CourtId").val();
                     }
                 },
                 filter:false,

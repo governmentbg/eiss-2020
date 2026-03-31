@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -9,7 +10,7 @@ namespace IOWebApplication.Core.Contracts
     {
         IQueryable<DocumentResolutionVM> Select(DocumentResolutionFilterVM filter);
         IQueryable<DocumentResolutionVM> Select(long documentId, long? id = null);
-        SaveResultVM SaveData(DocumentResolution model);
+        Task<SaveResultVM> SaveData(DocumentResolution model);
         SaveResultVM Register(DocumentResolution model);
         SaveResultVM UpdateAfterSign(long id);
         SaveResultVM ResolutionExpire(ExpiredInfoVM model);

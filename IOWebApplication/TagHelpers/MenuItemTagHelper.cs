@@ -62,7 +62,7 @@ namespace IOWebApplication.TagHelpers
             }
             catch (Exception ex)
             {
-                logger.LogError("TextBoxTagHelper.cs", ex);
+                logger.LogError(ex, "TextBoxTagHelper.cs");
             }
 
             base.Process(context, output);

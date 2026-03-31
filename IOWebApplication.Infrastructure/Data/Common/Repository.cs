@@ -1,11 +1,10 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Data.Common
 {
@@ -13,13 +12,28 @@ namespace IOWebApplication.Infrastructure.Data.Common
     /// Implementation of repository access methods
     /// for Relational Database Engine
     /// </summary>
-    /// <typeparam name="T">Type of the data table to which 
-    /// current reposity is attached</typeparam>
     public class Repository : BaseRepository, IRepository
     {
-        public Repository(ApplicationDbContext context)
+        //public Repository(
+        //    IDbContextFactory<ApplicationDbContext> contextFactory,
+        //    //ApplicationDbContext context,
+        //    ILogger<Repository> _logger,
+        //    IHttpContextAccessor _httpContextAccessor)
+        //{
+        //    this.Context = contextFactory.CreateDbContext();
+        //    this.logger = _logger;
+        //    if (_httpContextAccessor.HttpContext != null)
+        //        httpContext = _httpContextAccessor.HttpContext;
+        //}
+        public Repository(
+            ApplicationDbContext context,
+            ILogger<Repository> _logger,
+            IHttpContextAccessor _httpContextAccessor)
         {
             this.Context = context;
+            this.logger = _logger;
+            if (_httpContextAccessor.HttpContext != null)
+                httpContext = _httpContextAccessor.HttpContext;
         }
 
         public int TrackerCount => Context.ChangeTracker.Entries().Count();
@@ -29,17 +43,22 @@ namespace IOWebApplication.Infrastructure.Data.Common
             throw new NotImplementedException();
         }
 
-        public void RefreshDbContext(string connectionString)
+        public void RefreshDbContext(string connectionString, IConfiguration config = null)
         {
             if (Context != null)
-            {
-                Context.Dispose();
-            }
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseNpgsql(connectionString);
-            Context = new ApplicationDbContext(optionsBuilder.Options);
+                Context.ChangeTracker.Clear();
+
+            //net 2.2 obsolete
+            //if (Context != null)
+            //{
+            //    Context.Dispose();
+
+            //}
+            //var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            //optionsBuilder.UseNpgsql(connectionString);
+            //Context = new ApplicationDbContext(optionsBuilder.Options);
         }
 
-        
+
     }
 }

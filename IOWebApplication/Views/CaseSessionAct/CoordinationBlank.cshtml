@@ -3,16 +3,21 @@
 @{
     Layout = null;
 }
-<div style="text-align:center;width:100%;">
-    <h2>ОСОБЕНО МНЕНИЕ</h2>
-    <br />
-    <br />
-    <br />
-    <br />
-    към @Model.ActTypeName @if (Model.ActDate != null) {<text>@Model.ActNumber/@Model.ActDate.Value.ToString("dd.MM.yyyy")</text>}
-    <br />
-    на @(Model.CaseLawUnitName), @Model.JudgeRoleLabel
+<div>
+    <div style="text-align:center;width:100%;">
+        <h2>ОСОБЕНО МНЕНИЕ</h2>
+        <br />
+        <br />
+        <br />
+        <br />
+        към @Model.ActTypeName @if (Model.ActDate != null)
+        {
+            <text>@Model.ActNumber/@Model.ActDate.Value.ToString("dd.MM.yyyy")</text>
+        }
+        <br />
+        на @(Model.CaseLawUnitName), @Model.JudgeRoleLabel
+    </div>
+    <p>
+        @Html.Raw(Model.Content)
+    </p>
 </div>
-<p>
-    @Html.Raw(Model.Content)
-</p>

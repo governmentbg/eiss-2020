@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,11 +15,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("ecli_code")]
         [Display(Name = "ECLI идентификатор")]
         public string EcliCode { get; set; }
-        
+
         [Column("court_type_id")]
         [Display(Name = "Тип")]
         public int CourtTypeId { get; set; }
-        
+
         [Column("city_name")]
         [Display(Name = "Град")]
         public string CityName { get; set; }
@@ -54,6 +55,16 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("address_id")]
         public long? AddressId { get; set; }
 
+        [Column("epep_has_electronic_documents")]
+        public bool? EpepHasElectronicDocuments { get; set; }
+
+        [Column("uic")]
+        [Display(Name = "ЕИК на съд")]
+        public string Uic { get; set; }
+        [Column("judge_count")]
+        [Display(Name = "Действително зает щат")]
+        public int? JudgeCount { get; set; }
+
         [ForeignKey(nameof(CourtTypeId))]
         public virtual CourtType CourtType { get; set; }
 
@@ -65,5 +76,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(AddressId))]
         public virtual Address CourtAddress { get; set; }
+
+        public virtual ICollection<CourtCaseGroupAddr> CourtCaseGroupAddrs { get; set; }
+        public virtual ICollection<CourtStampCertificate> StampCertificates { get; set; }
     }
 }

@@ -33,5 +33,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         [Display(Name = "Номер на дело")]
         public string CaseRegNumber { get; set; }
+
+        [Display(Name = "В полза на")]
+        public int ReceiveSourceTypeId { get; set; }
+
+        [Display(Name = "Въведете име или част от име")]
+        public long? ReceiveSourceId { get; set; }
+
+        [Display(Name = "Вид лице")]
+        public string PersonType { get; set; }
     }
 }

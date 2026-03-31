@@ -1,0 +1,148 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseNavigationVM
+
+@{
+
+}
+
+<div id="myDiv">
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.MediationCaseSessionId)
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnOrder" onclick="MakeExpenseOrder()" value="Разходен ордер" title="Разходен ордер">
+                Разходен ордер
+                <i class="fa fa-paypal" title="Разходен ордер"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="obligationMainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        var table = $('#obligationMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListDataMediationObligations", "Mediation")",
+                "type": "POST",
+                "datatype": "json",
+                "data": function (d) {
+                    d.filter = {
+                        MediationCaseSessionId: $("#MediationCaseSessionId").val()
+                    };
+                }
+            },
+            dom: 'rt',
+            deferLoading: deferLoadingOnTab('#obligationMainTable'),
+            columns: [
+                {
+                    name: "checkRow",
+                    data: "checkRow",
+                    title: '<input type="checkbox" id="select-all" onclick="selectAll();">',
+                    sortable: false,
+                    searchable: false,
+                    "render": function (item, type, row, meta) {
+                        return '<input type="checkbox" value="' + row.id + '">';
+                    }
+                },
+                {
+                    className: 'col-md-8',
+                    name: 'mediationMediatorFullName',
+                    data: 'mediationMediatorFullName',
+                    title: 'Mедиатор',
+                    sortable: true,
+                    searchable: true,
+                },
+                {
+                    className: 'col-md-2 text-right',
+                    name: 'regNumberExpenseOrder',
+                    data: 'regNumberExpenseOrder',
+                    title: 'РКО',
+                    sortable: true,
+                    searchable: true,
+                    "render": function (item, type, row, meta) {
+                        if (row.regNumberExpenseOrder)
+                        {
+                            var url = '@(Url.Action("EditExpenseOrder", "Money", new { id = 666 }))';
+                            url = url.replace('666', row.expenseOrderId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.regNumberExpenseOrder + "</a>";
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    },
+                },
+                {
+                    className: 'col-md-1 text-right',
+                    name: 'amount',
+                    data: 'amount',
+                    title: 'Сума',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-1',
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#obligationTemplateEdit', value);
+                    }
+                }
+            ]
+        });
+    });
+
+    function ReloadDatatable() {
+        refreshTable('#obligationMainTable');
+    }
+
+    function selectAll() {
+        var check = $("#select-all").is(':checked');
+        var rows = $('#obligationMainTable').DataTable().rows({ 'search': 'applied' }).nodes();
+        $('input[type="checkbox"]', rows).prop('checked', check);
+    }
+
+    function GetAllCheckIds() {
+        var ids = "";
+        $('#obligationMainTable').DataTable().$('input[type="checkbox"]').each(function () {
+            if (this.checked) {
+                if (ids != "") {
+                    ids = ids + ",";
+                }
+                ids = ids + this.value;
+            }
+        });
+        return ids;
+    }
+
+    function MakeExpenseOrder() {
+        if ($('#obligationMainTable').DataTable() === undefined) return;
+        var ids = GetAllCheckIds();
+
+        if (ids == "") {
+            messageHelper.ShowErrorMessage('Изберете поне едно задължение.');
+            return;
+        }
+        requestContent('@Url.Action("ExpenseOrder", "Money")'
+            , { idStr:ids}
+            , function (data) {
+                ShowModalDialog('Разходен ордер', data);
+            });
+    }
+</script>
+
+<script id="obligationTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditMediationObligation", "Mediation")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>

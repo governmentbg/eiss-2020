@@ -31,5 +31,9 @@
         public static string LawUnitId = "law_unit_id";
         public static string LawUnitTypeId = "lu_type_id";
         public static string SystemFeatures = "sys_features";
+        public static string InterimPeriodEuroStart = "interim_period_euro_start";
+        public static string InterimPeriodEuroEnd = "interim_period_euro_end";
+        public static string EuroExchangeRate = "euro_exchange_rate";
+        public static string EnvName = "env";
     }
 }

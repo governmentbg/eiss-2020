@@ -3,6 +3,7 @@ using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -39,8 +40,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Съд, определил мярката")]
         public int? MeasureCourtId { get; set; }
 
-        [Column("measure_type")]
+        [Column("measure_kind_id")]
         [Display(Name = "Вид мярка")]
+        public int? MeasureKindId { get; set; }
+
+        [Column("measure_type")]
+        [Display(Name = "Мярка")]
         // eispp_tbl_code =214
         public string MeasureType { get; set; }
 
@@ -49,13 +54,21 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         // eispp_tbl_code =214
         public string MeasureTypeLabel { get; set; }
 
+        [Column("measure_quantity")]
+        [Display(Name = "Количество")]
+        public int? MeasureQuantity { get; set; }
+
+        [Column("measure_unit")]
+        [Display(Name = "Мерна единица")]
+        public string MeasureUnit { get; set; }
+
         [Column("measure_status_date")]
         [Display(Name = "Дата на мярката")]
         [Required(ErrorMessage = "Въведете {0}.")]
         public DateTime MeasureStatusDate { get; set; }
 
         [Column("bail_amount")]
-        [Display(Name = "Гаранция, лв")]
+        [Display(Name = "Гаранция, евро")]
         public double BailAmount { get; set; }
 
         // eispp_tbl_code =215
@@ -75,12 +88,32 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("mq_epep_id")]
         public int? MQEpepId { get; set; }
 
-
         /// <summary>
         /// Връзка с MQEpep
         /// </summary>
         [Column("mq_epep_is_send")]
         public bool? MQEpepIsSend { get; set; }
+
+        //--------Време-------------------------
+        [Column("measure_days")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете дни в интервала 0-9999")]
+        [Display(Name = "Дни")]
+        public int MeasureDays { get; set; }
+
+        [Column("measure_weeks")]
+        [Display(Name = "Седмици")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете седмици в интервала 0-9999")]
+        public int MeasureWeeks { get; set; }
+
+        [Column("measure_months")]
+        [Display(Name = "Месеци")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете месеци в интервала 0-9999")]
+        public int MeasureMonths { get; set; }
+
+        [Column("measure_years")]
+        [Display(Name = "Години")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете години в интервала 0-9999")]
+        public int MeasureYears { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -89,7 +122,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual Court MeasureCourt { get; set; }
 
         [ForeignKey(nameof(ParentId))]
-        public virtual CasePersonMeasure ParentMeasure  { get; set; }
+        public virtual CasePersonMeasure ParentMeasure { get; set; }
 
         [ForeignKey(nameof(CaseId))]
         public virtual Case Case { get; set; }
@@ -99,6 +132,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(MeasureInstitutionId))]
         public virtual Institution MeasureInstitution { get; set; }
+
+
+        public virtual ICollection<CasePersonSentencePunishmentMeasure> Punishments { get; set; }
 
 
         //################################################################################

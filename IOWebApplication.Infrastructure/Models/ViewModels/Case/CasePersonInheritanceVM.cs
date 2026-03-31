@@ -20,5 +20,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         
         [Display(Name = "Активна")]
         public string IsActiveText { get; set; }
+        public bool IsEdit { get; set; }
     }
 }

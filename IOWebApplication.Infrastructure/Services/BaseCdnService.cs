@@ -2,13 +2,17 @@
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.Cdn;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Services
@@ -24,13 +28,13 @@ namespace IOWebApplication.Infrastructure.Services
 
         protected readonly IRepository repo;
         public BaseCdnService(
-            IConfiguration _config,
+            IOptions<CdnConfigVM> optionCdnConfig,
             IRepository _repo,
             IMongoClient _mongoClient
             )
         {
             repo = _repo;
-            fileDbName = _config.GetValue<string>("FileDbName");
+            fileDbName = optionCdnConfig.Value.FileDbName;
             mongoClient = _mongoClient;
         }
 
@@ -45,7 +49,15 @@ namespace IOWebApplication.Infrastructure.Services
             gridFsBucket = new GridFSBucket(database);
         }
 
-        public IEnumerable<CdnItemVM> Select(int sourceType, string sourceId, string fileId = null)
+        public Task<string> GetTempFileIdByFilename(string filename)
+        {
+            return repo.AllReadonly<MongoFile>()
+                            .Where(x => x.SourceType == SourceTypeSelectVM.TemporaryFile && x.SourceId == filename)
+                            .Select(x => x.FileId)
+                            .FirstOrDefaultAsync();
+        }
+
+        public IQueryable<CdnItemVM> Select(int sourceType, string sourceId, string fileId = null)
         {
             int[] sourceTypes = new List<int>(){
                 sourceType
@@ -53,47 +65,57 @@ namespace IOWebApplication.Infrastructure.Services
 
             return Select(sourceTypes, sourceId, fileId);
         }
-        public IEnumerable<CdnItemVM> Select(int[] sourceTypes, string sourceId, string fileId = null)
+        public IQueryable<CdnItemVM> Select(int[] sourceTypes, string sourceId, string fileId = null)
         {
+            Expression<Func<MongoFile, bool>> whereSelect = x => x.SourceId == sourceId && sourceTypes.Contains(x.SourceType);
+
             if (!string.IsNullOrEmpty(fileId))
             {
-                return repo.AllReadonly<MongoFile>()
-                                .Where(x => x.FileId == fileId)
-                                .Select(x => new CdnItemVM
-                                {
-                                    MongoFileId = x.Id,
-                                    SourceType = x.SourceType,
-                                    SourceId = x.SourceId,
-                                    FileId = x.FileId,
-                                    Title = x.Title ?? x.FileName,
-                                    FileName = x.FileName,
-                                    UserUploaded = x.UserUploaded,
-                                    DateUploaded = x.DateUploaded,
-                                    DateExpired = x.DateExpired,
-                                    FileSize = x.FileSize,
-                                    SignituresCount = x.SignituresCount ?? 0
-                                }).OrderBy(x => x.DateUploaded);
+                whereSelect = x => x.FileId == fileId;
+            
             }
-            else
-            {
-                return repo.AllReadonly<MongoFile>()
-                                .Where(x => x.SourceId == sourceId && sourceTypes.Contains(x.SourceType))
-                                .Select(x => new CdnItemVM
-                                {
-                                    MongoFileId = x.Id,
-                                    SourceType = x.SourceType,
-                                    SourceId = x.SourceId,
-                                    FileId = x.FileId,
-                                    Title = x.Title ?? x.FileName,
-                                    FileName = x.FileName,
-                                    UserUploaded = x.UserUploaded,
-                                    DateUploaded = x.DateUploaded,
-                                    DateExpired = x.DateExpired,
-                                    FileSize = x.FileSize,
-                                    SignituresCount = x.SignituresCount ?? 0
-                                }).OrderBy(x => x.DateUploaded);
+            return repo.AllReadonly<MongoFile>()
+                            .Where(whereSelect)
+                            .Select(x => new CdnItemVM
+                            {
+                                MongoFileId = x.Id,
+                                SourceType = x.SourceType,
+                                SourceId = x.SourceId,
+                                FileId = x.FileId,
+                                Title = x.Title ?? x.FileName,
+                                FileName = x.FileName,
+                                UserUploaded = x.UserUploaded,
+                                DateUploaded = x.DateUploaded,
+                                DateExpired = x.DateExpired,
+                                FileSize = x.FileSize,
+                                SignituresCount = x.SignituresCount ?? 0,
+                                MongoFileTypeCode = (x.MongoFileTypeId > 0) ? x.MongoFileType.Code : null,
+                                MongoFileTypeName = (x.MongoFileTypeId > 0) ? x.MongoFileType.Label : null
+                            }).OrderBy(x => x.DateUploaded);
 
-            }
+        }
+
+        public IQueryable<CdnItemVM> Select(int[] sourceTypes, string[] sourceIds)
+        {
+            Expression<Func<MongoFile, bool>> whereSelect = x => sourceIds.Contains(x.SourceId) && sourceTypes.Contains(x.SourceType);
+
+            return repo.AllReadonly<MongoFile>()
+                            .Where(whereSelect)
+                            .Select(x => new CdnItemVM
+                            {
+                                MongoFileId = x.Id,
+                                SourceType = x.SourceType,
+                                SourceId = x.SourceId,
+                                FileId = x.FileId,
+                                Title = x.Title ?? x.FileName,
+                                FileName = x.FileName,
+                                UserUploaded = x.UserUploaded,
+                                DateUploaded = x.DateUploaded,
+                                DateExpired = x.DateExpired,
+                                FileSize = x.FileSize,
+                                SignituresCount = x.SignituresCount ?? 0
+                            }).OrderBy(x => x.DateUploaded);
+
         }
         public async virtual Task<CdnDownloadResult> GetFileById(string fileId)
         {
@@ -101,7 +123,7 @@ namespace IOWebApplication.Infrastructure.Services
             using (var file = await gridFsBucket.OpenDownloadStreamAsync(ObjectId.Parse(fileId)))
             {
                 byte[] fileContent = new byte[(int)file.Length];
-                file.Read(fileContent, 0, (int)file.Length);
+                await file.ReadAsync(fileContent, 0, (int)file.Length);
 
 
                 CdnDownloadResult result = new CdnDownloadResult()
@@ -120,12 +142,30 @@ namespace IOWebApplication.Infrastructure.Services
 
         public async Task<bool> MongoCdn_DeleteFiles(CdnFileSelect request)
         {
+            initMongo();
+            //await gridFsBucket.DeleteAsync(ObjectId.Parse(id));
+
+            // return await DeleteMongoFileData(id);
+
+
+
+
             bool result = true;
-            var selectedFiles = Select(request.SourceType, request.SourceId, request.FileId);
+            var selectedFiles = await repo.AllReadonly<MongoFile>()
+                            .Where(x => x.SourceType == request.SourceType && x.SourceId == request.SourceId)
+                            .Select(x => x.FileId)
+                            .ToListAsync();
+
+
+            //(request.SourceType, request.SourceId, request.FileId);
 
             foreach (var _file in selectedFiles)
             {
-                result &= await MongoCdn_DeleteFile(_file.FileId);
+                await gridFsBucket.DeleteAsync(ObjectId.Parse(_file));
+
+                result &= await DeleteMongoFileData(_file);
+
+                //result &= await MongoCdn_DeleteFile(_file.FileId);
             }
 
             return result;
@@ -154,7 +194,7 @@ namespace IOWebApplication.Infrastructure.Services
 
                 if (!string.IsNullOrEmpty(mongoFileId))
                 {
-                    result.Succeded = SaveMongoFileData(request, mongoFileId);
+                    result.Succeded = await SaveMongoFileData(request, mongoFileId);
                 }
 
                 result.FileId = mongoFileId;
@@ -173,24 +213,25 @@ namespace IOWebApplication.Infrastructure.Services
             initMongo();
             await gridFsBucket.DeleteAsync(ObjectId.Parse(id));
 
-            return DeleteMongoFileData(id);
+            return await DeleteMongoFileData(id);
         }
 
-        public bool DeleteMongoFileData(string mongoFileId)
+        public async Task<bool> DeleteMongoFileData(string mongoFileId)
         {
-            var saved = repo.All<MongoFile>(x => x.FileId == mongoFileId).FirstOrDefault();
+            return await repo.ExecuteDeleteAsync<MongoFile>(x => x.FileId == mongoFileId) > 0;
+            //var saved = await repo.All<MongoFile>(x => x.FileId == mongoFileId).FirstOrDefaultAsync();
 
-            if (saved != null)
-            {
-                repo.Delete(saved);
-                repo.SaveChanges();
-                return true;
-            }
+            //if (saved != null)
+            //{
+            //    repo.Delete(saved);
+            //    await repo.SaveChangesAsync();
+            //    return true;
+            //}
 
-            return false;
+            //return false;
         }
 
-        public bool SaveMongoFileData(CdnUploadRequest file, string mongoFileId)
+        public async Task<bool> SaveMongoFileData(CdnUploadRequest file, string mongoFileId)
         {
             try
             {
@@ -203,6 +244,7 @@ namespace IOWebApplication.Infrastructure.Services
                     FileSize = file.FileContent.Length,
                     FileName = file.FileName,
                     SignituresCount = file.SignituresCount,
+                    MongoFileTypeId = file.MongoFileTypeId,
                     UserUploaded = file.UserUploaded,
                     DateUploaded = DateTime.Now
                 };
@@ -217,9 +259,9 @@ namespace IOWebApplication.Infrastructure.Services
                 //    mongoFile.SignersCount = file.SignersCount;
                 //}
 
-                repo.Add(mongoFile);
-                repo.SaveChanges();
-
+                await repo.AddAsync(mongoFile);
+                await repo.SaveChangesAsync();
+                file.MongoFileId = mongoFile.Id;
                 return true;
             }
             catch (Exception)

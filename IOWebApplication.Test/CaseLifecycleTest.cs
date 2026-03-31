@@ -96,7 +96,7 @@ namespace IOWebApplication.Test
                 repo.Add<CaseLifecycle>(saved);
 
                 var dateTo = DateTime.Now;
-                service.CaseLifecycle_CloseInterval(1, 1, dateTo);
+                var closeInterevalResult = service.CaseLifecycle_CloseInterval(1, 1, dateTo).Result;
                 var caseLifecycle = repo.AllReadonly<CaseLifecycle>().FirstOrDefault();
 
                 Assert.That(dateTo, Is.EqualTo(caseLifecycle.DateTo));
@@ -222,7 +222,7 @@ namespace IOWebApplication.Test
                 repo.Add<CaseLifecycle>(saved);
 
                 var dateFrom = DateTime.Now;
-                service.CaseLifecycle_NewIntervalSave(1, dateFrom);
+                service.CaseLifecycle_NewIntervalSave(1, dateFrom, null);
                 var caseLifecycle = repo.AllReadonly<CaseLifecycle>().OrderByDescending(x => x.DateFrom).FirstOrDefault();
 
                 Assert.That(dateFrom, Is.EqualTo(caseLifecycle.DateFrom));

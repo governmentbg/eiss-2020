@@ -1,4 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Data.Common;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -28,6 +30,11 @@ namespace IOWebApplication.Test.Mockups
         }
 
         public void Add<T>(T entity) where T : class
+        {
+            DbSet<T>().Add(entity);
+        }
+
+        public async Task AddAsync<T>(T entity) where T : class
         {
             DbSet<T>().Add(entity);
         }
@@ -246,7 +253,7 @@ namespace IOWebApplication.Test.Mockups
             }
         }
 
-        public void RefreshDbContext(string connectionString)
+        public void RefreshDbContext(string connectionString, IConfiguration config = null)
         {
             throw new NotImplementedException();
         }
@@ -258,6 +265,47 @@ namespace IOWebApplication.Test.Mockups
         }
 
         public void PropUnmodified<T>(Expression<Func<T>> selectProp) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<T> GetByIdAsync<T>(object id) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Tprop> GetPropByIdAsync<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDbContextTransaction BeginTransaction(bool fakeTransaction = false)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public void ClearEntityTracker()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool StopTrackingApplicationUser()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Attach<T>(T entity) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public int ExecuteDelete<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> ExecuteDeleteAsync<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class
         {
             throw new NotImplementedException();
         }

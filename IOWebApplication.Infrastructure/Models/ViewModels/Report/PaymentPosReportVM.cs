@@ -30,6 +30,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Сума")]
         public decimal Amount { get; set; }
 
+        [Display(Name = "Сума в лева")]
+        public decimal AmountBGN { get; set; }
+
         public int MoneyGroupId { get; set; }
     }
 

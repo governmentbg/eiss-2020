@@ -6,6 +6,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.AuditLog
 {
     public class AuditLogSprVM
     {
+        public Guid Id { get; set; }
         public DateTime Date { get; set; }
         public string Operation { get; set; }
         public string CaseGroupLabel { get; set; }
@@ -14,8 +15,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.AuditLog
         public string ObjectInfo { get; set; }
         public string BaseObject { get; set; }
         public string UserName { get; set; }
+        public string Email { get; set; }
         public string UserId { get; set; }
         public int? CourtId { get; set; }
+        public bool ShowLink { get; set; }
         public string RequestUrl { get; set; }
+        public string ClientIP { get; set; }
     }
 }

@@ -27,7 +27,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string Description { get; set; }
 
         [Display(Name = "Номер на тома и годината, в който са подредени за запазване")]
-        public string BookData { get; set; }
+        public string BookData { get { return BookNumber.ToString() + ((BookNumber != null || BookYear != null) ? "/" : "") + BookYear.ToString(); }   }
+
+        public int? BookNumber { get; set; }
+
+        public int? BookYear { get; set; }
 
         [Display(Name = "Номенклатурен индекс")]
         public string ArchiveIndex { get; set; }

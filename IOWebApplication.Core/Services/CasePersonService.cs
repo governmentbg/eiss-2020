@@ -1,26 +1,27 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
+using IOWebApplication.Core.Helper;
+using IOWebApplication.Core.Models;
+using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
-using IOWebApplication.Infrastructure.Extensions;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using IOWebApplication.Core.Extensions;
-using IOWebApplication.Infrastructure.Contracts;
-using IOWebApplication.Infrastructure.Constants;
-using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using System.Linq.Expressions;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplication.Core.Helper;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Infrastructure.Data.Models;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -30,25 +31,27 @@ namespace IOWebApplication.Core.Services
         private readonly ICasePersonLinkService casePersonLinkService;
         private readonly IMQEpepService mqEpepService;
         private readonly ICommonService commonService;
-  
+        private readonly ICounterService counterService;
+
         public CasePersonService(
             ILogger<CasePersonService> _logger,
             INomenclatureService _nomenclatureService,
             ICasePersonLinkService _casePersonLinkService,
-            AutoMapper.IMapper _mapper,
             IMQEpepService _mqEpepService,
             IRepository _repo,
             IUserContext _userContext,
-            ICommonService _commonService)
+            ICommonService _commonService,
+            ICounterService _counterService
+            )
         {
             logger = _logger;
-            mapper = _mapper;
             nomenclatureService = _nomenclatureService;
             repo = _repo;
             mqEpepService = _mqEpepService;
             userContext = _userContext;
             casePersonLinkService = _casePersonLinkService;
             commonService = _commonService;
+            counterService = _counterService;
         }
 
         /// <summary>
@@ -63,91 +66,341 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CasePersonListVM> CasePerson_Select(int caseId, int? caseSessionId, bool checkSessionDate, bool showExpired, bool setRowNumberFromCase)
         {
             DateTime dateEnd = DateTime.Now.AddYears(100);
+
             Expression<Func<CasePerson, bool>> checkDateWhere = x => true;
             if (checkSessionDate == true && (caseSessionId ?? 0) > 0)
                 checkDateWhere = x => ((x.DateTo ?? dateEnd) >= x.CaseSession.DateFrom);
 
+            Expression<Func<CasePerson, bool>> caseSessionIdWhere = x => x.CaseSessionId == null;
+            if ((caseSessionId ?? 0) > 0)
+                caseSessionIdWhere = x => x.CaseSessionId == caseSessionId;
+
             bool setRowNumber = false;
-            List<CasePerson> casePersons = null;
             if (setRowNumberFromCase && (caseSessionId ?? 0) > 0)
-            {
                 setRowNumber = true;
-                casePersons = repo.AllReadonly<CasePerson>()
-                                .Where(x => x.CaseId == caseId && x.CaseSessionId == null)
-                                .ToList();
-            }
+
+            var casePersons = repo.AllReadonly<CasePerson>()
+                                  .Where(x => x.CaseId == caseId &&
+                                              x.CaseSessionId == null);
 
             var casePersonLists = repo.AllReadonly<CasePerson>()
-                                       .Include(x => x.Case)
-                                       .ThenInclude(x => x.Document)
-                                       .Include(x => x.Case)
-                                       .ThenInclude(x => x.CaseType)
-                                       .Include(x => x.PersonRole)
-                                       .Include(x => x.CaseSession)
-                                       .ThenInclude(x => x.SessionType)
-                                       .Include(x => x.Addresses)
-                                       .ThenInclude(x => x.Address)
-                                       .Include(x => x.UicType)
-                                       .Where(x => x.CaseId == caseId &&
-                                                   ((caseSessionId == null) ? true : (x.CaseSessionId ?? 0) == (caseSessionId ?? 0)))
-                                       .Where(checkDateWhere)
-                                       .Where(this.FilterExpireInfo<CasePerson>(showExpired))
-                                       .ToList()
-                                       .Select(x => new CasePersonListVM()
-                                       {
-                                           Id = x.Id,
-                                           CaseId = x.CaseId,
-                                           CaseSessionId = x.CaseSessionId,
-                                           Uic = x.Uic,
-                                           UicTypeLabel = (x.UicType != null) ? x.UicType.Label : string.Empty,
-                                           FullName = x.FullName,
-                                           RoleName = x.PersonRole.Label,
-                                           PersonRoleId = x.PersonRole.Id,
-                                           PersonRoleLabel = x.PersonRole.Label,
-                                           RoleKindId = x.PersonRole.RoleKindId,
-                                           DateFrom = x.DateFrom,
-                                           DateTo = x.DateTo,
-                                           RowNumber = setRowNumber == false ? x.RowNumber :
-                                                       casePersons.Where(a => x.CasePersonIdentificator == a.CasePersonIdentificator)
-                                                       .Select(a => a.RowNumber)
-                                                       .FirstOrDefault(),
-                                           ForNotification = x.ForNotification,
-                                           NotificationNumber = x.NotificationNumber,
-                                           CaseSessionLabel = ((x.CaseSessionId != null) ? (x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy HH:mm")) : (string.Empty)),
-                                           CasePersonIdentificator = x.CasePersonIdentificator,
-                                           AddressString = (x.Addresses.Count > 0) ? ((x.Addresses.Any(a => ((a.ForNotification ?? false) == true)) ? x.Addresses.Where(c => c.ForNotification == true).FirstOrDefault().Address.FullAddress : x.Addresses.FirstOrDefault().Address.FullAddress)) : string.Empty,
-                                           CurrentAddressString = (x.Addresses.Count > 0) ? ((x.Addresses.Any(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current)) ? x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current).FirstOrDefault().Address.FullAddress : string.Empty) : string.Empty,
-                                           WorkAddressString = (x.Addresses.Count > 0) ? ((x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work).Any()) ? x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work).FirstOrDefault().Address.FullAddress : string.Empty) : string.Empty,
-                                           IsViewPersonSentence = ((x.PersonRole.RoleKindId == NomenclatureConstants.RoleKind.RightSide || x.PersonRoleId == NomenclatureConstants.PersonRole.Offender) && (x.CaseSessionId == null) && (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo) && ((x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance) || (x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.SecondInstance))),
-                                           IsIndividual = ((x.UicTypeId == NomenclatureConstants.UicTypes.BirthDate || x.UicTypeId == NomenclatureConstants.UicTypes.EGN || x.UicTypeId == NomenclatureConstants.UicTypes.LNCh) && (x.CaseSessionId == null)),
-                                           IsViewPersonInheritance = ((x.CaseSessionId == null) && (x.PersonRoleId == NomenclatureConstants.PersonRole.Inheritor || x.PersonRoleId == NomenclatureConstants.PersonRole.Petitioner || x.PersonRoleId == NomenclatureConstants.PersonRole.Notifier) && ((x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.Request51LawInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestAcceptanceInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestRefusalInheritance))),
-                                           IsArrested = x.IsArrested ?? false,
-                                       }).OrderBy(x => x.RoleKindId).ToList();
+                                      .Where(x => x.CaseId == caseId)
+                                      .Where(caseSessionIdWhere)
+                                      .Where(checkDateWhere)
+                                      .Where(this.FilterExpireInfo<CasePerson>(showExpired))
+                                      .Select(x => new CasePersonListVM()
+                                      {
+                                          Id = x.Id,
+                                          CaseId = x.CaseId,
+                                          CaseSessionId = x.CaseSessionId,
+                                          Uic = x.Uic,
+                                          UicTypeLabel = x.UicType.Label,
+                                          FullName = x.FullName,
+                                          FirstName = x.FirstName,
+                                          MiddleName = x.MiddleName,
+                                          FamilyName = x.FamilyName,
+                                          Family2Name = x.Family2Name,
+                                          RoleName = x.PersonRole.Label,
+                                          PersonRoleId = x.PersonRole.Id,
+                                          PersonRoleLabel = x.PersonRole.Label,
+                                          PersonRoleBigForumLabel = string.IsNullOrEmpty(x.PersonRole.BigForum) ? x.PersonRole.Label : x.PersonRole.BigForum,
+                                          PersonRoleShortForumLabel = string.IsNullOrEmpty(x.PersonRole.ShortForum) ? x.PersonRole.Label : x.PersonRole.ShortForum,
+                                          RoleKindId = x.PersonRole.RoleKindId,
+                                          DateFrom = x.DateFrom,
+                                          DateTo = x.DateTo,
+                                          RowNumber = setRowNumber ? x.RowNumber :
+                                                                     casePersons.Where(a => a.CasePersonIdentificator == x.CasePersonIdentificator)
+                                                                                .Select(a => a.RowNumber)
+                                                                                .FirstOrDefault(),
+                                          ForNotification = x.ForNotification,
+                                          NotificationNumber = x.NotificationNumber,
+                                          CaseSessionLabel = (x.CaseSessionId != null) ? (x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy HH:mm")) : string.Empty,
+                                          CasePersonIdentificator = x.CasePersonIdentificator,
+                                          AllAddressString = x.Addresses.Where(c => c.DateExpired == null)
+                                                                        .Select(c => c.Address.AddressType.Label.ToLower() + " " + c.Address.FullAddress)
+                                                                        .FirstOrDefault(),
+                                          AddressString = x.Addresses.Any(c => c.DateExpired == null) ? (x.Addresses
+                                                                                                          .Any(a => (a.ForNotification ?? false) &&
+                                                                                                                    a.DateExpired == null) ? x.Addresses
+                                                                                                                                              .Where(c => c.ForNotification == true &&
+                                                                                                                                                          c.DateExpired == null)
+                                                                                                                                              .Select(c => c.Address.FullAddress)
+                                                                                                                                              .FirstOrDefault() :
+                                                                                                                                             x.Addresses
+                                                                                                                                              .Where(c => c.DateExpired == null)
+                                                                                                                                              .Select(c => c.Address.FullAddress)
+                                                                                                                                              .FirstOrDefault()) :
+                                                                                                      string.Empty,
+                                          CurrentAddressString = x.Addresses.Any(c => c.DateExpired == null) ? (x.Addresses
+                                                                                                                 .Any(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current &&
+                                                                                                                           a.DateExpired == null) ? x.Addresses
+                                                                                                                                                     .Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current &&
+                                                                                                                                                                 a.DateExpired == null)
+                                                                                                                                                     .Select(a => a.Address.FullAddress)
+                                                                                                                                                     .FirstOrDefault() :
+                                                                                                                                                    string.Empty) :
+                                                                                                               string.Empty,
+                                          WorkAddressString = x.Addresses.Any(c => c.DateExpired == null) ? (x.Addresses
+                                                                                                              .Any(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work &&
+                                                                                                                        a.DateExpired == null) ? x.Addresses
+                                                                                                                                                  .Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work &&
+                                                                                                                                                              a.DateExpired == null)
+                                                                                                                                                  .Select(a => a.Address.FullAddress)
+                                                                                                                                                  .FirstOrDefault() :
+                                                                                                                                                 string.Empty) :
+                                                                                                            string.Empty,
+                                          IsViewPersonSentence = (x.PersonRole.RoleKindId == NomenclatureConstants.RoleKind.RightSide || x.PersonRoleId == NomenclatureConstants.PersonRole.Offender) &&
+                                                                 (x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance || x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.SecondInstance) &&
+                                                                 x.CaseSessionId == null &&
+                                                                 x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo,
+                                          IsIndividual = (x.UicTypeId == NomenclatureConstants.UicTypes.BirthDate || x.UicTypeId == NomenclatureConstants.UicTypes.EGN || x.UicTypeId == NomenclatureConstants.UicTypes.LNCh) &&
+                                                         (x.CaseSessionId == null),
+                                          IsViewPersonInheritance = (x.CaseSessionId == null) &&
+                                                                    (x.PersonRoleId == NomenclatureConstants.PersonRole.Inheritor || x.PersonRoleId == NomenclatureConstants.PersonRole.Petitioner || x.PersonRoleId == NomenclatureConstants.PersonRole.Notifier) &&
+                                                                    ((x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.Request51LawInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestAcceptanceInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestRefusalInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestForInventoryInheritanceReturnOfAChild)),
+                                          IsArrested = x.IsArrested ?? false,
+                                          IsDeceased = x.IsDeceased
+                                      })
+                                      .ToList();
 
             foreach (var casePerson in casePersonLists)
             {
                 var linkListVM = casePersonLinkService.GetLinkForPerson(casePerson.Id, false, 0, null);
-                casePerson.LinkForPersonString = string.Empty;
-                if (linkListVM != null)
+                if (linkListVM.Any())
                 {
+                    if ((caseSessionId ?? 0) > 0)
+                    {
+                        var caseSessionDateFrom = repo.AllReadonly<CaseSession>()
+                                                      .Where(x => x.Id == caseSessionId)
+                                                      .Select(x => x.DateFrom)
+                                                      .FirstOrDefault();
+
+                        linkListVM = linkListVM.Where(x => (x.DateTo ?? dateEnd) >= caseSessionDateFrom.Date)
+                                               .ToList();
+                    }
+
                     casePerson.LinkForPersonString = string.Join(", ", linkListVM.Select(x => x.Label));
                 }
             }
 
-            return casePersonLists.OrderBy(x => x.RoleKindId).AsQueryable();
+            return casePersonLists.OrderBy(x => x.RoleKindId)
+                                  .AsQueryable();
         }
+
+        /// <summary>
+        /// Извличане на данни за лица по дело/заседание в лист
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <param name="caseSessionId">Идентификатор на заседание</param>
+        /// <param name="checkSessionDate"></param>
+        /// <param name="showExpired">Флаг да показва изтритите записи</param>
+        /// <param name="setRowNumberFromCase">Ако е за заседание и е true да вземе rownumber от делото за този идентификатор</param>
+        /// <param name="start">От коя позиция да дръпне данните</param>
+        /// <param name="length">Дължина</param>
+        /// <param name="sortedColumns">Колони по които се сортира</param>
+        /// <returns></returns>
+        public async Task<DataTableResponseVM<CasePersonListVM>> CasePersonList_Select(int caseId, int? caseSessionId, bool checkSessionDate, bool showExpired, bool setRowNumberFromCase, int start, int length, List<DataTablesSortColumnVM> sortedColumns)
+        {
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+
+            Expression<Func<CasePerson, bool>> checkDateWhere = x => true;
+            if (checkSessionDate == true && (caseSessionId ?? 0) > 0)
+                checkDateWhere = x => ((x.DateTo ?? dateEnd) >= x.CaseSession.DateFrom);
+
+            Expression<Func<CasePerson, bool>> caseSessionIdWhere = x => x.CaseSessionId == null;
+            if ((caseSessionId ?? 0) > 0)
+                caseSessionIdWhere = x => x.CaseSessionId == caseSessionId;
+
+            var casePersons = repo.AllReadonly<CasePerson>()
+                                  .Where(x => x.CaseId == caseId &&
+                                              x.CaseSessionId == null);
+
+            var queryPerson = repo.AllReadonly<CasePerson>()
+                                      .Where(x => x.CaseId == caseId)
+                                      .Where(caseSessionIdWhere)
+                                      .Where(checkDateWhere)
+                                      .Where(this.FilterExpireInfo<CasePerson>(showExpired));
+
+
+            int count = await queryPerson.CountAsync();
+
+            var casePersonLists = await queryPerson.Select(x => new CasePersonListVM()
+            {
+                Id = x.Id,
+                CaseId = x.CaseId,
+                CaseSessionId = x.CaseSessionId,
+                Uic = x.Uic,
+                UicTypeLabel = x.UicType.Label,
+                FullName = x.FullName,
+                FirstName = x.FirstName,
+                MiddleName = x.MiddleName,
+                FamilyName = x.FamilyName,
+                Family2Name = x.Family2Name,
+                RoleName = x.PersonRole.Label,
+                PersonRoleId = x.PersonRole.Id,
+                PersonRoleLabel = x.PersonRole.Label,
+                PersonRoleBigForumLabel = string.IsNullOrEmpty(x.PersonRole.BigForum) ? x.PersonRole.Label : x.PersonRole.BigForum,
+                PersonRoleShortForumLabel = string.IsNullOrEmpty(x.PersonRole.ShortForum) ? x.PersonRole.Label : x.PersonRole.ShortForum,
+                RoleKindId = x.PersonRole.RoleKindId,
+                DateFrom = x.DateFrom,
+                DateTo = x.DateTo,
+                //RowNumber = setRowNumber ? x.RowNumber :
+                //                           casePersons.Where(a => a.CasePersonIdentificator == x.CasePersonIdentificator)
+                //                                      .Select(a => a.RowNumber)
+                //                                      .FirstOrDefault(),
+                RowNumber = x.RowNumber,
+                ForNotification = x.ForNotification,
+                NotificationNumber = x.NotificationNumber,
+                CaseSessionLabel = (x.CaseSessionId != null) ? (x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy HH:mm")) : string.Empty,
+                CasePersonIdentificator = x.CasePersonIdentificator,
+                AddressString = x.Addresses.Any(c => c.DateExpired == null) ? (x.Addresses
+                                                                                                                                    .Any(a => (a.ForNotification ?? false) &&
+                                                                                                                                              a.DateExpired == null) ? x.Addresses
+                                                                                                                                                                        .Where(c => c.ForNotification == true &&
+                                                                                                                                                                                    c.DateExpired == null)
+                                                                                                                                                                        .Select(c => c.Address.FullAddress)
+                                                                                                                                                                        .FirstOrDefault() :
+                                                                                                                                                                       x.Addresses
+                                                                                                                                                                        .Where(c => c.DateExpired == null)
+                                                                                                                                                                        .Select(c => c.Address.FullAddress)
+                                                                                                                                                                        .FirstOrDefault()) :
+                                                                                                                                string.Empty,
+                CurrentAddressString = x.Addresses.Any(c => c.DateExpired == null) ? (x.Addresses
+                                                                                                                                           .Any(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current &&
+                                                                                                                                                     a.DateExpired == null) ? x.Addresses
+                                                                                                                                                                               .Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current &&
+                                                                                                                                                                                           a.DateExpired == null)
+                                                                                                                                                                               .Select(a => a.Address.FullAddress)
+                                                                                                                                                                               .FirstOrDefault() :
+                                                                                                                                                                              string.Empty) :
+                                                                                                                                         string.Empty,
+                WorkAddressString = x.Addresses.Any(c => c.DateExpired == null) ? (x.Addresses
+                                                                                                                                        .Any(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work &&
+                                                                                                                                                  a.DateExpired == null) ? x.Addresses
+                                                                                                                                                                            .Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work &&
+                                                                                                                                                                                        a.DateExpired == null)
+                                                                                                                                                                            .Select(a => a.Address.FullAddress)
+                                                                                                                                                                            .FirstOrDefault() :
+                                                                                                                                                                           string.Empty) :
+                                                                                                                                      string.Empty,
+                IsViewPersonSentence = (x.PersonRole.RoleKindId == NomenclatureConstants.RoleKind.RightSide || x.PersonRoleId == NomenclatureConstants.PersonRole.Offender) &&
+                                                                                           (x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance || x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.SecondInstance) &&
+                                                                                           x.CaseSessionId == null &&
+                                                                                           x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo,
+                IsIndividual = (x.UicTypeId == NomenclatureConstants.UicTypes.BirthDate || x.UicTypeId == NomenclatureConstants.UicTypes.EGN || x.UicTypeId == NomenclatureConstants.UicTypes.LNCh) &&
+                                                                                   (x.CaseSessionId == null),
+                IsViewPersonInheritance = (x.CaseSessionId == null) &&
+                                                                                              (x.PersonRoleId == NomenclatureConstants.PersonRole.Inheritor || x.PersonRoleId == NomenclatureConstants.PersonRole.Petitioner || x.PersonRoleId == NomenclatureConstants.PersonRole.Notifier) &&
+                                                                                              ((x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.Request51LawInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestAcceptanceInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestRefusalInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestForInventoryInheritanceReturnOfAChild)),
+                IsArrested = x.IsArrested ?? false,
+                IsDeceased = x.IsDeceased
+            })
+                                             .OrderBy(sortedColumns)
+                                             .Skip(start)
+                                             .Take(length)
+                                             .ToListAsync();
+
+            foreach (var casePerson in casePersonLists)
+            {
+                var linkListVM = casePersonLinkService.GetLinkForPerson(casePerson.Id, false, 0, null);
+                if (linkListVM.Any())
+                {
+                    if ((caseSessionId ?? 0) > 0)
+                    {
+                        var caseSessionDateFrom = repo.AllReadonly<CaseSession>()
+                                                      .Where(x => x.Id == caseSessionId)
+                                                      .Select(x => x.DateFrom)
+                                                      .FirstOrDefault();
+
+                        linkListVM = linkListVM.Where(x => (x.DateTo ?? dateEnd) >= caseSessionDateFrom.Date)
+                                               .ToList();
+                    }
+
+                    casePerson.LinkForPersonString = string.Join(", ", linkListVM.Select(x => x.Label));
+                }
+            }
+
+            var result = new DataTableResponseVM<CasePersonListVM>
+            {
+                TotalCount = count,
+                Records = casePersonLists,
+            };
+
+            return result;
+        }
+
+        public IQueryable<CasePersonListVM> CasePersonFast_SelectForCasePreview(int caseId, int? caseSessionId = null)
+        {
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+
+            Expression<Func<CasePerson, bool>> sessionCheck = x => x.CaseSessionId == null;
+            if (caseSessionId > 0)
+            {
+                sessionCheck = x => x.CaseSessionId == caseSessionId &&
+                                    ((x.DateTo ?? dateEnd) >= x.CaseSession.DateFrom);
+            }
+
+            return repo.AllReadonly<CasePerson>()
+                       .Where(x => x.CaseId == caseId)
+                       .Where(sessionCheck)
+                       .Where(FilterExpireInfo<CasePerson>(false))
+                       .Select(x => new CasePersonListVM()
+                       {
+                           Id = x.Id,
+                           CaseId = x.CaseId,
+                           CaseSessionId = x.CaseSessionId,
+                           Uic = x.Uic,
+                           UicTypeLabel = (x.UicType != null) ? x.UicType.Label : string.Empty,
+                           FullName = x.FullName,
+                           FirstName = x.FirstName,
+                           MiddleName = x.MiddleName,
+                           FamilyName = x.FamilyName,
+                           Family2Name = x.Family2Name,
+                           RoleName = x.PersonRole.Label,
+                           PersonRoleId = x.PersonRole.Id,
+                           PersonRoleLabel = x.PersonRole.Label,
+                           RoleKindId = x.PersonRole.RoleKindId,
+                           DateFrom = x.DateFrom,
+                           DateTo = x.DateTo,
+                           RowNumber = x.RowNumber,
+                           ForNotification = x.ForNotification,
+                           NotificationNumber = x.NotificationNumber,
+                           CasePersonIdentificator = x.CasePersonIdentificator,
+                           IsViewPersonSentence = (x.PersonRole.RoleKindId == NomenclatureConstants.RoleKind.RightSide || x.PersonRoleId == NomenclatureConstants.PersonRole.Offender) &&
+                                                  ((x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance) || (x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.SecondInstance)) &&
+                                                  (x.CaseSessionId == null) &&
+                                                  (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo),
+                           IsIndividual = (x.UicTypeId == NomenclatureConstants.UicTypes.BirthDate || x.UicTypeId == NomenclatureConstants.UicTypes.EGN || x.UicTypeId == NomenclatureConstants.UicTypes.LNCh) &&
+                                          (x.CaseSessionId == null),
+                           IsViewPersonInheritance = (x.CaseSessionId == null) &&
+                                                     (x.PersonRoleId == NomenclatureConstants.PersonRole.Inheritor || x.PersonRoleId == NomenclatureConstants.PersonRole.Petitioner || x.PersonRoleId == NomenclatureConstants.PersonRole.Notifier) &&
+                                                     ((x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.Request51LawInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestAcceptanceInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestRefusalInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestForInventoryInheritanceReturnOfAChild)),
+                           IsArrested = x.IsArrested ?? false,
+                           IsDeceased = x.IsDeceased
+                       })
+                       .OrderBy(x => x.RoleKindId)
+                       .AsQueryable();
+        }
+
 
         /// <summary>
         /// Запис на лица по дело/заседание
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public (bool result, string errorMessage) CasePerson_SaveData(CasePersonVM model)
+        public async Task<(bool result, string errorMessage)> CasePerson_SaveData(CasePersonVM model)
         {
             try
             {
                 //Ако човека е с дата преди делото да стане датата на делото + 1 сек. заради електронната папка на делото и да се направи проверка за датите
-                var caseData = GetById<Case>(model.CaseId);
+                var caseData = await repo.AllReadonly<Case>()
+                                    .Where(x => x.Id == model.CaseId)
+                                    .Select(x => new
+                                    {
+                                        x.RegDate,
+                                        x.CaseTypeId
+                                    }).FirstOrDefaultAsync();
+
                 if (model.DateFrom <= caseData.RegDate)
                     model.DateFrom = caseData.RegDate.AddSeconds(1);
 
@@ -159,12 +412,16 @@ namespace IOWebApplication.Core.Services
                     }
                 }
 
+                model.RelatedActId = model.RelatedActId.EmptyToNull();
+
                 //Ако не е наказателно първа инстанция и не е роля за задържан Isarrested = false
                 if (NomenclatureConstants.CaseTypes.CaseTypeArrested.Contains(caseData.CaseTypeId))
                 {
-                    var isSideForArrested = repo.AllReadonly<PersonRoleGrouping>()
-                         .Where(x => x.PersonRoleId == model.PersonRoleId &&
-                         x.PersonRoleGroup == NomenclatureConstants.PersonRoleGroupings.RoleArrested).Any();
+                    var isSideForArrested = await repo.AllReadonly<PersonRoleGrouping>()
+                                                .Where(x => x.PersonRoleId == model.PersonRoleId &&
+                                                            x.PersonRoleGroup == NomenclatureConstants.PersonRoleGroupings.RoleArrested)
+                                                .AnyAsync();
+
                     if (isSideForArrested == false)
                         model.IsArrested = false;
                 }
@@ -176,7 +433,7 @@ namespace IOWebApplication.Core.Services
                 CasePerson casePerson = null;
                 if (model.Id > 0)
                 {
-                    casePerson = repo.GetById<CasePerson>(model.Id);
+                    casePerson = await repo.GetByIdAsync<CasePerson>(model.Id);
 
                 }
                 else
@@ -185,12 +442,12 @@ namespace IOWebApplication.Core.Services
                     casePerson.CourtId = userContext.CourtId;
                     casePerson.CaseId = model.CaseId;
                     casePerson.CaseSessionId = model.CaseSessionId;
-                    casePerson.RowNumber = repo.AllReadonly<CasePerson>().Where(a => a.CaseId == casePerson.CaseId &&
-                                             (a.CaseSessionId ?? 0) == (casePerson.CaseSessionId ?? 0))
+                    casePerson.RowNumber = (await repo.AllReadonly<CasePerson>()
+                                                .Where(a => a.CaseId == casePerson.CaseId &&
+                                                            (a.CaseSessionId ?? 0) == (casePerson.CaseSessionId ?? 0))
                                                 .Select(x => x.RowNumber)
-                                                .DefaultIfEmpty(0)
-                                                .Max() + 1;
-
+                                                .MaxAsync()) + 1;
+                    casePerson.PersonGid = PersonNamesBase_GeneratePersonGid();
                 }
 
                 casePerson.PersonRoleId = model.PersonRoleId;
@@ -205,30 +462,39 @@ namespace IOWebApplication.Core.Services
                 casePerson.ReRegisterDate = model.ReRegisterDate;
                 casePerson.IsDeceased = model.IsDeceased;
                 casePerson.DateDeceased = model.DateDeceased;
+                casePerson.AppointDateFrom = model.AppointDateFrom;
+                casePerson.AppointDateTo = model.AppointDateTo;
+                casePerson.RelatedActId = model.RelatedActId;
                 casePerson.UserId = userContext.UserId;
                 casePerson.DateWrt = DateTime.Now;
 
                 casePerson.CopyFrom(model);
-                PersonNamesBase_SaveData(casePerson);
+                PersonNamesBase_SaveData(casePerson, model.Id > 0);
 
                 if (model.Id > 0)
                 {
-                    CreateHistory<CasePerson, CasePersonH>(casePerson);
+                    //CreateHistory<CasePerson, CasePersonH>(casePerson);
 
                     //Update
-                    repo.Update(casePerson);
-                    repo.SaveChanges();
+                    //repo.Update(casePerson);
+                    await repo.SaveChangesAsync();
 
-                    mqEpepService.AppendCasePerson(casePerson, EpepConstants.ServiceMethod.Update);
+                    await mqEpepService.AppendCasePerson(casePerson, EpepConstants.ServiceMethod.Update);
+
+
                 }
                 else
                 {
                     casePerson.CasePersonIdentificator = Guid.NewGuid().ToString().ToLower();
-                    CreateHistory<CasePerson, CasePersonH>(casePerson);
+                    //CreateHistory<CasePerson, CasePersonH>(casePerson);
 
                     if (model.FromPersonId > 0)
                     {
-                        casePerson.Addresses = repo.AllReadonly<CasePersonAddress>().Include(x => x.Address).Where(x => x.CasePersonId == model.FromPersonId).ToList();
+                        casePerson.Addresses = await repo.AllReadonly<CasePersonAddress>()
+                                                   .Include(x => x.Address)
+                                                   .Where(x => x.CasePersonId == model.FromPersonId)
+                                                   .ToListAsync();
+
                         foreach (var itemAddress in casePerson.Addresses)
                         {
                             itemAddress.Id = 0;
@@ -241,7 +507,7 @@ namespace IOWebApplication.Core.Services
                             itemAddress.DateWrt = DateTime.Now;
                             itemAddress.CasePersonAddressIdentificator = Guid.NewGuid().ToString().ToLower();
 
-                            CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddress);
+                            //CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddress);
                         }
                     }
                     else
@@ -249,7 +515,9 @@ namespace IOWebApplication.Core.Services
                         if ((model.Person_SourceType == SourceTypeSelectVM.Instutution || model.Person_SourceType == SourceTypeSelectVM.Court)
                             && (model.Person_SourceId ?? 0) > 0)
                         {
-                            var instAddress = commonService.SelectEntity_SelectAddress(model.Person_SourceType ?? 0, model.Person_SourceId ?? 0);
+                            var instAddress = commonService.SelectEntity_SelectAddress(model.Person_SourceType ?? 0, model.Person_SourceId ?? 0)
+                                                           .ToList();
+
                             foreach (var adr in instAddress)
                             {
                                 CasePersonAddress itemAddress = new CasePersonAddress();
@@ -262,22 +530,23 @@ namespace IOWebApplication.Core.Services
                                 itemAddress.CasePersonAddressIdentificator = Guid.NewGuid().ToString().ToLower();
                                 casePerson.Addresses.Add(itemAddress);
 
-                                CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddress);
+                                //CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddress);
                             }
                         }
                     }
                     //Insert
-                    repo.Add<CasePerson>(casePerson);
-                    repo.SaveChanges();
+                    await repo.AddAsync<CasePerson>(casePerson);
+                    await repo.SaveChangesAsync();
 
-                    mqEpepService.AppendCasePerson(casePerson, EpepConstants.ServiceMethod.Add);
+                    await mqEpepService.AppendCasePerson(casePerson, EpepConstants.ServiceMethod.Add);
+                    await mqEpepService.AppendAutomaticEpepAccessForPerson(casePerson);
                 }
                 model.Id = casePerson.Id;
                 return (result: true, errorMessage: "");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CasePerson Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CasePerson Id={model.Id}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }
@@ -287,11 +556,13 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public CasePersonVM CasePerson_GetById(int id)
+        public async Task<CasePersonVM> CasePerson_GetById(int id)
         {
-            var casePerson = repo.AllReadonly<CasePerson>()
-                               .Include(x => x.Case)
-                               .Where(a => a.Id == id).FirstOrDefault();
+            var casePerson = await repo.AllReadonly<CasePerson>()
+                                       .Include(x => x.Case)
+                                       .Where(a => a.Id == id)
+                                       .FirstOrDefaultAsync();
+
             var casePersonVM = new CasePersonVM();
             casePersonVM.Id = casePerson.Id;
             casePersonVM.CourtId = casePerson.CourtId;
@@ -312,6 +583,9 @@ namespace IOWebApplication.Core.Services
             casePersonVM.CompanyTypeId = casePerson.CompanyTypeId;
             casePersonVM.ReRegisterDate = casePerson.ReRegisterDate;
             casePersonVM.TaxNumber = casePerson.TaxNumber;
+            casePersonVM.AppointDateFrom = casePerson.AppointDateFrom;
+            casePersonVM.AppointDateTo = casePerson.AppointDateTo;
+            casePersonVM.RelatedActId = casePerson.RelatedActId;
             casePersonVM.CopyFrom(casePerson);
 
             return casePersonVM;
@@ -325,17 +599,16 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CasePersonAddressListVM> CasePersonAddress_Select(int casePersonId)
         {
             return repo.AllReadonly<CasePersonAddress>()
-                .Include(x => x.Address)
-                .Include(x => x.Address.AddressType)
-                .Where(x => x.CasePersonId == casePersonId)
-                .Where(FilterExpireInfo<CasePersonAddress>(false))
-                .Select(x => new CasePersonAddressListVM()
-                {
-                    Id = x.Id,
-                    FullAddress = x.Address.FullAddress,
-                    ForNotification = x.ForNotification ?? false,
-                    AddressTypeName = x.Address.AddressType.Label
-                }).AsQueryable();
+                       .Where(x => x.CasePersonId == casePersonId)
+                       .Where(FilterExpireInfo<CasePersonAddress>(false))
+                       .Select(x => new CasePersonAddressListVM()
+                       {
+                           Id = x.Id,
+                           FullAddress = x.Address.FullAddress,
+                           ForNotification = x.ForNotification ?? false,
+                           AddressTypeName = x.Address.AddressType.Label
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -343,7 +616,7 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public (bool result, string errorMessage) CasePersonAddress_SaveData(CasePersonAddress model)
+        public async Task<(bool result, string errorMessage)> CasePersonAddress_SaveData(CasePersonAddress model)
         {
             try
             {
@@ -351,7 +624,8 @@ namespace IOWebApplication.Core.Services
                 {
                     var existsPermanentAddress = repo.AllReadonly<CasePersonAddress>().Where(x => x.CasePersonId == model.CasePersonId &&
                                     x.Address.AddressTypeId == NomenclatureConstants.AddressType.Permanent &&
-                                    x.Id != model.Id).Any();
+                                    x.Id != model.Id &&
+                                    x.DateExpired == null).Any();
                     if (existsPermanentAddress == true)
                     {
                         return (result: false, errorMessage: "Не може да има повече от един постоянен адрес. При необходимост коригирайте данните във вече въведения постоянен адрес.");
@@ -368,7 +642,7 @@ namespace IOWebApplication.Core.Services
                     saved.UserId = userContext.UserId;
                     saved.DateWrt = DateTime.Now;
 
-                    CreateHistory<CasePersonAddress, CasePersonAddressH>(saved);
+                    //CreateHistory<CasePersonAddress, CasePersonAddressH>(saved);
 
                     repo.Update(saved);
                     repo.SaveChanges();
@@ -382,16 +656,17 @@ namespace IOWebApplication.Core.Services
                     model.DateWrt = DateTime.Now;
                     model.CasePersonAddressIdentificator = Guid.NewGuid().ToString().ToLower();
 
-                    CreateHistory<CasePersonAddress, CasePersonAddressH>(model);
+                    //CreateHistory<CasePersonAddress, CasePersonAddressH>(model);
 
                     repo.Add<CasePersonAddress>(model);
                     repo.SaveChanges();
                 }
+                await mqEpepService.RNFL_SendSide(model.CasePersonId, model.CaseId ?? 0);
                 return (result: true, errorMessage: "");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CasePersonAddress Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CasePersonAddress Id={model.Id}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }
@@ -425,7 +700,7 @@ namespace IOWebApplication.Core.Services
             //                     }).ToList();
 
             List<SelectListItem> result = new List<SelectListItem>();
-            result.Insert(result.Count(), new SelectListItem { Value = "0", Text = "От делото" });
+            result.Insert(result.Count, new SelectListItem { Value = "0", Text = "От делото" });
             return result;
         }
 
@@ -435,11 +710,11 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseId"></param>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        private IList<CheckListVM> FillCheckListVMs(int caseId, int? caseSessionId)
+        private async Task<IList<CheckListVM>> FillCheckListVMs(int caseId, int? caseSessionId)
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePerson = CasePerson_Select(caseId, caseSessionId, false, false, false);
+            var casePerson = await CasePersonFast_SelectForCasePreview(caseId, caseSessionId).ToListAsync();
 
             foreach (var person in casePerson)
                 checkListVMs.Add(new CheckListVM() { Checked = true, Value = person.Id.ToString(), Label = person.FullName + "(" + (person.Uic ?? "") + ") - " + person.RoleName });
@@ -448,24 +723,68 @@ namespace IOWebApplication.Core.Services
         }
 
         /// <summary>
+        /// Извличат се данни за лица от дело заседание за чеклист
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <param name="caseSessionId">Идентификатор на заседание</param>
+        /// <returns></returns>
+        public IQueryable<CasePersonForCheckListVM> CasePersonForCheckList_Select(int caseId, int? caseSessionId = null)
+        {
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+
+            Expression<Func<CasePerson, bool>> sessionCheck = x => x.CaseSessionId == null;
+            if (caseSessionId > 0)
+            {
+                sessionCheck = x => x.CaseSessionId == caseSessionId &&
+                                    ((x.DateTo ?? dateEnd) >= x.CaseSession.DateFrom);
+            }
+
+            return repo.AllReadonly<CasePerson>()
+                       .Where(x => x.CaseId == caseId)
+                       .Where(sessionCheck)
+                       .Where(FilterExpireInfo<CasePerson>(false))
+                       .Select(x => new CasePersonForCheckListVM()
+                       {
+                           Id = x.Id,
+                           PersonFullName = x.FullName,
+                           PersonRoleLabel = x.PersonRole.Label,
+                           PersonUic = x.Uic,
+                           DateTo = x.DateTo,
+                           CasePersonIdentificator = x.CasePersonIdentificator
+                       })
+                       .AsQueryable();
+        }
+
+        /// <summary>
         /// Връща списък с елементите за чекбокса
         /// </summary>
         /// <param name="caseId"></param>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        private IList<CheckListVM> FillCheckListVMs_SelectForCheck(int caseId, int? caseSessionId, int realCaseSessionId)
+        private async Task<IList<CheckListVM>> FillCheckListVMs_SelectForCheck(int caseId, int? caseSessionId, int realCaseSessionId)
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePerson = CasePerson_Select(caseId, caseSessionId, false, false, false);
-            var casePersonRealSession = repo.AllReadonly<CasePerson>().Where(x => x.CaseId == caseId && x.CaseSessionId == realCaseSessionId).ToList();
-            var caseSession = GetById<CaseSession>(realCaseSessionId);
+            var casePerson = await CasePersonForCheckList_Select(caseId, caseSessionId).ToListAsync();
+            //var casePerson = CasePersonFast_SelectForCasePreview(caseId, caseSessionId).ToList();
+            var casePersonRealSession = await repo.AllReadonly<CasePerson>()
+                                                  .Where(x => x.CaseId == caseId &&
+                                                              x.CaseSessionId == realCaseSessionId)
+                                                  .ToListAsync();
+
+            var caseSession = await GetByIdAsync<CaseSession>(realCaseSessionId);
 
             DateTime dateEnd = DateTime.Now.AddYears(100);
             foreach (var person in casePerson.Where(x => ((x.DateTo ?? dateEnd) >= caseSession.DateFrom)))
             {
-                bool check = casePersonRealSession.Where(x => (((x.DateTo ?? dateEnd) >= caseSession.DateFrom)) && (x.CasePersonIdentificator == person.CasePersonIdentificator)).Any();
-                checkListVMs.Add(new CheckListVM() { Checked = check, Value = person.Id.ToString(), Label = person.FullName + "(" + (person.Uic ?? "") + ") - " + person.RoleName });
+                bool check = casePersonRealSession.Any(x => (x.DateTo ?? dateEnd) >= caseSession.DateFrom &&
+                                                            x.CasePersonIdentificator == person.CasePersonIdentificator);
+                checkListVMs.Add(new CheckListVM()
+                {
+                    Checked = check,
+                    Value = person.Id.ToString(),
+                    Label = person.PersonLabel
+                });
             }
 
             return checkListVMs.OrderBy(x => x.Label).ToList();
@@ -478,14 +797,15 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseSessionId"></param>
         /// <param name="realCaseSessionId"></param>
         /// <returns></returns>
-        public CheckListViewVM CasePerson_SelectForCheck(int caseId, int caseSessionId, int realCaseSessionId)
+        public async Task<CheckListViewVM> CasePerson_SelectForCheck(int caseId, int caseSessionId, int realCaseSessionId)
         {
             CheckListViewVM checkListViewVM = new CheckListViewVM
             {
                 CourtId = caseId,
                 ObjectId = realCaseSessionId,
                 Label = "Изберете страни",
-                checkListVMs = FillCheckListVMs_SelectForCheck(caseId, caseSessionId, realCaseSessionId)
+                checkListVMs = await FillCheckListVMs_SelectForCheck(caseId, caseSessionId, realCaseSessionId),
+                ShowLogOperation = true
             };
 
             return checkListViewVM;
@@ -496,7 +816,7 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public CheckListViewVM CasePersonPrint_SelectForCheck(int caseId)
+        public async Task<CheckListViewVM> CasePersonPrint_SelectForCheck(int caseId)
         {
             CheckListViewVM checkListViewVM = new CheckListViewVM
             {
@@ -504,7 +824,7 @@ namespace IOWebApplication.Core.Services
                 ObjectId = 0,
                 Label = "Изберете страни, които да се включат в списъка на лицата по делото",
                 ButtonLabel = "Потвърди",
-                checkListVMs = FillCheckListVMs(caseId, 0)
+                checkListVMs = await FillCheckListVMs(caseId, 0)
             };
 
             return checkListViewVM;
@@ -520,7 +840,7 @@ namespace IOWebApplication.Core.Services
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePerson = CasePerson_Select(caseId, caseSessionId, false, false, false);
+            var casePerson = CasePersonFast_SelectForCasePreview(caseId, caseSessionId).ToList();
 
             foreach (var person in casePerson)
                 checkListVMs.Add(new CheckListVM() { Checked = (person.ForNotification == true), Value = person.Id.ToString(), Label = person.FullName + "(" + (person.Uic ?? "") + ") - " + person.RoleName });
@@ -557,29 +877,26 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseNewSessionDateFrom"></param>
         public void SetCasePersonDataForCopySession(int caseId, int? caseOldSession, int caseNewSessionId, List<CasePerson> casePersonList, DateTime caseNewSessionDateFrom)
         {
-            var casePersonCurrentSession = repo.AllReadonly<CasePerson>()
-                                     .Include(x => x.Addresses)
-                                     .ThenInclude(x => x.Address)
-                                     .Where(x => x.CaseId == caseId &&
-                                         (x.CaseSessionId ?? 0) == caseNewSessionId).ToList();
+            var casePersonCurrentSession = repo.All<CasePerson>()
+                                               .Include(x => x.Addresses)
+                                               .ThenInclude(x => x.Address)
+                                               .Where(x => x.CaseId == caseId &&
+                                                           (x.CaseSessionId ?? 0) == caseNewSessionId)
+                                               .ToList();
 
             //Всички, които ги има в заседанието и са активни, но не са чекнати да ги затърка
             DateTime dateEnd = DateTime.Now.AddYears(100);
-            CaseSession caseNewSession = null;
-            if (caseNewSessionId > 0)
-                caseNewSession = GetById<CaseSession>(caseNewSessionId);
-            foreach (var item in casePersonCurrentSession)
+            CaseSession caseNewSession = GetById<CaseSession>(caseNewSessionId);
+            foreach (var item in casePersonCurrentSession.Where(x => (x.DateTo ?? dateEnd) >= caseNewSession.DateFrom &&
+                                                                     !casePersonList.Any(p => p.CasePersonIdentificator == x.CasePersonIdentificator)))
             {
-                if ((item.DateTo ?? dateEnd) >= caseNewSession.DateFrom && casePersonList.Where(x => x.CasePersonIdentificator == item.CasePersonIdentificator).Any() == false)
-                {
-                    item.DateTo = caseNewSession.DateFrom.AddDays(-1);
-                    CreateHistory<CasePerson, CasePersonH>(item);
-                    repo.Update(item);
-                }
+                item.DateTo = caseNewSession.DateFrom.AddDays(-1);
+                //CreateHistory<CasePerson, CasePersonH>(item);
+                repo.Update(item);
             }
 
-            int rownumber = casePersonCurrentSession.Select(x => x.RowNumber).DefaultIfEmpty(0).Max() + 1;
-            foreach (var item in casePersonList)
+            int rownumber = (casePersonCurrentSession.Max(x => (int?)x.RowNumber) ?? 0) + 1;
+            foreach (var item in casePersonList.OrderBy(x => x.RowNumber))
             {
                 //Ако го има и има DateTo преди заседанието да му я смени и да ъпдейтне данните, а ако го няма да го добави
                 var personCurrentSession = casePersonCurrentSession.Where(x => x.CasePersonIdentificator == item.CasePersonIdentificator).FirstOrDefault();
@@ -611,10 +928,10 @@ namespace IOWebApplication.Core.Services
                         itemAddress.UserId = userContext.UserId;
                         itemAddress.DateWrt = DateTime.Now;
 
-                        CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddress);
+                        //CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddress);
                     }
 
-                    CreateHistory<CasePerson, CasePersonH>(item);
+                    //CreateHistory<CasePerson, CasePersonH>(item);
                     repo.Add<CasePerson>(item);
                 }
             }
@@ -631,16 +948,11 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
-                /*CAST PROBLEM
-                 * 
-                 * SELECT x.id, x.birth_city_code, x.birth_country_code, x.birth_foreign_place, x.case_id, x.case_person_identificator, x.case_selection_protokol_id, x.case_session_id, x.company_type_id, x.court_id, x.date_expired, x.date_from, x.date_to, x.date_transfered_dw, x.date_wrt, x.department_name, x.description_expired, x.family_2_name, x.family_name, x.first_name, x.for_notification, x.full_name, x.is_arrested, x.is_deceased, x.is_initial_person, x.latin_name, x.middle_name, x.military_rang_id, x.notification_number, x.person_id, x.person_maturity_id, x.person_role_id, x.person_source_code, x.person_source_id, x.person_source_type, x.re_register_date, x.row_number, x.tax_number, x.uic, x.uic_type_id, x.user_expired_id, x.user_id
-FROM case_person AS x
-WHERE CAST(x.id AS text) IN ('779434', '1359537', '779433', '779432')
-ORDER BY x.row_number, x.id
-                 */
-                List<int> id = ids.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
-                var casePersonList = repo.AllReadonly<CasePerson>().Include(x => x.Addresses).ThenInclude(x => x.Address)
-                                         .Where(x => id.Contains(x.Id))
+                int[] iDs = ids.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToArray();
+                var casePersonList = repo.AllReadonly<CasePerson>()
+                                         .Include(x => x.Addresses)
+                                         .ThenInclude(x => x.Address)
+                                         .Where(x => iDs.Contains(x.Id))
                                          .OrderBy(x => x.RowNumber)
                                          .ToList();
                 var caseOldSession = casePersonList.Select(x => x.CaseSessionId).FirstOrDefault();
@@ -652,7 +964,7 @@ ORDER BY x.row_number, x.id
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CasePerson_Copy CaseId={ caseId }");
+                logger.LogError(ex, $"Грешка при запис на CasePerson_Copy CaseId={caseId}");
                 return false;
             }
         }
@@ -660,13 +972,16 @@ ORDER BY x.row_number, x.id
         /// <summary>
         /// Извличане на данни за лица по дело/заседание за чекбокс
         /// </summary>
-        /// <param name="caseId"></param>
-        /// <param name="caseSessionId"></param>
-        /// <param name="roleKindIds"></param>
-        /// <param name="defaultElementText"></param>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <param name="caseSessionId">Идентификатор на заседание</param>
+        /// <param name="roleKindIds">Идентификатори на тип</param>
+        /// <param name="defaultElementText">Друго име на дефолтната стойност</param>
+        /// <param name="dateTo">До дата</param>
+        /// <param name="isViewUic">Флаг дали да се вижда идентификатора</param>
         /// <returns></returns>
-        public List<SelectListItem> CasePerson_SelectForDropDownList(int caseId, int? caseSessionId, string roleKindIds = "", string defaultElementText = "")
+        public List<SelectListItem> CasePerson_SelectForDropDownList(int caseId, int? caseSessionId, string roleKindIds = "", string defaultElementText = "", DateTime? dateTo = null, bool isViewUic = true)
         {
+            DateTime dateEnd = DateTime.Now.AddYears(100);
             Expression<Func<CasePerson, bool>> roleKindWhere = x => true;
             if (string.IsNullOrEmpty(roleKindIds) == false)
             {
@@ -674,22 +989,29 @@ ORDER BY x.row_number, x.id
                 roleKindWhere = x => roles.Contains(x.PersonRole.RoleKindId.ToString());
             }
 
+            Expression<Func<CasePerson, bool>> dateToWhere = x => true;
+            if (dateTo != null)
+            {
+                dateToWhere = x => (x.DateTo ?? dateEnd) >= NomenclatureExtensions.ForceStartDate(dateTo);
+            }
+
             var result = repo.AllReadonly<CasePerson>()
-                .Include(x => x.PersonRole)
-                .Include(x => x.PersonRole.RoleKind)
-                .Where(x => x.CaseId == caseId &&
-                            (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
-                            x.DateExpired == null)
-                .Where(roleKindWhere)
-                 .OrderBy(x => x.RowNumber)
-                                 .Select(x => new SelectListItem()
-                                 {
-                                     Value = x.Id.ToString(),
-                                     Text = x.FullName + "(" + (x.Uic ?? "") + ") - " + x.PersonRole.Label
-                                 }).ToList();
+                             .Where(x => x.CaseId == caseId &&
+                                         (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
+                                         x.DateExpired == null)
+                             .Where(roleKindWhere)
+                             .Where(dateToWhere)
+                             .OrderBy(x => x.RowNumber)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Value = x.Id.ToString(),
+                                 Text = x.FullName + (isViewUic ? " (" + (x.Uic ?? "") + ") - " : " - ") + x.PersonRole.Label
+                             })
+                             .ToList();
 
             if (string.IsNullOrEmpty(defaultElementText))
                 defaultElementText = "Избери";
+
             result.Insert(0, new SelectListItem() { Text = defaultElementText, Value = "-1" });
 
             return result;
@@ -718,7 +1040,7 @@ ORDER BY x.row_number, x.id
                                                                     (x.NotificationListTypeId == null && notificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList)
                                                                )
                                                    )
-                                                   .ToList();
+                                                   ;
             var casePersons = repo.AllReadonly<CasePerson>()
                                  .Where(x => x.CaseId == caseId &&
                                              x.CaseSessionId == null);
@@ -772,7 +1094,6 @@ ORDER BY x.row_number, x.id
             var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>()
                                                    .Where(x => x.CaseSessionId == caseSessionId && x.DateExpired == null && x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson).ToList();
             var result = repo.All<CasePerson>()
-                .Include(x => x.PersonRole)
                 .Where(x => x.CaseId == caseId && (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) && (x.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide))
                 .Select(x => new SelectListItem()
                 {
@@ -845,7 +1166,7 @@ ORDER BY x.row_number, x.id
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CaseNotification CaseId={ checkListViewVM.CourtId }");
+                logger.LogError(ex, $"Грешка при запис на CaseNotification CaseId={checkListViewVM.CourtId}");
                 return false;
             }
         }
@@ -871,13 +1192,9 @@ ORDER BY x.row_number, x.id
             FinalDateTo = NomenclatureExtensions.ForceEndDate(FinalDateTo);
             WithoutFinalDateTo = NomenclatureExtensions.ForceEndDate(WithoutFinalDateTo);
 
-            uic = uic?.ToLower();
-            fullName = fullName?.ToLower();
-            caseRegnumber = caseRegnumber?.ToLower();
-
             Expression<Func<CasePerson, bool>> uicSearch = x => true;
             if (!string.IsNullOrEmpty(uic))
-                uicSearch = x => x.Uic.ToLower() == uic;
+                uicSearch = x => x.Uic == uic;
 
             Expression<Func<CasePerson, bool>> nameSearch = x => true;
             if (!string.IsNullOrEmpty(fullName))
@@ -885,7 +1202,7 @@ ORDER BY x.row_number, x.id
 
             Expression<Func<CasePerson, bool>> caseNumberSearch = x => true;
             if (!string.IsNullOrEmpty(caseRegnumber))
-                caseNumberSearch = x => EF.Functions.ILike(x.Case.RegNumber,caseRegnumber.ToCasePaternSearch());
+                caseNumberSearch = x => EF.Functions.ILike(x.Case.RegNumber, caseRegnumber.ToCasePaternSearch());
 
             Expression<Func<CasePerson, bool>> caseRegDateSearch = x => true;
             if ((DateFrom != null) && (DateTo != null))
@@ -910,9 +1227,6 @@ ORDER BY x.row_number, x.id
                                                                                                                                                    b.CaseSession.CaseSessionResults.Any(r => r.DateExpired == null && resultFinish.Contains(r.SessionResultId)))))));
 
             return repo.AllReadonly<CasePerson>()
-                       .Include(x => x.PersonRole)
-                       .Include(x => x.Case)
-                       .Include(x => x.Case.CaseState)
                        .Where(x => x.Case.CourtId == courtId && x.CaseSessionId == null)
                        .Where(x => x.DateExpired == null)
                        .Where(uicSearch)
@@ -930,7 +1244,8 @@ ORDER BY x.row_number, x.id
                            FullName = x.FullName,
                            RoleName = x.PersonRole.Label,
                            CaseStateLabel = x.Case.CaseState.Label
-                       }).AsQueryable();
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -944,7 +1259,6 @@ ORDER BY x.row_number, x.id
             bool addMail = notificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnEMail;
 
             var result = repo.AllReadonly<CasePersonAddress>()
-                .Include(x => x.Address)
                 .Where(x => x.CasePersonId == casePersonId)
                 .Select(x => new SelectListItem()
                 {
@@ -967,14 +1281,52 @@ ORDER BY x.row_number, x.id
         public List<SelectListItem> GetDDL_AddressByCasePersonAddress(int casePersonId)
         {
             var result = repo.AllReadonly<CasePersonAddress>()
-                .Include(x => x.Address)
-                .Where(x => x.CasePersonId == casePersonId)
-                .Select(x => new SelectListItem()
-                {
-                    Value = x.Address.Id.ToString(),
-                    Text = ((x.ForNotification ?? false) ? " " : "") + x.Address.FullAddress
-                })
-                .ToList();
+                             .Where(x => x.CasePersonId == casePersonId)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Value = x.Address.Id.ToString(),
+                                 Text = ((x.ForNotification ?? false) ? " " : "") + x.Address.FullAddress
+                             })
+                             .ToList();
+
+            if (result.Count == 0)
+                result.Insert(0, new SelectListItem() { Text = "Няма данни", Value = "-1" });
+
+            return result.OrderBy(x => x.Text).ToList();
+        }
+
+        /// <summary>
+        /// Извличане на адреси за комбобокс
+        /// </summary>
+        /// <param name="casePersonId"></param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> GetDDL_AddressByCasePersonAddressAsync(int casePersonId)
+        {
+            var result = await repo.AllReadonly<CasePersonAddress>()
+                                   .Where(x => x.CasePersonId == casePersonId)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Value = x.Address.Id.ToString(),
+                                       Text = ((x.ForNotification ?? false) ? " " : "") + x.Address.FullAddress
+                                   })
+                                   .ToListAsync();
+
+            if (result.Count == 0)
+                result.Insert(0, new SelectListItem() { Text = "Няма данни", Value = "-1" });
+
+            return result.OrderBy(x => x.Text).ToList();
+        }
+
+        public List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId)
+        {
+            var result = repo.AllReadonly<CasePersonAddress>()
+                             .Where(x => x.CasePersonId == casePersonId)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Value = x.Id.ToString(),
+                                 Text = ((x.ForNotification ?? false) ? " " : "") + x.Address.FullAddress + " - " + x.Address.AddressType.Label
+                             })
+                             .ToList();
 
             if (result.Count == 0)
                 result.Insert(0, new SelectListItem() { Text = "Няма данни", Value = "-1" });
@@ -1022,8 +1374,10 @@ ORDER BY x.row_number, x.id
                     itemAddressCase.Address.Id = 0;
                     itemAddressCase.UserId = userContext.UserId;
                     itemAddressCase.DateWrt = DateTime.Now;
+                    //repo.Add(itemAddressCase);
                     toObj.Addresses.Add(itemAddressCase);
-                    CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddressCase);
+
+                    //CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddressCase);
                 }
                 else
                 {
@@ -1031,11 +1385,11 @@ ORDER BY x.row_number, x.id
                     itemAddressCurrent.Address.CopyFrom(itemAddressCase.Address);
                     itemAddressCurrent.Address.FullAddress = itemAddressCase.Address.FullAddress;
                     itemAddressCurrent.ForNotification = itemAddressCase.ForNotification;
-                    CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddressCase);
+                    //CreateHistory<CasePersonAddress, CasePersonAddressH>(itemAddressCase);
                 }
             }
-            CreateHistory<CasePerson, CasePersonH>(toObj);
-            repo.Update(toObj);
+            //CreateHistory<CasePerson, CasePersonH>(toObj);
+            //repo.Update(toObj);
         }
 
         /// <summary>
@@ -1054,12 +1408,12 @@ ORDER BY x.row_number, x.id
                 //    return (result: false, errorMessage: "Заседанието вече е започнало. Не може да бъде извършено обновяване на данните.");
                 //}
 
-                var casePersonCurrent = repo.AllReadonly<CasePerson>().Include(x => x.Addresses).ThenInclude(x => x.Address)
+                var casePersonCurrent = repo.All<CasePerson>().Include(x => x.Addresses).ThenInclude(x => x.Address)
                                                          .Where(x => x.CaseId == caseId && x.CaseSessionId == caseSessionId).ToList();
                 var casePersonCase = repo.AllReadonly<CasePerson>().Include(x => x.Addresses).ThenInclude(x => x.Address)
                                                          .Where(x => x.CaseId == caseId && x.CaseSessionId == null && x.DateExpired == null).ToList();
 
-                var caseNotification = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == caseSessionId && x.DateExpired == null).ToList();
+                var caseNotification = repo.All<CaseSessionNotificationList>().Where(x => x.CaseSessionId == caseSessionId && x.DateExpired == null).ToList();
 
                 foreach (var item in casePersonCurrent)
                 {
@@ -1074,12 +1428,13 @@ ORDER BY x.row_number, x.id
                         var itemNotification = caseNotification.Where(x => x.CasePersonId == item.Id).FirstOrDefault();
                         if (itemNotification != null && itemNotification.NotificationAddressId == null)
                         {
-                            long addressId = item.Addresses.Where(x => x.ForNotification == true).Select(x => x.AddressId).DefaultIfEmpty(0).FirstOrDefault();
+                            long addressId = itemCasePersonCase.Addresses.Where(x => x.ForNotification == true).Select(x => x.AddressId).FirstOrDefault();
                             if (addressId == 0)
-                                addressId = item.Addresses.Select(x => x.AddressId).FirstOrDefault();
+                                addressId = itemCasePersonCase.Addresses.Select(x => x.AddressId).FirstOrDefault();
 
-                            itemNotification.NotificationAddressId = addressId;
-                            repo.Update(itemNotification);
+                            if (addressId > 0)
+                                itemNotification.NotificationAddressId = addressId;
+                            //repo.Update(itemNotification);
                         }
                     }
                 }
@@ -1089,7 +1444,7 @@ ORDER BY x.row_number, x.id
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на ReloadPersonData CaseId={ caseId }");
+                logger.LogError(ex, $"Грешка при запис на ReloadPersonData CaseId={caseId}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
 
@@ -1103,7 +1458,7 @@ ORDER BY x.row_number, x.id
         public IQueryable<CaseSessionNotificationListVM> PersonListForPrint_Select(CheckListViewVM model)
         {
             List<CaseSessionNotificationListVM> result = new List<CaseSessionNotificationListVM>();
-            var casePersonLists = CasePerson_Select(model.CourtId, 0, false, false, false).ToList();
+            var casePersonLists = CasePersonFast_SelectForCasePreview(model.CourtId).ToList();
             int maxnum = 0;
 
             foreach (var item in casePersonLists.OrderBy(x => x.RoleKindId))
@@ -1183,7 +1538,7 @@ ORDER BY x.row_number, x.id
         private IQueryable<CasePerson> GetCasePersonByActId(int actId)
         {
             int[] roles = { NomenclatureConstants.PersonKinds.LeftSide, NomenclatureConstants.PersonKinds.RightSide };
-            var caseId = repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == actId).Select(x => x.CaseSession.CaseId).DefaultIfEmpty(0).FirstOrDefault();
+            var caseId = repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == actId).Select(x => x.CaseSession.CaseId).FirstOrDefault();
             return repo.AllReadonly<CasePerson>()
                 .Where(x => x.CaseId == caseId && x.CaseSessionId == null)
                 .Where(x => roles.Contains(x.PersonRole.RoleKindId))
@@ -1241,7 +1596,7 @@ ORDER BY x.row_number, x.id
         /// <param name="casePersonId"></param>
         /// <param name="addressId"></param>
         /// <returns></returns>
-        public (bool result, string errorMessage) CasePersonAddress_AddFromSearch(int casePersonId, int addressId)
+        public async Task<(bool result, string errorMessage)> CasePersonAddress_AddFromSearch(int casePersonId, int addressId)
         {
             var casePerson = repo.GetById<CasePerson>(casePersonId);
             CasePersonAddress model = new CasePersonAddress();
@@ -1250,7 +1605,7 @@ ORDER BY x.row_number, x.id
             model.CourtId = userContext.CourtId;
             model.Address = repo.AllReadonly<Address>().Where(x => x.Id == addressId).FirstOrDefault();
             model.Address.Id = 0;
-            return CasePersonAddress_SaveData(model);
+            return await CasePersonAddress_SaveData(model);
         }
 
         /// <summary>
@@ -1261,19 +1616,15 @@ ORDER BY x.row_number, x.id
         public IQueryable<CasePersonInheritanceVM> CasePersonInheritance_Select(int CasePersonId)
         {
             return repo.AllReadonly<CasePersonInheritance>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.DecreedCourt)
-                       .Include(x => x.CasePersonInheritanceResult)
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.ActType)
-                       .Where(x => x.CasePersonId == CasePersonId && x.DateExpired == null)
+                       .Where(x => x.CasePersonId == CasePersonId)
                        .Select(x => new CasePersonInheritanceVM()
                        {
                            Id = x.Id,
-                           CaseSessionActLabel = x.CaseSessionAct != null ? x.CaseSessionAct.ActType.Label + " " + (x.CaseSessionAct.RegNumber ?? string.Empty) + "/" + (x.CaseSessionAct.RegDate != null ? (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty) : string.Empty,
+                           CaseSessionActLabel = x.CaseSessionAct.ActType.Label + " " + (x.CaseSessionAct.RegNumber ?? string.Empty) + "/" + (x.CaseSessionAct.RegDate != null ? (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty),
                            CourtLabel = x.DecreedCourt.Label,
                            CasePersonInheritanceResultLabel = x.CasePersonInheritanceResult.Label,
-                           IsActiveText = (x.IsActive ?? false) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No
+                           IsActiveText = (x.DateExpired == null) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No,
+                           IsEdit = (x.DateExpired == null)
                        })
                        .AsQueryable();
         }
@@ -1283,14 +1634,14 @@ ORDER BY x.row_number, x.id
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CasePersonInheritance_SaveData(CasePersonInheritance model)
+        public async Task<bool> CasePersonInheritance_SaveData(CasePersonInheritance model)
         {
             try
             {
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CasePersonInheritance>(model.Id);
+                    var saved = await repo.GetByIdAsync<CasePersonInheritance>(model.Id);
                     saved.DecreedCourtId = model.DecreedCourtId;
                     saved.CasePersonId = model.CasePersonId;
                     saved.CaseSessionActId = model.CaseSessionActId;
@@ -1299,20 +1650,26 @@ ORDER BY x.row_number, x.id
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
-                    repo.SaveChanges();
                 }
                 else
                 {
+                    if (counterService.Counter_GetCasePersonInheritanceCounter(model, model.CourtId) == false)
+                    {
+                        return false;
+                    }
+
+                    model.DateCreate = DateTime.Now;
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
-                    repo.Add<CasePersonInheritance>(model);
-                    repo.SaveChanges();
+                    repo.Add(model);
                 }
+
+                await repo.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Наследство по лице в дело Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Наследство по лице в дело Id={model.Id}");
                 return false;
             }
         }
@@ -1326,15 +1683,13 @@ ORDER BY x.row_number, x.id
         public IQueryable<CasePersonMeasureVM> CasePersonMeasure_Select(int CasePersonId, bool showExpired = false)
         {
             return repo.AllReadonly<CasePersonMeasure>()
-                       .Include(x => x.MeasureInstitution)
-                       .Include(x => x.MeasureCourt)
                        .Where(x => x.CasePersonId == CasePersonId &&
                                    (!showExpired ? x.DateExpired == null : true))
                        .Select(x => new CasePersonMeasureVM()
                        {
                            Id = x.Id,
-                           MeasureCourtLabel = (x.MeasureCourt != null) ? x.MeasureCourt.Label : string.Empty,
-                           MeasureInstitutionLabel = (x.MeasureInstitution != null) ? x.MeasureInstitution.FullName : string.Empty,
+                           MeasureCourtLabel = (x.MeasureCourtId != null) ? x.MeasureCourt.Label : string.Empty,
+                           MeasureInstitutionLabel = (x.MeasureInstitutionId != null) ? x.MeasureInstitution.FullName : string.Empty,
                            MeasureTypeLabel = x.MeasureTypeLabel,
                            MeasureStatusDate = x.MeasureStatusDate,
                            BailAmount = x.BailAmount,
@@ -1371,8 +1726,11 @@ ORDER BY x.row_number, x.id
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private CasePersonMeasure FillCasePersonMeasure(CasePersonMeasureEditVM model)
+        private async Task<CasePersonMeasure> FillCasePersonMeasure(CasePersonMeasureEditVM model)
         {
+            var measureType = await nomenclatureService.GetByCode_EISPPTblElementAsync(model.MeasureType);
+            var measureStatus = await nomenclatureService.GetByCode_EISPPTblElementAsync(model.MeasureStatus);
+
             return new CasePersonMeasure()
             {
                 Id = model.Id,
@@ -1382,12 +1740,19 @@ ORDER BY x.row_number, x.id
                 MeasureCourtId = model.MeasureCourtId,
                 CasePersonId = model.CasePersonId,
                 MeasureInstitutionId = model.MeasureInstitutionId,
+                MeasureKindId = model.MeasureKindId.NumberEmptyToNull(),
                 MeasureType = model.MeasureType,
-                MeasureTypeLabel = nomenclatureService.GetByCode_EISPPTblElement(model.MeasureType).Label,
+                MeasureTypeLabel = measureType != null ? measureType.Label : string.Empty,
                 MeasureStatusDate = model.MeasureStatusDate,
                 BailAmount = model.BailAmount,
                 MeasureStatus = model.MeasureStatus,
-                MeasureStatusLabel = nomenclatureService.GetByCode_EISPPTblElement(model.MeasureStatus).Label
+                MeasureStatusLabel = measureStatus != null ? measureStatus.Label : string.Empty,
+                MeasureUnit = model.MeasureUnit,
+                MeasureQuantity = model.MeasureQuantity,
+                MeasureDays = model.MeasureDays,
+                MeasureWeeks = model.MeasureWeeks,
+                MeasureMonths = model.MeasureMonths,
+                MeasureYears = model.MeasureYears,
             };
         }
 
@@ -1396,7 +1761,7 @@ ORDER BY x.row_number, x.id
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private CasePersonMeasureEditVM FillCasePersonMeasureEditVM(CasePersonMeasure model)
+        private async Task<CasePersonMeasureEditVM> FillCasePersonMeasureEditVM(CasePersonMeasure model)
         {
             return new CasePersonMeasureEditVM()
             {
@@ -1407,12 +1772,19 @@ ORDER BY x.row_number, x.id
                 MeasureCourtId = model.MeasureCourtId,
                 CasePersonId = model.CasePersonId,
                 MeasureInstitutionId = model.MeasureInstitutionId,
-                MeasureInstitutionTypeId = (model.MeasureInstitutionId != null) ? (repo.AllReadonly<Institution>().Where(x => x.Id == model.MeasureInstitutionId).FirstOrDefault()).InstitutionTypeId : (int?)null,
+                MeasureInstitutionTypeId = (model.MeasureInstitutionId != null) ? (await repo.AllReadonly<Institution>().Where(x => x.Id == model.MeasureInstitutionId).FirstOrDefaultAsync()).InstitutionTypeId : (int?)null,
                 MeasureType = model.MeasureType,
+                MeasureKindId = model.MeasureKindId,
+                MeasureUnit = model.MeasureUnit,
+                MeasureQuantity = model.MeasureQuantity,
                 MeasureStatusDate = model.MeasureStatusDate,
                 BailAmount = model.BailAmount,
                 MeasureStatus = model.MeasureStatus,
-                DateExpired = model.DateExpired
+                DateExpired = model.DateExpired,
+                MeasureDays = model.MeasureDays,
+                MeasureWeeks = model.MeasureWeeks,
+                MeasureMonths = model.MeasureMonths,
+                MeasureYears = model.MeasureYears
             };
         }
 
@@ -1421,41 +1793,77 @@ ORDER BY x.row_number, x.id
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CasePersonMeasure_SaveData(CasePersonMeasureEditVM model)
+        public async Task<bool> CasePersonMeasure_SaveData(CasePersonMeasureEditVM model)
         {
             try
             {
-                var modelSave = FillCasePersonMeasure(model);
+                var modelSave = await FillCasePersonMeasure(model);
+
+                var punishmentIds = model.Punishments.Where(x => x.Checked).Select(x => int.Parse(x.Value)).ToArray();
 
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CasePersonMeasure>(modelSave.Id);
+                    var saved = await repo.GetByIdAsync<CasePersonMeasure>(modelSave.Id);
+
                     saved.MeasureInstitutionId = modelSave.MeasureInstitutionId;
                     saved.MeasureType = modelSave.MeasureType;
                     saved.MeasureTypeLabel = modelSave.MeasureTypeLabel;
+                    saved.MeasureKindId = modelSave.MeasureKindId;
+                    saved.MeasureUnit = modelSave.MeasureUnit;
+                    saved.MeasureQuantity = modelSave.MeasureQuantity;
                     saved.MeasureStatusDate = modelSave.MeasureStatusDate;
                     saved.BailAmount = modelSave.BailAmount;
                     saved.MeasureStatus = modelSave.MeasureStatus;
                     saved.MeasureStatusLabel = modelSave.MeasureStatusLabel;
+                    saved.MeasureDays = model.MeasureDays;
+                    saved.MeasureWeeks = model.MeasureWeeks;
+                    saved.MeasureMonths = model.MeasureMonths;
+                    saved.MeasureYears = model.MeasureYears;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
-                    repo.Update(saved);
-                    repo.SaveChanges();
+
+                    var savedPunishments = await repo.AllReadonly<CasePersonSentencePunishmentMeasure>()
+                                                     .Where(x => x.CasePersonMeasureId == modelSave.Id)
+                                                     .ToListAsync();
+
+                    foreach (var forDel in savedPunishments.Where(x => !punishmentIds.Contains(x.CasePersonSentencePunishmentId)))
+                    {
+                        repo.Delete(forDel);
+                    }
+                    foreach (var forInsert in punishmentIds.Where(x => !savedPunishments.Any(m => m.CasePersonSentencePunishmentId == x)))
+                    {
+                        repo.Add(new CasePersonSentencePunishmentMeasure()
+                        {
+                            CasePersonSentencePunishmentId = forInsert,
+                            CasePersonMeasureId = modelSave.Id
+                        });
+                    }
+
+                    await repo.SaveChangesAsync();
                 }
                 else
                 {
                     modelSave.DateWrt = DateTime.Now;
                     modelSave.UserId = userContext.UserId;
-                    repo.Add<CasePersonMeasure>(modelSave);
-                    repo.SaveChanges();
+
+
+                    if (punishmentIds.Length > 0)
+                    {
+                        modelSave.Punishments = punishmentIds.Select(x => new CasePersonSentencePunishmentMeasure()
+                        {
+                            CasePersonSentencePunishmentId = x
+                        }).ToList();
+                    }
+                    repo.Add(modelSave);
+                    await repo.SaveChangesAsync();
                     model.Id = modelSave.Id;
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Мерки към лица по НД Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Мерки към лица по НД Id={model.Id}");
                 return false;
             }
         }
@@ -1465,21 +1873,27 @@ ORDER BY x.row_number, x.id
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CasePersonDocument_SaveData(CasePersonDocument model)
+        public async Task<bool> CasePersonDocument_SaveData(CasePersonDocument model)
         {
             try
             {
-                model.IssuerCountryName = (repo.AllReadonly<EkCountry>().Where(x => x.Code == model.IssuerCountryCode).FirstOrDefault()).Name;
-                model.PersonalDocumentTypeLabel = nomenclatureService.GetByCode_EISPPTblElement(model.PersonalDocumentTypeId).Label;
+                model.IssuerCountryName = await repo.AllReadonly<EkCountry>()
+                                                    .Where(x => x.Code == model.IssuerCountryCode)
+                                                    .Select(x => x.Name)
+                                                    .FirstOrDefaultAsync();
+
+                var personalDocumentType = await nomenclatureService.GetByCode_EISPPTblElementAsync(model.PersonalDocumentTypeId);
+                model.PersonalDocumentTypeLabel = personalDocumentType != null ? personalDocumentType.Label : string.Empty;
 
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CasePersonDocument>(model.Id);
+                    var saved = await repo.GetByIdAsync<CasePersonDocument>(model.Id);
                     saved.IssuerCountryCode = model.IssuerCountryCode;
                     saved.IssuerCountryName = model.IssuerCountryName;
                     saved.PersonalDocumentTypeId = model.PersonalDocumentTypeId;
                     saved.PersonalDocumentTypeLabel = model.PersonalDocumentTypeLabel;
+                    saved.PersonalDocumentTypeNote = model.PersonalDocumentTypeNote;
                     saved.DocumentNumber = model.DocumentNumber;
                     saved.DocumentDate = model.DocumentDate;
                     saved.DocumentDateTo = model.DocumentDateTo;
@@ -1487,20 +1901,20 @@ ORDER BY x.row_number, x.id
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
-                    repo.SaveChanges();
                 }
                 else
                 {
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
-                    repo.Add<CasePersonDocument>(model);
-                    repo.SaveChanges();
+                    repo.Add(model);
                 }
+
+                await repo.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Мерки към лица по НД Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Мерки към лица по НД Id={model.Id}");
                 return false;
             }
         }
@@ -1510,9 +1924,9 @@ ORDER BY x.row_number, x.id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public CasePersonMeasureEditVM CasePersonMeasure_GetById(int id)
+        public async Task<CasePersonMeasureEditVM> CasePersonMeasure_GetById(int id)
         {
-            return FillCasePersonMeasureEditVM(repo.GetById<CasePersonMeasure>(id));
+            return await FillCasePersonMeasureEditVM(await repo.GetByIdAsync<CasePersonMeasure>(id));
         }
 
 
@@ -1521,7 +1935,8 @@ ORDER BY x.row_number, x.id
             var result = repo.AllReadonly<CasePerson>()
                              .Where(x => x.CaseId == caseId &&
                                          x.CaseSessionId == null &&
-                                         x.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide)
+                                         (x.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide ||
+                                          x.PersonRoleId == NomenclatureConstants.PersonRole.Certified))
                              .Select(x => new SelectListItem()
                              {
                                  Value = x.Id.ToString(),
@@ -1531,22 +1946,24 @@ ORDER BY x.row_number, x.id
             return result;
         }
 
-        public (bool result, string errorMessage) CheckCasePersonExpired(CasePerson model)
+        public async Task<(bool result, string errorMessage)> CheckCasePersonExpired(CasePerson model)
         {
             //Тъй като са с 3 или-та гледам и делото
-            bool checkLink = repo.AllReadonly<CasePersonLink>()
-                              .Where(x => x.CaseId == model.CaseId && x.DateExpired == null &&
-                                 (x.CasePersonId == model.Id || x.CasePersonRelId == model.Id ||
-                                 x.CasePersonSecondRelId == model.Id))
-                              .Any();
+            bool checkLink = await repo.AllReadonly<CasePersonLink>()
+                                       .Where(x => x.CaseId == model.CaseId && x.DateExpired == null &&
+                                                   (x.CasePersonId == model.Id || x.CasePersonRelId == model.Id ||
+                                                   x.CasePersonSecondRelId == model.Id))
+                                       .AnyAsync();
+
             if (checkLink)
                 return (result: false, errorMessage: "Има активна връзка за лицето");
 
             //Тъй като са с 3 или-та гледам и делото
-            bool checkNotification = repo.AllReadonly<CaseNotification>()
-                              .Where(x => x.CaseId == model.CaseId && x.DateExpired == null &&
-                                 x.CasePerson.CasePersonIdentificator == model.CasePersonIdentificator)
-                              .Any();
+            bool checkNotification = await repo.AllReadonly<CaseNotification>()
+                                               .Where(x => x.CaseId == model.CaseId && x.DateExpired == null &&
+                                                           x.CasePerson.CasePersonIdentificator == model.CasePersonIdentificator)
+                                               .AnyAsync();
+
             if (checkNotification)
                 return (result: false, errorMessage: "Има създадена призовка/съобщение за лицето");
 
@@ -1573,86 +1990,87 @@ ORDER BY x.row_number, x.id
 
         }
 
-        public bool CasePerson_SaveExpiredPlus(ExpiredInfoVM model)
+        public async Task<bool> CasePerson_SaveExpiredPlus(ExpiredInfoVM model)
         {
             try
             {
-                var expireObject = repo.GetById<CasePerson>(model.Id);
-                model.DateExpired = DateTime.Now;
+                var expireObject = await repo.All<CasePerson>()
+                                             .Where(x => x.Id == model.Id)
+                                             .FirstAsync();
 
+                model.DateExpired = DateTime.Now;
                 expireObject.DateExpired = model.DateExpired;
                 expireObject.UserExpiredId = userContext.UserId;
                 expireObject.DescriptionExpired = model.DescriptionExpired;
-                repo.Update(expireObject);
 
-                var casePeople = repo.AllReadonly<CasePerson>()
-                                     .Where(x => x.CasePersonIdentificator == expireObject.CasePersonIdentificator &&
-                                                 x.CaseSession.DateFrom >= model.DateExpired &&
-                                                 x.Id != model.Id)
-                                     .ToList();
+                var casePeople = await repo.All<CasePerson>()
+                                           .Where(x => x.CasePersonIdentificator == expireObject.CasePersonIdentificator &&
+                                                       x.CaseSession.DateFrom >= model.DateExpired &&
+                                                       x.Id != model.Id)
+                                           .ToListAsync();
 
                 foreach (var casePerson in casePeople)
                 {
                     casePerson.DateExpired = model.DateExpired;
                     casePerson.UserExpiredId = userContext.UserId;
                     casePerson.DescriptionExpired = model.DescriptionExpired;
-                    repo.Update(casePerson);
                 }
 
-                var caseNotifications = repo.AllReadonly<CaseNotification>()
-                                            .Where(x => x.CasePerson.CasePersonIdentificator == expireObject.CasePersonIdentificator &&
-                                                        x.CaseSession.DateFrom >= model.DateExpired)
-                                            .ToList();
+                var caseNotifications = await repo.All<CaseNotification>()
+                                                  .Where(x => x.CasePerson.CasePersonIdentificator == expireObject.CasePersonIdentificator &&
+                                                              x.CaseSession.DateFrom >= model.DateExpired)
+                                                  .ToListAsync();
 
                 foreach (var caseNotification in caseNotifications)
                 {
                     caseNotification.DateExpired = model.DateExpired;
                     caseNotification.UserExpiredId = userContext.UserId;
                     caseNotification.DescriptionExpired = model.DescriptionExpired;
-                    repo.Update(caseNotification);
                 }
 
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
+                await mqEpepService.AppendCasePerson(expireObject, EpepConstants.ServiceMethod.Delete);
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при премахване на лице с Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при премахване на лице с Id={model.Id}");
                 return false;
             }
         }
 
-        public List<SelectListItem> GetAddressByCasePerson_DropDown(int casePersonId)
+        public async Task<List<SelectListItem>> GetAddressByCasePerson_DropDown(int casePersonId)
         {
-            var result = repo.AllReadonly<CasePersonAddress>()
-                .Where(x => x.CasePersonId == casePersonId)
-                .Select(x => new SelectListItem()
-                {
-                    Value = x.Id.ToString(),
-                    Text = x.Address.FullAddress
-                })
-                .OrderBy(x => x.Text)
-                .ToList();
+            var result = await repo.AllReadonly<CasePersonAddress>()
+                                   .Where(x => x.CasePersonId == casePersonId)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Value = x.Id.ToString(),
+                                       Text = x.Address.FullAddress
+                                   })
+                                   .OrderBy(x => x.Text)
+                                   .ToListAsync();
 
             result.Insert(0, new SelectListItem() { Text = "Изберете", Value = "-1" });
 
             return result;
         }
 
-        public SaveResultVM CasePersonAddress_IsUsed(CasePersonAddress model)
+        public async Task<SaveResultVM> CasePersonAddress_IsUsed(CasePersonAddress model)
         {
-            if (repo.AllReadonly<CaseNotification>()
-                            .Include(x => x.CasePersonAddress)
-                            .Select(x => x.CasePersonAddress)
-                            .Where(x => x != null)
-                            .Where(x => x.CasePersonAddressIdentificator == model.CasePersonAddressIdentificator).Any())
+            if (await repo.AllReadonly<CaseNotification>()
+                          .AnyAsync(x => x.CasePersonAddressId != null &&
+                                         x.CasePersonAddress.CasePersonAddressIdentificator == model.CasePersonAddressIdentificator))
             {
                 return new SaveResultVM(true, "Има изготвено уведомление. Не можете да деактивирате адреса!");
             }
-            if (repo.AllReadonly<DocumentTemplate>().Where(x => x.CasePersonAddressId == model.Id).Any())
+
+            if (await repo.AllReadonly<DocumentTemplate>()
+                    .AnyAsync(x => x.CasePersonAddressId == model.Id))
             {
                 return new SaveResultVM(true, "За избрания адрес има издадени изходящи писма");
             }
+
             return new SaveResultVM(false);
         }
 
@@ -1670,6 +2088,104 @@ ORDER BY x.row_number, x.id
                 return true;
             else
                 return false;
+        }
+
+        public IQueryable<CasePersonPrevNameVM> CasePersonPrevName_Select(int casePersonId)
+        {
+            return repo.AllReadonly<CasePersonPrevName>()
+                       .Where(x => x.CasePersonId == casePersonId)
+                       .Where(FilterExpireInfo<CasePersonPrevName>(false))
+                       .OrderBy(x => x.PersonPrevNamesTypeId)
+                       .Select(x => new CasePersonPrevNameVM
+                       {
+                           Id = x.Id,
+                           FullName = x.FullName,
+                           PrevNameType = x.PersonPrevNamesType.Label
+                       });
+        }
+
+        /// <summary>
+        /// Запис на лица по дело/заседание
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<SaveResultVM> CasePersonPrevName_SaveData(CasePersonPrevName model)
+        {
+            try
+            {
+                CasePersonPrevName casePersonPrevName = null;
+                if (model.Id > 0)
+                {
+                    casePersonPrevName = repo.GetById<CasePersonPrevName>(model.Id);
+
+                }
+                else
+                {
+                    casePersonPrevName = new CasePersonPrevName();
+                    casePersonPrevName.CaseId = await repo.GetPropByIdAsync<CasePerson, int>(x => x.Id == model.CasePersonId, x => x.CaseId);
+                    casePersonPrevName.CasePersonId = model.CasePersonId;
+                    repo.Add(casePersonPrevName);
+                }
+
+                casePersonPrevName.PersonPrevNamesTypeId = model.PersonPrevNamesTypeId;
+                casePersonPrevName.UserId = userContext.UserId;
+                casePersonPrevName.DateWrt = DateTime.Now;
+
+                casePersonPrevName.CopyFrom(model);
+                PersonNamesBase_SaveData(casePersonPrevName, model.Id > 0);
+                await repo.SaveChangesAsync();
+
+                model.Id = casePersonPrevName.Id;
+                return new SaveResultVM(true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на CasePerson Id={model.Id}");
+                return new SaveResultVM(false, Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
+            }
+        }
+
+        public async Task<List<CheckListVM>> CasePersonSentencePunishmentMeasure_GetPunishmentChecks(int casePersonMeasureId, int casePersonId)
+        {
+            if (casePersonId == 0)
+            {
+                casePersonId = await repo.AllReadonly<CasePersonMeasure>()
+                                         .Where(x => x.Id == casePersonMeasureId)
+                                         .Select(x => x.CasePersonId)
+                                         .FirstOrDefaultAsync();
+            }
+
+            var punishments = await repo.AllReadonly<CasePersonSentencePunishment>()
+                                        .Where(x => x.CasePersonSentence.CasePersonId == casePersonId)
+                                        .Where(x => x.DateExpired == null)
+                                        .OrderBy(x => x.DateFrom)
+                                        .Select(x => new
+                                        {
+                                            x.Id,
+                                            SentenceTypeLabel = x.SentenceType.Label,
+                                            x.SentenceText,
+                                            x.DateFrom
+                                        })
+                                        .ToListAsync();
+            //TODO: ToList()!!!!!
+
+            var saved = await repo.AllReadonly<CasePersonSentencePunishmentMeasure>()
+                                  .Where(x => x.CasePersonMeasureId == casePersonMeasureId)
+                                  .Select(x => x.CasePersonSentencePunishmentId)
+                                  .ToArrayAsync();
+
+            var measureKinds = nomenclatureService.GetDDL_MeasureKind();
+            var result = new List<CheckListVM>();
+            foreach (var item in punishments)
+            {
+                result.Add(new CheckListVM()
+                {
+                    Value = item.Id.ToString(),
+                    Label = $"{item.SentenceTypeLabel}, от {item.DateFrom:dd.MM.yyyy}",
+                    Checked = saved.Any(a => a == item.Id)
+                });
+            }
+            return result;
         }
     }
 }

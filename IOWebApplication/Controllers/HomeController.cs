@@ -2,11 +2,11 @@
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
+using IOWebApplication.Infrastructure.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -22,29 +22,18 @@ namespace IOWebApplication.Controllers
 
         public HomeController(
             ILogger<HomeController> _logger,
-            INewsService _newsService)
+            INewsService _newsService,
+            IDBUserContext dbUserContext)
         {
             logger = _logger;
             newsService = _newsService;
+            this.dbUserContext = dbUserContext;
         }
-
-        //public IActionResult yearname(DateTime id)
-        //{
-        //    return Content(id.FullDateDiggitName());
-        //}
-
-        //[Route("signin-stampit?{error}")]
-        //[AllowAnonymous]
-
-        //public IActionResult StampitError(string error = null, string error_reason = null)
-        //{
-        //    throw new Exception("Невалиден сертификат");
-        //}
 
         public async Task<IActionResult> Index()
         {
             SetHelpFile(HelpFileValues.HomeDashboard);
-            ViewBag.userSettings = await userContext.Settings();
+            ViewBag.userSettings = await dbUserContext.Settings();
             return View();
         }
         public IActionResult AccessDenied(string message = null)
@@ -53,22 +42,63 @@ namespace IOWebApplication.Controllers
             return View();
         }
 
+        public IActionResult NotFound(string message = null)
+        {
+            var errorModel = new ErrorViewModel
+            {
+                Title = "Ненамерен ресурс",
+                Message = message
+            };
+
+            return View(nameof(Error), errorModel);
+        }
+
+
         [AllowAnonymous]
-        public IActionResult Error()
+        public IActionResult Error(string message = null)
         {
             var feature = this.HttpContext.Features.Get<IExceptionHandlerFeature>();
-            var error = feature.Error.Message;
+            string errorTitle = "Грешка";
+            string errorMessage = "Възникна неочаквана грешка. Моля, опитайте по-късно.";
+            string innerMessage = "";
+
+            var error = feature?.Error.Message;
+            if (error != null)
+            {
+                errorMessage = feature.Error.Message;
+                innerMessage = feature.Error.InnerException?.Message;
+                if (feature.Error is NotFoundException)
+                {
+                    errorTitle = "Ненамерен ресурс";
+                }
+                else
+                {
+                    logger.LogError(feature.Error, $"EissWeb; {message}");
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(message))
+                {
+                    innerMessage = message;
+
+                    if (message.Trim().ToLower().Replace(" ", "").Contains("authstate"))
+                    {
+                        return RedirectToAction("Login", "Account", new
+                        {
+                            error = "Моля изберете валиден сертификат."
+                        });
+                    }
+                }
+            }
             var errorModel = new ErrorViewModel
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-                Message = error,
-                InnerException = feature.Error.InnerException?.Message
+                Title = errorTitle,
+                Message = errorMessage,
+                InnerException = innerMessage
             };
-            if (feature.Error is NotFoundException)
-            {
-                errorModel.Title = "Ненамерен ресурс";
-            }
-            logger.LogError(feature.Error, "EissWeb");
+
             return View(errorModel);
         }
     }

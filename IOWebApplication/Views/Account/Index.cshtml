@@ -1,16 +1,18 @@
 ﻿@{
     ViewData["Title"] = "Потребители";
 }
-@section breadcrumb{
-    @if (ViewBag.breadcrumbs != null)
-    {
+
+@section breadcrumb {
+    @if (ViewBag.breadcrumbs != null) {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
+
 @model IOWebApplication.Infrastructure.Models.ViewModels.Identity.UserFilterVM
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.FullName)</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.Email)</div>
+    <div class="col-lg-6">@Html.EditorFor(x => x.UserRoles, "GenericDropDownMultipleArray")</div>
 </div>
 
 <div class="row">
@@ -38,71 +40,101 @@
 </div>
 
 @section scripts {
-    <script>
-        $(function () {
-            var table = $('#mainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("ListData")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.filter = {
-                            FullName : $('#FullName').val(),
-                            Email : $('#Email').val()
-                        }
+<script>
+    $(document).ready(function () {
+        $('#UserRoles').select2({ language: "bg" });
+    });
+
+    $(function () {
+        var table = $('#mainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListData")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.filter = {
+                        FullName : $('#FullName').val(),
+                        Email : $('#Email').val(),
+                        UserRoles : $('#UserRoles').val()
+                    }
+                }
+            },
+            filter: false,
+            columns: [
+                {
+                    name: 'courtName',
+                    data: 'courtName',
+                    title: 'Съд',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'fullName',
+                    data: 'fullName',
+                    title: 'Имена',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'lawUnitTypeName',
+                    data: 'lawUnitTypeName',
+                    title: 'Вид',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'email',
+                    data: 'email',
+                    title: 'Потребителско име',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-4',
+                    name: 'rolesLabel',
+                    data: 'rolesLabel',
+                    title: 'Роли',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-1',
+                    name: 'isActive',
+                    data: 'isActive',
+                    title: 'Активен потребител',
+                    sortable: true,
+                    searchable: true,
+                    render: function (value) {
+                        return JsonBGYesNo(value);
                     }
                 },
-                filter: false,
-                columns: [
-                    {
-                        name: 'courtName',
-                        data: 'courtName',
-                        title: 'Съд',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'fullName',
-                        data: 'fullName',
-                        title: 'Имена',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'lawUnitTypeName',
-                        data: 'lawUnitTypeName',
-                        title: 'Вид',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'email',
-                        data: 'email',
-                        title: 'Потребителско име',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'actions',
-                        data: "id",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        widht: 80,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
-                        }
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    widht: 80,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#templateEdit', value);
                     }
-                ]
-            });
-
-
+                }
+            ],
+            "createdRow": function (row, data, index) {
+                if (data.isActive == false) {
+                    $(row).css("background-color", "#ffe0e0");
+                    $(row).css("color", "#d80000");
+                }
+            }
         });
-    </script>
 
-    <script id="templateEdit" type="text/x-handlebars-template">
-        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-        <a href="@Url.Action("Index","DeliveryAccount")?userId={{this}}" class="btn btn-def btn-sm" title="Сдвояване на мобилно устройство"><i class="fa fa-mobile"></i><span class="hidden-sm hidden-xs"></span></a>
-    </script>
+
+    });
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    <a href="@Url.Action("Index","DeliveryAccount")?userId={{this}}" class="btn btn-def btn-sm m-b-5" title="Сдвояване на мобилно устройство"><i class="fa fa-mobile"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
 }

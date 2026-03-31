@@ -1,0 +1,112 @@
+﻿@using Integration.Epep;
+@model SummaryCase
+@{
+    var dataTimeformat = "dd.MM.yyyy HH:mm";
+    var dateFormat = "dd.MM.yyyy";
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        @foreach (var hearing in Model.Hearings.OrderByDescending(x => x.Date))
+        {
+
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">@hearing.HearingType, @hearing.Date.ToString(dataTimeformat)</legend>
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        @Html.DisplayFor(x=>hearing.CourtRoom,"obj",null,new{label="Зала"})
+                    </div>
+                    <div class="col-lg-4">
+                        @Html.DisplayFor(x=>hearing.SecretaryName,"obj",null,new{label="Секретар"})
+                    </div>
+                    <div class="col-lg-4">
+                        @Html.DisplayFor(x=>hearing.ProsecutorName,"obj",null,new{label="Прокурор"})
+                    </div>
+                </div>
+
+                @if (hearing.Participants != null && hearing.Participants.Any())
+                {
+                    <h4>Участници:</h4>
+                    <table class="table table-hover table-striped simple-dt">
+                        <tr>
+                            <th>Имена</th>
+                            <th>Качество</th>
+                        </tr>
+                        @foreach (var participant in hearing.Participants)
+                        {
+                            <tr>
+                                <td>@participant.JudgeName</td>
+                                <td>@participant.Role</td>
+                            </tr>
+                        }
+                    </table>
+                }
+                @if (hearing.HearingDocuments != null && hearing.HearingDocuments.Any())
+                {
+                    <h4>Документи, предоставени в заседанието:</h4>
+                    <table class="table table-hover table-striped simple-dt">
+                        <tr>
+                            <th>Вид</th>
+                            <th>Вносител</th>
+                            <th>Прикачени документи</th>
+                        </tr>
+                        @foreach (var hearingDocument in hearing.HearingDocuments)
+                        {
+                            var _side = Model.Sides.Where(x => x.SideId == hearingDocument.SideId).FirstOrDefault();
+                            var sideName = "";
+                            if (_side != null)
+                            {
+                                sideName = IOWebApplication.Infrastructure.Utils.EpepHelper.GetName(_side.Person, _side.Entity);
+                            }
+                            <tr>
+                                <td>@hearingDocument.HearingDocumentKind</td>
+                                <td>@sideName</td>
+                                <td>
+                                    <partial name="_SummaryFiles" model="@hearingDocument.Files" />
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+
+            </fieldset>
+        }
+    </div>
+    <div class="col-lg-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Актове</legend>
+
+            <table class="table table-hover table-striped simple-dt">
+                <tr>
+                    <th>Вид</th>
+                    <th>Номер</th>
+                    <th>Дата на връчване</th>
+                    <th>Влиза в сила от</th>
+                    <th>Прикачени документи</th>
+                </tr>
+                @foreach (var act in Model.Acts)
+                {
+                    <tr>
+                        <td>@act.ActKindName</td>
+                        <td>@act.Number</td>
+                        <td>@act.DateSigned.ToString(dateFormat)</td>
+                        @if (act.DateInPower.HasValue)
+                        {
+                            <td>@act.DateInPower.Value.ToString(dateFormat)</td>
+                        }
+                        else
+                        {
+                            <td>n/a</td>
+                        }                        
+                        <td>
+                            <partial name="_SummaryFiles" model="@act.Files" />
+                        </td>
+                    </tr>
+                }
+            </table>
+
+
+        </fieldset>
+    </div>
+</div>

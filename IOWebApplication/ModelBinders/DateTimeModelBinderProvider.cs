@@ -13,12 +13,9 @@ namespace IOWebApplication.ModelBinders
     {
         private readonly string _customFormat;
 
-        private readonly ILoggerFactory loggerFactory;
-
-        public DateTimeModelBinderProvider(string dateFormat, ILoggerFactory logFactory)
+        public DateTimeModelBinderProvider(string dateFormat)
         {
             _customFormat = dateFormat;
-            loggerFactory = logFactory;
         }
 
         public IModelBinder GetBinder(ModelBinderProviderContext context)
@@ -27,7 +24,7 @@ namespace IOWebApplication.ModelBinders
 
             if (context.Metadata.ModelType == typeof(DateTime) || context.Metadata.ModelType == typeof(DateTime?))
             {
-                return new DateTimeModelBinder(_customFormat, loggerFactory);
+                return new DateTimeModelBinder(_customFormat);
             }
 
             return null;

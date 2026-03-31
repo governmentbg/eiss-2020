@@ -1,0 +1,131 @@
+﻿@model ExecProcessInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+@using RestEpep = IOWebApplication.Infrastructure.Models.Integrations.EpepRest;
+
+@{
+    ViewData["Title"] = "Преглед на партида по изпълнителен лист";
+    RestEpep.ExecProcessDetailsVM execProcess = null;
+    if (Model != null)
+    {
+        execProcess = Model.Data;
+        ViewData["Title"] = $"Електронна партида към ИЛ {execProcess.ActNumber}/{execProcess.ActDate:dd.MM.yyyy}";
+    }
+    var dataTimeformat = "dd.MM.yyyy HH:mm";
+}
+@section breadcrumb {
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+
+@if (Model == null)
+{
+    return;
+}
+<div class="row">
+    <div class=col-lg-9>
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Изпълнителен лист</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => execProcess.ActNumber, "obj", null, new { label = "Номер" })
+                </div>
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => execProcess.ActDate, "date", null, new { label = "Дата" })
+                </div>
+                <div class="col-md-6">
+                    @if (execProcess.ActFileId.HasValue)
+                    {
+                        <a href="@(ViewBag.EPEP_FILE_PATH)@(execProcess.ActFileId.Value)" title="Изтегли документа">
+                            Изтегли изпълнителен лист
+                        </a>
+                    }
+                </div>
+            </div>
+            @if (execProcess.OrderDate != null)
+            {
+                <div class="row">
+                    <div class="col-md-3">
+                        @Html.DisplayFor(x => execProcess.OrderNumber, "obj", null, new { label = "Заповед номер" })
+                    </div>
+                    <div class="col-md-3">
+                        @Html.DisplayFor(x => execProcess.OrderDate, "date", null, new { label = "Заповед дата" })
+                    </div>
+                    <div class="col-md-6">
+                        @if (execProcess.OrderFileId.HasValue)
+                        {
+                            <a href="@(ViewBag.EPEP_FILE_PATH)@(execProcess.OrderFileId.Value)" title="Изтегли документа">
+                                Изтегли заповед за изпълнение
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+            @if (execProcess.ClaimDocumentFiles != null && execProcess.ClaimDocumentFiles.Length > 0)
+            {
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="control-label">Документ, от който произтича вземането</label>
+                    </div>
+                    <div class="col-md-6">
+                        @for (int i = 0; i < execProcess.ClaimDocumentFiles.Length; i++)
+                        {
+                            var file = execProcess.ClaimDocumentFiles[i];
+                            if (i > 0)
+                            {
+                                <br />
+                            }
+                            <a href="@(ViewBag.EPEP_FILE_PATH)@(file.Gid)" title="Изтегли документа">@file.FileName</a>
+                        }
+                    </div>
+                </div>
+            }
+            @if (execProcess.IsExpired)
+            {
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h3 class="text-danger">Електронната партида е деактивирана</h3>
+                        @execProcess.InfoExpired
+                    </div>
+                </div>
+            }
+        </fieldset>
+    </div>
+    <div class=col-lg-3>
+        Данните са актуални към: @Model.DateWrt.ToString(dataTimeformat)
+        <a href="@Url.Action("EpepShowExecProcess", new { actId = Model.CaseSessionActId, execListId = Model.ExecListId, refreshData = true })" class="btn btn-success btn-xs">Актуализиране</a>
+    </div>
+</div>
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseInfo">
+        <li class="active"><a href="#tabObligations" data-toggle="tab">Задължения</a></li>
+        <li><a href="#tabExecCases" data-toggle="tab">Изпълнителни дела</a></li>
+        @if (execProcess.HasCorrectedAct)
+        {
+            <li><a href="#tabCorrectionActs" data-toggle="tab">Коригиращи ИЛ</a></li>
+        }
+        <li><a href="#tabAccess" data-toggle="tab">Достъпи в ЕПЕП</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="tabObligations">
+            <partial name="EpepShowExecProcess_ObligationList" model="@Model" />
+        </div>
+        <div class="tab-pane" id="tabExecCases">
+            <partial name="EpepShowExecProcess_CaseList" model="@Model" />
+        </div>
+        @if (execProcess.HasCorrectedAct)
+        {
+            <div class="tab-pane" id="tabCorrectionActs">
+                <partial name="EpepShowExecProcess_CorrectionActList" model="@Model" />
+            </div>
+        }
+        <div class="tab-pane" id="tabAccess">
+            <partial name="EpepShowExecProcess_AccessList" model="@Model" />
+        </div>
+
+    </div>
+</div>

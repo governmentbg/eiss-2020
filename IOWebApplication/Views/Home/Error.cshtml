@@ -1,12 +1,29 @@
 ﻿@model ErrorViewModel
 @{
-    ViewData["Title"] = "Грешка";
+    ViewData["Title"] = Model.Title;
     Layout = "~/Views/Shared/_MasterLayout.cshtml";
 }
-@section menuHeader{
-    @*<header class="main-header">
-        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
-    </header>*@
+@section menuHeader {
+    <header class="main-header">
+        <nav class="navbar navbar-static-top">
+            <div class="container menu-container">
+                <div class="navbar-header">
+                    <a asp-action="Index" asp-controller="Home" class="navbar-brand"><i class="fa fa-balance-scale"></i>&nbsp;<b>ЕИСС</b></a>
+                    <a asp-action="Index" asp-controller="Home" class="navbar-brand">@ViewData["Title"]</a>
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <a href="#">@ViewData["Title"]</a>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+    </header>
 }
 <h3>@Model.Message</h3>
 <p>@Model.InnerException</p>

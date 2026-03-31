@@ -5,17 +5,32 @@
     Layout = null;
     string sign = "_______________________";
 }
-<div style="text-align:right;width:100%;margin-top:30px;">
-    <table class="no-border row-space-single" align="right">
+<div style="float:right;width:100%;margin-top:30px;clear:right;">
+    <table class="no-border row-space-single" style="float:right;clear:left;">
         @if ((Model.JudgeList.Count == 0 && Model.JuryList.Count == 0) || (string.IsNullOrEmpty(Model.JudgeChairman) && Model.JudgeList.Count == 1))
         {
-
-            <tr>
-                <td align="right">
-                    <b>Съдия при @Model.CourtName:</b>
-                </td>
-                <td>@sign</td>
-            </tr>
+            @if (Model.GenerateExecProcess && NomenclatureConstants.ActType.ExecListActs.Contains(Model.ActTypeId))
+            {
+                <tr>
+                    <td align="right">
+                        <b>Изпълнителният лист е подписан с квалифициран електронен подпис от съдия:</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.JudgeReporter )
+                    </td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td align="right">
+                        <b>Съдия при @Model.CourtName:</b>
+                    </td>
+                    <td>@sign</td>
+                </tr>
+            }
         }
         else
         {
@@ -75,14 +90,37 @@
                 }
             }
         }
-        @if (!string.IsNullOrEmpty(Model.SecretaryName) && Model.ActFormatType == NomenclatureConstants.ActFormatType.Protokol)
+        @if (Model.ActFormatType == NomenclatureConstants.ActFormatType.Protokol)
         {
-            <tr>
-                <td align="right">
-                    <b>Секретар:</b>
-                </td>
-                <td>@sign</td>
-            </tr>
+            @if (!string.IsNullOrEmpty(Model.SecretaryName) || Model.SecretaryList.Count == 1)
+            {
+                <tr>
+                    <td align="right">
+                        <b>Секретар:</b>
+                    </td>
+                    <td>@sign</td>
+                </tr>
+            }
+            @if (Model.SecretaryList.Count > 1)
+            {
+                <tr>
+                    <td align="right">
+                        <b>Секретари:</b>
+                    </td>
+                    <td></td>
+                </tr>
+                int i = 0;
+                foreach (var item in Model.SecretaryList)
+                {
+                    i++;
+                    <tr>
+                        <td align="right">
+                            @(i).
+                        </td>
+                        <td>@sign</td>
+                    </tr>
+                }
+            }
         }
     </table>
 </div>

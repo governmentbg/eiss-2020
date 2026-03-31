@@ -26,6 +26,7 @@
         {
             <div class="row">
                 <div class="col-md-12 text-right pb-15">
+                    @* <input id="subButton" type="button" value="Обнови списъка" onclick="caseLawUnitRefresh();" class="btn btn-def btn-sm" /> *@
                     <a asp-controller="CaseLawUnit" asp-action="CaseLawUnitRefresh" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-def btn-sm">
                         <i class="fa fa-refresh"></i>
                         Обнови списъка
@@ -76,7 +77,7 @@
                     data: 'dateFrom',
                     title: 'От',
                     sortable: true,
-                    searchable: true,
+                    searchable: false,
                     render: function (data) {
                         return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
                     }
@@ -87,7 +88,7 @@
                     data: 'dateTo',
                     title: 'До',
                     sortable: true,
-                    searchable: true,
+                    searchable: false,
                     render: function (data) {
                         return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
                     }
@@ -104,7 +105,7 @@
                     }
                 }
             ]
-        });
+        }).order([[2, "asc"]]);
     });
 </script>
 
@@ -122,8 +123,18 @@
     }
 </script>
 
-<script>
-    $(document).ready(function () {
-
-    });
-</script>
+@if (Model.CaseSessionId > 0)
+{
+    <script>
+        function caseLawUnitRefresh() {
+        var caseId = @Model.Id;
+        var caseSessionId = @Model.CaseSessionId;
+        $("#subButton").attr("disabled", "disabled");
+        postContent('@Url.Action("CaseLawUnitRefresh", "CaseLawUnit")'
+        , { CaseId: caseId, CaseSessionId: caseSessionId }
+        , function (data) {
+        $("#subButton").removeAttr("disabled");
+        });
+        }
+    </script>
+}

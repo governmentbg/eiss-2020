@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -12,6 +8,8 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -37,6 +35,7 @@ namespace IOWebApplication.Controllers
         /// Дела за архивиране
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult CaseForArchive()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
@@ -64,6 +63,7 @@ namespace IOWebApplication.Controllers
         /// <param name="dateFrom"></param>
         /// <param name="dateTo"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult CaseArchive(DateTime? dateFrom, DateTime? dateTo)
         {
             CaseArchiveFilterVM filter = new CaseArchiveFilterVM()
@@ -74,7 +74,7 @@ namespace IOWebApplication.Controllers
             SetHelpFile(HelpFileValues.Archive2);
             return View(filter);
         }
-        
+
         /// <summary>
         /// Извличане на данни за дела в архив
         /// </summary>
@@ -90,7 +90,7 @@ namespace IOWebApplication.Controllers
 
         void SetViewbag(int caseId, string comeFrom, int caseArchiveId)
         {
-            var caseModel = service.GetById<Case>(caseId);
+            var caseModel = service.GetReadonly<Case>(caseId);
             ViewBag.CaseNumber = caseModel.RegNumber + "/" + caseModel.RegDate.ToString("dd.MM.yyyy");
             var acts = actService.GetDropDownListForArchive(caseId);
             ViewBag.CaseSessionActId_ddl = acts;
@@ -124,6 +124,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
+        [DisableAudit]
         public IActionResult Add(int caseId)
         {
             var caseArchive = service.CaseArchiveByCaseId_Select(caseId);
@@ -144,6 +145,22 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        void auditInfoCaseArchive(string operation, CaseArchive model, string comeFrom, string add = "")
+        {
+            var objectType = string.Empty;
+            if (comeFrom == "CaseForDestroy")
+                objectType = "Унищожаване на дело";
+            else if (comeFrom == "CaseForArchive")
+                objectType = "Дела за архивиране";
+            else
+                objectType = "Архивирани дела";
+
+            if (model != null)
+            {
+                AddAuditInfo(operation, $"{model.RegNumber}/{model.RegDate.ToString("dd.MM.yyyy")}", add, objectType);
+            }
+        }
+
         /// <summary>
         /// Редакция на дело в архив 
         /// </summary>
@@ -154,6 +171,7 @@ namespace IOWebApplication.Controllers
         {
             var model = service.GetById<CaseArchive>(id);
             SetViewbag(model.CaseId, comeFrom, id);
+            auditInfoCaseArchive(AuditConstants.Operations.View, model, comeFrom);
             return View(nameof(Edit), model);
         }
 
@@ -198,6 +216,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <param name="comeFrom"></param>
         /// <returns></returns>
+        [DisableAudit]
         [HttpPost]
         public IActionResult Edit(CaseArchive model, string comeFrom)
         {
@@ -213,6 +232,7 @@ namespace IOWebApplication.Controllers
             if (service.CaseArchive_SaveData(model, ref messageError, isDestroy))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                auditInfoCaseArchive(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model, comeFrom);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id, comeFrom = comeFrom });
             }
@@ -228,12 +248,12 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="indexId"></param>
         /// <returns></returns>
-        public IActionResult Get_StorageYears(int indexId)
+        public async Task<IActionResult> Get_StorageYears(int indexId)
         {
-            var model = courtArchiveService.GetById<CourtArchiveIndex>(indexId);
+            var StorageYears = await courtArchiveService.GetPropByIdAsync<CourtArchiveIndex, int>(indexId, x => x.StorageYears);
             return Json(new
             {
-                years = model.StorageYears
+                years = StorageYears
             });
         }
 
@@ -241,6 +261,7 @@ namespace IOWebApplication.Controllers
         /// Дела за унищожаване
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult CaseForDestroy()
         {
             SetHelpFile(HelpFileValues.Destroy);

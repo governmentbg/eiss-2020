@@ -1,7 +1,10 @@
-﻿@{
+﻿@using IOWebApplication.Infrastructure.Constants;
+@using IOWebApplication.Infrastructure.Contracts;
+@{
     ViewData["Title"] = "ЕПЕП - Потребители";
 }
 @model IOWebApplication.Infrastructure.Models.ViewModels.Epep.EpepUserFilterVM
+@inject IUserContext userContext;
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
@@ -9,8 +12,9 @@
     }
 }
 <div class="row">
-    <div class="col-lg-3">@Html.EditorFor(m => m.EpepUserTypeId, "GenericDropDown")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.EpepUserTypeId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.FullName)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PersonNumber)</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.Email)</div>
 </div>
 
@@ -20,14 +24,6 @@
             Филтриране
             <i class="fa fa-search" title="Търсене"></i>
         </button>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-12 text-right pb-15">
-        <a asp-action="EpepUser_Add" class="btn btn-success">
-            <i class="fa fa-plus"></i>
-            Добави
-        </a>
     </div>
 </div>
 <div class="row">
@@ -47,12 +43,13 @@
                     data: function (d) {
                         d.filter = {
                             EpepUserTypeId: $('#EpepUserTypeId').val(),
+                            PersonNumber: $('#PersonNumber').val(),
                             FullName: $('#FullName').val(),
                             Email: $('#Email').val()
                         }
                     }
                 },
-                filter:false,
+                filter: false,
                 columns: [
                     {
                         name: 'userTypeName',
@@ -69,20 +66,19 @@
                         searchable: true
                     },
                     {
-                        name: 'lawyerNumber',
-                        data: 'lawyerNumber',
-                        title: 'Номер',
-                        sortable: true,
+                        name: 'personNumber',
+                        data: 'personNumber',
+                        title: 'ЕГН/Номер',
+                        sortable: false,
                         searchable: true
-                    }
-                    ,{
+                    },
+                    {
                         name: 'email',
                         data: 'email',
                         title: 'Електронна поща',
                         sortable: true,
                         searchable: true
-                    }
-                    ,
+                    },
                     {
                         name: 'actions',
                         data: "id",

@@ -1,14 +1,13 @@
 ﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.VksNotificationPrintFilter
 @using IOWebApplication.Extensions
 @using IOWebApplication.Infrastructure.Constants
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Списък за държавен вестник";
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 
@@ -51,7 +50,8 @@
 
         $(function () {
             var table = $('#mainTable').DataTable({
-            data: dataSet,
+                data: dataSet,
+                processing: false,
                 serverSide: false,
                 'order': [[1, 'asc']],
                 "paging": false,
@@ -80,7 +80,7 @@
                             if (type === 'display' || type === 'filter') {
                                 let checkVal = (row.checkRow ? " checked" : "");
                                 //  return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')"' + checkVal + '>';
-                                return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '"'  + checkVal + '>';
+                                return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '"' + checkVal + '>';
                             }
                             return row.checkRow;
                         }
@@ -139,32 +139,32 @@
             $('#btnFilter').attr("disabled", true);
             let DateFrom = $('#DateFrom').val();
             console.log(DateFrom);
-           $.ajax({
-            type: "POST",
-            url: "@Url.Action("ListData")",
-            dataType: "json",
-               cache: false,
-               data: { DateFrom: DateFrom },
-               success: function (response) {
-                   dataSet = response.data;
-                   $("#select-all").prop('checked', false);
-                   var table = $('#mainTable').DataTable();
-                   table.clear();
-                   table.rows.add(dataSet).draw();
-                   $(".for-show").show();
-                   $("#vksMonth").val(response.vksMonth)
-                   if (response.paperEdition == null) {
-                       $('.submit-for-print').show();
-                       $('#PaperEdition').hide();
-                   } else {
-                       $('.submit-for-print').hide();
-                       $('#PaperEdition').html(response.paperEdition)
-                       $('#PaperEdition').show();
-                   }
-            },
-            complete: function () { },
-            error: log_ajax_err
-           });
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("ListData")",
+                dataType: "json",
+                cache: false,
+                data: { DateFrom: DateFrom },
+                success: function (response) {
+                    dataSet = response.data;
+                    $("#select-all").prop('checked', false);
+                    var table = $('#mainTable').DataTable();
+                    table.clear();
+                    table.rows.add(dataSet).draw();
+                    $(".for-show").show();
+                    $("#vksMonth").val(response.vksMonth)
+                    if (response.paperEdition == null) {
+                        $('.submit-for-print').show();
+                        $('#PaperEdition').hide();
+                    } else {
+                        $('.submit-for-print').hide();
+                        $('#PaperEdition').html(response.paperEdition)
+                        $('#PaperEdition').show();
+                    }
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
             $('#btnFilter').attr("disabled", false);
         }
         function submitForPrint() {

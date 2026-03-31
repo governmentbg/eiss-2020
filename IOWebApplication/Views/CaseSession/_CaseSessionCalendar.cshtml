@@ -1,7 +1,8 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Identity
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@inject IOWebApplication.Infrastructure.Contracts.IDBUserContext dbUserContext;
 @model CaseSessionCalendarFilterVM
-@{ 
+@{
     string calendar_addr = Url.Action("ListDataCaseSessionHallUseCalendarSpr", "CaseSession");
 }
 <link href="~/lib/fullcalendar/fullcalendar.min.css" rel="stylesheet" />
@@ -9,9 +10,15 @@
 <script src="~/lib/fullcalendar/lib/moment.min.js"></script>
 <script src="~/lib/fullcalendar/fullcalendar.min.js"></script>
 <script src="~/lib/fullcalendar/bg.js"></script>
+
+
+<script type="text/javascript">
+    var userSettings = JSON.parse('@Html.Raw((await dbUserContext.Settings()).AsText())');
+</script>
+
 <div>
     @*<div class="box-header with-border ">
-        <h3 class="box-title">Календар на заседания</h3>
+    <h3 class="box-title">Календар на заседания</h3>
     </div>*@
     <div class="box-body">
         <div id="calendar" class="calendar-person"></div>
@@ -21,16 +28,16 @@
 <script>
 
     $(function () {
-       $('#calendar').fullCalendar({
+        $('#calendar').fullCalendar({
             header: {
                 left: 'prev,next',
                 center: 'title',
-               right: 'month,listWeek,agendaDay'
+                right: 'month,listWeek,agendaDay'
             },
             editable: true,
             eventLimit: true, // allow "more" link when too many events
             timezone: "local",
-           defaultView: userSettings.CalendarStyle,
+            defaultView: userSettings.CalendarStyle,
             weekNumbers: false,
             eventRender: function (eventObj, $el) {
                 $el.popover({
@@ -52,19 +59,19 @@
                 error: function () {
                     $('#script-warning').show();
                 }
-           },
-           timeFormat: 'HH:mm',
-           viewRender: (function () {
-               var lastViewName;
-               return function (view) {
-                   var view = $('#calendar').fullCalendar('getView');
-                   //console.log(view);
-                   //alert('The new title of the view is ' + view.type);
-                   if (view.type != userSettings.CalendarStyle)
-                   updateUserSetting('@UserSettingsModel.Set.CalendarStyle', view.type);
+            },
+            timeFormat: 'HH:mm',
+            viewRender: (function () {
+                var lastViewName;
+                return function (view) {
+                    var view = $('#calendar').fullCalendar('getView');
+                    //console.log(view);
+                    //alert('The new title of the view is ' + view.type);
+                    if (view.type != userSettings.CalendarStyle)
+                        updateUserSetting('@UserSettingsModel.Set.CalendarStyle', view.type);
 
-               }
-           })(),
+                }
+            })(),
 
         });
     });
@@ -77,5 +84,9 @@
 
     .fc-widget-content .fc-other-month {
         background-color: #fcfcfc;
+    }
+
+    a[href="#hide"] .fc-time {
+        display: none;
     }
 </style>

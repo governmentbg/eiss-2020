@@ -1,0 +1,105 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CheckListViewVM
+
+@{
+    ViewData["Title"] = Model.Label;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        @* @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList", enctype = "multipart/form-data", formnovalidate = "formnovalidate" })) *@
+        <form id="frmCheckList" method="post" enctype="multipart/form-data" formnovalidate novalidate>
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.ObjectId)
+            @Html.HiddenFor(x => x.OtherId)
+            @Html.HiddenFor(x => x.Label)
+            @Html.HiddenFor(x => x.ButtonLabel)
+            @Html.HiddenFor(x => x.ShowLogOperation)
+            <fieldset class="is-fieldset checklist">
+                <div class="check-tools">
+                    <a href="#" data-action="all" class="btn btn-xs btn-default">Маркирайте всички</a>
+                    <a href="#" data-action="none" class="btn btn-xs btn-default">Размаркирайте всички</a>
+                </div>
+                <legend class="legend_1">Изберете</legend>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    @for (int i = 0; i < Model.checkListVMs.Count; i++)
+                    {
+                        <div class="checklist-item">
+                            <input asp-for="checkListVMs[i].Value" type="hidden" />
+                            <input asp-for="checkListVMs[i].Label" type="hidden" />
+                            <input asp-for="checkListVMs[i].Warrning" type="hidden" class="checklist-warning" />
+                            <label><input asp-for="checkListVMs[i].Checked" type="checkbox" onclick="NotificationListItemClick(this)">&nbsp;&nbsp;@Model.checkListVMs[i].Label.Decode()</label>
+                        </div>
+                    }
+                </div>
+            </fieldset>
+            <div style="display:none">
+              <button formnovalidate id="subButton" type="submit" class="btn btn-success">@Model.ButtonLabel </button>
+            </div>
+            <div class="form-group">
+                @if (!string.IsNullOrEmpty(Model.ButtonLabel))
+                {
+                    <button formnovalidate id="subButton1" type="button" onclick={SubmitCheckList()} class="btn btn-success">@Model.ButtonLabel </button>
+                }
+                else
+                {
+                    <button formnovalidate id="subButton1" type="button" onclick={SubmitCheckList()} class="btn btn-success">Запис</button>
+                }
+                <a href="@(ViewBag.backUrl)" class="btn btn-danger">Назад</a>
+                @if (Model.ShowLogOperation)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.ObjectId.ToString() })
+                    </div>
+                }
+            </>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.check-tools a').click(function() {
+            $('#messageContainer').html('');
+            if ($(this).data('action') == 'all') {
+                $('.checklist').find('input[type="checkbox"]').prop('checked', true);
+            } else {
+                $('.checklist').find('input[type="checkbox"]').each(function(i, e) {
+                    const container = $(e).parents(".checklist-item:first");
+                    const warning = container.find('.checklist-warning').val();
+                    if (warning !== "have_notification") {
+                        $(e).prop('checked', false);
+                    }
+                });
+            }
+        });
+        $('#subButton').removeAttr("disabled");
+    });
+  
+    function SubmitCheckList() {
+        $("#subButton1").attr("disabled", true);
+        $("#subButton2").attr("disabled", true);
+        $("#subButton").trigger('click');
+        //     $('#frmCheckList').trigger('submit');
+    }
+    function NotificationListItemClick(el) {
+        const container = $(el).parents(".checklist-item:first");
+        const warning = container.find('.checklist-warning').val();
+        if (warning == "have_notification") {
+            container.find('input[type="checkbox"]').prop('checked', true);
+            messageHelper.ShowErrorMessage('Има призовка/съобщение', '#messageContainer');
+        } else {
+            $('#messageContainer').html('');
+        }
+        return false;
+    }
+</script>
+

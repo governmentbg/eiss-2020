@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -11,8 +8,11 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -24,13 +24,17 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionService sessionService;
         private readonly ICommonService commonService;
         private readonly IDocumentService docService;
+        private readonly IWorkTaskService taskService;
+        private readonly ICaseService caseService;
 
         public CaseLawUnitController(ICaseLawUnitService _service,
                                      INomenclatureService _nomService,
                                      ICaseSessionActService _actService,
                                      ICaseSessionService _sessionService,
                                      ICommonService _commonService,
-                                     IDocumentService _docService)
+                                     IDocumentService _docService,
+                                     IWorkTaskService _taskService,
+                                     ICaseService _caseService)
         {
             service = _service;
             nomService = _nomService;
@@ -38,6 +42,8 @@ namespace IOWebApplication.Controllers
             sessionService = _sessionService;
             commonService = _commonService;
             docService = _docService;
+            taskService = _taskService;
+            caseService = _caseService;
         }
 
         /// <summary>
@@ -61,15 +67,15 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult IndexDismisal(int id)
+        public async Task<IActionResult> IndexDismisal(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLawUnitDismisalList, null, AuditConstants.Operations.View, id))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLawUnitDismisalList, null, AuditConstants.Operations.View, id))
             {
                 return Redirect_Denied();
             }
-            var tcase = service.GetById<Case>(id);
+            var tcase = await caseService.GetCaseInfo(id);
             ViewBag.caseId = id;
-            ViewBag.CaseName = tcase.RegNumber;
+            ViewBag.CaseName = tcase.CaseTypeCodeShortNumberRegDate;
             SetHelpFile(HelpFileValues.CaseLawunit);
 
             return View();
@@ -121,7 +127,7 @@ namespace IOWebApplication.Controllers
         /// <param name="caseId"></param>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public IActionResult SessionLawUnitFromCase(int caseId, int caseSessionId)
+        public async Task<IActionResult> SessionLawUnitFromCase(int caseId, int caseSessionId)
         {
             var checkListViewVM = service.CheckListViewVM_Fill(caseId, caseSessionId);
             if (checkListViewVM.checkListVMs.Count < 1)
@@ -129,7 +135,7 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage("Няма данни за копиране");
                 return RedirectToAction("Preview", "CaseSession", new { id = caseSessionId });
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionLawUnit, null, AuditConstants.Operations.ChoiceByList, caseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionLawUnit, null, AuditConstants.Operations.ChoiceByList, caseSessionId))
             {
                 return Redirect_Denied();
             }
@@ -145,11 +151,11 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult SessionLawUnitFromCase(CheckListViewVM model)
+        public async Task<IActionResult> SessionLawUnitFromCase(CheckListViewVM model)
         {
             if (service.SessionLawUnitFromCase_SaveData(model))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionLawUnit, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionLawUnit, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 this.SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, model.ObjectId);
             }
@@ -166,9 +172,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="lawUnitId"></param>
         /// <returns></returns>
-        public IActionResult AddEditDismisal(int lawUnitId)
+        public async Task<IActionResult> AddEditDismisal(int lawUnitId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLawUnitDismisal, null, AuditConstants.Operations.Append, lawUnitId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLawUnitDismisal, null, AuditConstants.Operations.Append, lawUnitId))
             {
                 return Redirect_Denied();
             }
@@ -187,7 +193,7 @@ namespace IOWebApplication.Controllers
         {
             var sessionAct = service.GetById<CaseSessionAct>(CaseSessionActId);
             var caseSessionResults = sessionService.CaseSessionResult_Select(sessionAct.CaseSessionId);
-            return caseSessionResults.Any(x => x.SessionResultId == NomenclatureConstants.CaseSessionResult.S_opredelenie_za_otvod || x.SessionResultId == NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod);
+            return caseSessionResults.Any(x => NomenclatureConstants.CaseSessionResult.ActZaOtvod.Contains(x.SessionResultId));
         }
 
         /// <summary>
@@ -195,18 +201,19 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="lawUnitId"></param>
         /// <returns></returns>
-        public IActionResult Add(int lawUnitId)
+        public async Task<IActionResult> Add(int lawUnitId)
         {
-            var lawUnit = service.GetById<CaseLawUnit>(lawUnitId);
+            var lawUnit = await service.GetByIdAsync<CaseLawUnit>(lawUnitId);
             var model = new CaseLawUnitDismisal()
             {
                 CourtId = lawUnit.CourtId,
                 CaseId = lawUnit.CaseId,
                 CaseLawUnitId = lawUnitId,
-                DismisalDate = DateTime.Now
+                DismisalDate = DateTime.Now,
+                DismissalRequestType = NomenclatureConstants.DismissalRequestTypes.Document
             };
 
-            SetViewbag(lawUnitId);
+            await SetViewbagDismissal(lawUnitId);
             model.DismisalKindId = ViewBag.DismisalKind;
             return View(nameof(EditDismisal), model);
 
@@ -217,46 +224,40 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult ViewDismisal(int id)
+        public async Task<IActionResult> ViewDismisal(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLawUnitDismisal, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLawUnitDismisal, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
 
-            var model = service.GetById<CaseLawUnitDismisal>(id);
+            var model = await service.GetByIdAsync<CaseLawUnitDismisal>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас отвод не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеният от Вас отвод не е намерен и/или нямате достъп до него.");
             }
             model.DismissalStateId = model.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed;
-            SetViewbag(model.CaseLawUnitId);
+            model.DismissalRequestType = model.DismissalRequestType ?? NomenclatureConstants.DismissalRequestTypes.Document;
+            await SetViewbagDismissal(model.CaseLawUnitId);
             return View(nameof(EditDismisal), model);
         }
 
-        void SetViewbag(int caseLawUnitId)
+        private async Task SetViewbagDismissal(int caseLawUnitId)
         {
-            var caseLawUnit = service.GetById<CaseLawUnit>(caseLawUnitId);
-            //ViewBag.DismisalTypeId_ddl = nomService.GetDropDownList<DismisalType>(false);
-            ViewBag.DismisalTypeId_ddl = nomService.GetDismisalTypes_SelectForDropDownList(caseLawUnitId);
-            //  ViewBag.CaseSessionActId_ddl = actService.GetDropDownList(caseLawUnit.CaseId);
-            ViewBag.CaseSessionActId_ddl = actService.GetDropDownListForDismisal(caseLawUnit.CaseId);
-            var caseCase = service.GetById<Case>(caseLawUnit.CaseId);
-            ViewBag.CaseName = caseCase.RegNumber;
+            var caseLawUnit = await service.GetByIdAsync<CaseLawUnit>(caseLawUnitId);
+
+            ViewBag.DismisalTypeId_ddl = await nomService.GetDismisalTypes_SelectForDropDownListAsync(caseLawUnitId);
+            ViewBag.CaseSessionActId_ddl = await actService.GetDropDownListForDismisalAsync(caseLawUnit.CaseId);
+            ViewBag.DismissalSessionActId_ddl = await actService.GetDropDownListForDismisalRequestAsync(caseLawUnit.CaseId);
+            var caseCase = await caseService.GetCaseInfo(caseLawUnit.CaseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
             ViewBag.caseId = caseCase.Id;
 
-            if (NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(caseLawUnit.JudgeRoleId))
-            {
-                ViewBag.DismisalKind = NomenclatureConstants.LawUnitTypes.Judge;
-            }
-            else
-            {
-                ViewBag.DismisalKind = NomenclatureConstants.LawUnitTypes.Jury;
-            }
+            ViewBag.DismisalKind = NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(caseLawUnit.JudgeRoleId) ? NomenclatureConstants.LawUnitTypes.Judge :
+                                                                                                                      NomenclatureConstants.LawUnitTypes.Jury;
 
-            ViewBag.DocumentId_ddl = docService.GetCompliantDocumentsByCaseId(caseLawUnit.CaseId);
-            ViewBag.DismissalStateId_ddl = nomService.GetDropDownList<DismissalState>(false);
-            ViewBag.hasEproReq = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal);
+            ViewBag.DocumentId_ddl = await docService.GetCompliantDocumentsByCaseIdAsync(caseLawUnit.CaseId, true);
+            ViewBag.DismissalStateId_ddl = await nomService.GetDropDownListAsync<DismissalState>(false);
             SetHelpFile(HelpFileValues.CaseLawunit);
         }
 
@@ -265,17 +266,22 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private string IsValid(CaseLawUnitDismisal model)
+        private string IsValidDismissal(CaseLawUnitDismisal model)
         {
+            if (service.CaseLawUnitDismisal_GetByCaseLawUnitId(model.CaseLawUnitId) != null)
+            {
+                return "Съществува отвод/самоотвод за избраното лице.";
+            }
             if (model.DismisalTypeId < 0)
             {
                 return "Не е избран тип на отвеждане";
             }
             if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod || model.DismisalTypeId == NomenclatureConstants.DismisalType.SamoOtvod)
             {
-                if (model.CaseSessionActId < 0)
+                if ((model.CaseSessionActId ?? -1) < 0)
                     return "Няма избран акт";
             }
+
 
             if ((model.Description ?? string.Empty) == string.Empty)
                 return "Няма въведен мотив";
@@ -325,16 +331,14 @@ namespace IOWebApplication.Controllers
                     if (lastDate.AddSeconds(-lastDate.Second) > model.DismisalDate.AddSeconds(-model.DismisalDate.Second))
                     {
                         return $"Датата на отвеждане е по-ранна от последната дата на подпис ({lastDate.ToString("dd.MM.yyyy")})";
-
                     }
-
-
                 }
             }
 
-            if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal))
+
+            if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod)
             {
-                if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod)
+                if (model.DismissalRequestType == NomenclatureConstants.DismissalRequestTypes.Document)
                 {
                     if ((model.DocumentId ?? 0) <= 0)
                     {
@@ -346,7 +350,27 @@ namespace IOWebApplication.Controllers
                         return "Изберете 'Вносител на искането'.";
                     }
                 }
+
+                if (model.DismissalRequestType == NomenclatureConstants.DismissalRequestTypes.Session)
+                {
+                    if ((model.DismissalSessionActId ?? 0) <= 0)
+                    {
+                        return "Изберете 'Протокола от заседанието, в което е внесено искането за отвода'.";
+                    }
+                }
+                if (model.DismissalRequestType == null)
+                {
+                    return "Изберете 'Вид искане за отвод'.";
+                }
             }
+            else
+            {
+                model.DismissalRequestType = null;
+                model.DismissalSessionActId = null;
+                model.DismissalCasePersonId = null;
+                model.DocumentPersonId = null;
+            }
+
             return string.Empty;
         }
 
@@ -356,11 +380,11 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditDismisal(CaseLawUnitDismisal model, string btnRedirectSelection = null)
+        public async Task<IActionResult> EditDismisal(CaseLawUnitDismisal model, string btnRedirectSelection = null)
         {
-            SetViewbag(model.CaseLawUnitId);
+            await SetViewbagDismissal(model.CaseLawUnitId);
 
-            string _isvalid = IsValid(model);
+            string _isvalid = IsValidDismissal(model);
             if (_isvalid != string.Empty)
             {
                 ModelState.AddModelError("", _isvalid);
@@ -424,13 +448,13 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
-        public IActionResult AddManualRoles(int caseId)
+        public async Task<IActionResult> AddManualRoles(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLawUnit, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLawUnit, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
-            var caseCase = service.GetById<Case>(caseId);
+            var caseCase = await service.GetByIdAsync<Case>(caseId);
             var model = new CaseLawUnit()
             {
                 CourtId = caseCase.CourtId,
@@ -438,31 +462,31 @@ namespace IOWebApplication.Controllers
                 DateFrom = DateTime.Now
             };
 
-            SetViewbagManualRoles(caseId);
+            await SetViewbagManualRoles(caseId);
             return View(nameof(EditManualRoles), model);
         }
 
-        public IActionResult EditManualRoles(int id)
+        public async Task<IActionResult> EditManualRoles(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLawUnit, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLawUnit, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CaseLawUnit>(id);
+            var model = await service.GetByIdAsync<CaseLawUnit>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
             }
-            SetViewbagManualRoles(model.CaseId);
+            await SetViewbagManualRoles(model.CaseId);
             return View(nameof(EditManualRoles), model);
         }
 
-        void SetViewbagManualRoles(int caseId)
+        private async Task SetViewbagManualRoles(int caseId)
         {
-            var caseCase = service.GetById<Case>(caseId);
-            ViewBag.CaseName = caseCase.RegNumber;
+            var caseCase = await caseService.GetCaseInfo(caseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
             ViewBag.caseId = caseCase.Id;
-            ViewBag.JudgeRoleId_ddl = nomService.GetDDL_JudgeRoleManualRoles();
+            ViewBag.JudgeRoleId_ddl = await nomService.GetDDL_JudgeRoleManualRolesAsync();
             SetHelpFile(HelpFileValues.CaseLawunit);
         }
 
@@ -498,9 +522,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditManualRoles(CaseLawUnit model)
+        public async Task<IActionResult> EditManualRoles(CaseLawUnit model)
         {
-            SetViewbagManualRoles(model.CaseId);
+            await SetViewbagManualRoles(model.CaseId);
 
             if (!ModelState.IsValid)
             {
@@ -515,7 +539,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CaseLawUnit_SaveData(model))
+            if (await service.CaseLawUnit_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseLawUnit, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -540,12 +564,28 @@ namespace IOWebApplication.Controllers
             return RedirectToAction("Preview", "CaseSession", new { id = caseSessionId });
         }
 
+        async Task auditInfoCaseLawUnitChangeDepRol(string operation, int caseId, int? caseSessionId = null, string add = "")
+        {
+            var caseCase = await caseService.Case_SelectForEdit(caseId);
+            var caseSession = (caseSessionId != null) ? sessionService.CaseSessionById(caseSessionId ?? 0) : null;
+
+            if (caseSession != null)
+            {
+                AddAuditInfo(operation, $"По заседание: {caseSession.SessionType.Label} от: {caseSession.DateFrom.ToString("dd.MM.yyyy")}", add, $"Промяна на председател/състав");
+            }
+            else
+            {
+                AddAuditInfo(operation, $"По дело: {caseCase.RegNumberText}", add, $"Промяна на председател/състав");
+            }
+        }
+
         /// <summary>
         /// Страница за промяна на председател и състав
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="caseId"></param>
+        /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public IActionResult CaseLawUnitChangeDepRol(int caseId, int? caseSessionId = null)
+        public async Task<IActionResult> CaseLawUnitChangeDepRol(int caseId, int? caseSessionId = null)
         {
             var model = service.GetCaseLawUnitChangeDepRol(caseId, caseSessionId);
             //Ако не няма избран състав - да покаже Без избран състав
@@ -558,16 +598,18 @@ namespace IOWebApplication.Controllers
                 return RedirectToAction("CasePreview", "Case", new { id = caseId });
             }
 
+            await auditInfoCaseLawUnitChangeDepRol(AuditConstants.Operations.View, caseId, caseSessionId);
             return View(nameof(CaseLawUnitChangeDepRol), model);
         }
 
         [HttpPost]
-        public IActionResult CaseLawUnitChangeDepRol(CaseLawUnitChangeDepRolVM model)
+        public async Task<IActionResult> CaseLawUnitChangeDepRol(CaseLawUnitChangeDepRolVM model)
         {
             SetViewbagCaseLawUnitChangeDepRol(model.CaseId, model.CaseSessionId);
             if (service.GetCaseLawUnitChangeDepRol_Save(model))
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                await auditInfoCaseLawUnitChangeDepRol(AuditConstants.Operations.Update, model.CaseId, model.CaseSessionId);
                 if (model.CaseSessionId > 0)
                 {
                     this.SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, model.CaseSessionId);
@@ -595,7 +637,7 @@ namespace IOWebApplication.Controllers
             var selectListItemDepartments = service.GetDDL_GetListDepartmentFromRealDepartment(caseId);
             ViewBag.CaseLawUnitId_ddl = selectListItemCaseLawUnits;
             ViewBag.hasLawUnit = selectListItemCaseLawUnits.Count > 0;
-            ViewBag.DepartmentId_ddl = selectListItemDepartments;
+            ViewBag.DepartmentId_ddl = selectListItemDepartments.OrderBy(x => x.Text).ToList();
             ViewBag.hasDepartment = selectListItemDepartments.Count > 0;
             SetHelpFile(HelpFileValues.CaseLawunit);
         }
@@ -604,7 +646,14 @@ namespace IOWebApplication.Controllers
         public IActionResult LawUnitSubstitute_LoadData(IDataTablesRequest request, int caseSessionId)
         {
             var data = service.LawUnitSubstitution_SelectForSession(caseSessionId);
-            return request.GetResponse(data);
+            return request.GetResponse(data, null, null, false);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LoadDataCaseSelectionProtokolSubstitution(IDataTablesRequest request, int caseSessionId)
+        {
+            var data = await service.GetCaseSelectionProtokolSubstitution(caseSessionId);
+            return request.GetResponse(data, null, null, false);
         }
 
         [HttpPost]
@@ -614,10 +663,66 @@ namespace IOWebApplication.Controllers
             return Json(new { isOk = result });
         }
 
+        /// <summary>
+        /// Запис на заместване (случайно разпределение извън дело)
+        /// </summary>
+        /// <param name="protokolId">Идентификатор на протокола</param>
+        /// <param name="caseSessionId">Идентификатор на заседанието</param>
+        /// <returns></returns>
         [HttpPost]
-        public JsonResult IsExistJudgeLawUnitInCase(int caseId)
+        public async Task<IActionResult> CaseSelectionProtokolSubstitutionApply(int protokolId, int caseSessionId)
         {
-            return Json(new { result = service.IsExistJudgeLawUnitInCase(caseId) });
+            var result = await service.CaseSelectionProtokolSubstitutionApply(protokolId, caseSessionId);
+            return Json(new { isOk = result });
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> IsExistJudgeLawUnitInCase(int caseId)
+        {
+            return Json(new { result = await service.IsExistJudgeLawUnitInCase(caseId) });
+        }
+
+        public async Task<JsonResult> CheckActSignersForDismissal(int lawUnitId, int actId)
+        {
+            var lawUnit = service.GetById<CaseLawUnit>(lawUnitId);
+            lawUnit.LawUnit = service.GetById<Infrastructure.Data.Models.Common.LawUnit>(lawUnit.LawUnitId);
+            var tasks = await taskService.Select(SourceTypeSelectVM.CaseSessionAct, actId);
+            var lastSendToSignTask = tasks.Where(x => x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_SentToSign
+                        && x.TaskStateId == WorkTaskConstants.States.Completed)
+                        .OrderByDescending(x => x.Id)
+                        .FirstOrDefault();
+            if (lastSendToSignTask == null)
+            {
+                return Json(new { result = false, message = "Актът не е подписан." });
+            }
+
+            var lastSignTasks = tasks.Where(x => x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_Sign
+                                            && x.Id > lastSendToSignTask.Id
+                                            && x.TaskStateId == WorkTaskConstants.States.Completed)
+                                            .ToList();
+
+            if (!lastSignTasks.Any())
+            {
+                return Json(new { result = false, message = "Актът не е подписан." });
+            }
+
+            var caseSessionId = service.GetPropById<CaseSessionAct, int>(x => x.Id == actId, x => x.CaseSessionId);
+            var lawunits = service.CaseLawUnit_Select(lawUnit.CaseId, caseSessionId);
+            var dissmissedJudgeName = lawUnit.LawUnit.FirstNameInitial_Family;
+
+            var dismissedIsSigner = lastSignTasks.Any(x => x.UserId == service.GetUserIdByLawUnitId(lawUnit.LawUnitId));
+
+            var signers = new List<string>();
+            foreach (var task in lastSignTasks)
+            {
+                var signer = lawunits.Where(x => x.LawUnitUserId == task.UserId).FirstOrDefault();
+                if (signer != null)
+                {
+                    signers.Add(signer.LawUnitNameInitials);
+                }
+            }
+
+            return Json(new { result = true, dismisalSigner = dismissedIsSigner, dissmissedJudgeName = dissmissedJudgeName, signers = string.Join(',', signers) });
         }
     }
 }

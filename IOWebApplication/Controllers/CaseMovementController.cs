@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplication.Infrastructure.Models.ViewModels;
-using Microsoft.AspNetCore.Mvc;
-using DataTables.AspNet.Core;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Core.Helper.GlobalConstants;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -21,12 +17,17 @@ namespace IOWebApplication.Controllers
         private readonly ICaseMovementService service;
         private readonly INomenclatureService nomService;
         private readonly ICourtOrganizationService organizationService;
+        private readonly ICaseService caseService;
 
-        public CaseMovementController(ICaseMovementService _service, INomenclatureService _nomService, ICourtOrganizationService _organizationService)
+        public CaseMovementController(ICaseMovementService _service,
+                                      INomenclatureService _nomService,
+                                      ICourtOrganizationService _organizationService,
+                                      ICaseService _caseService)
         {
             service = _service;
             nomService = _nomService;
             organizationService = _organizationService;
+            caseService = _caseService;
         }
 
         /// <summary>
@@ -34,13 +35,12 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="CaseId"></param>
         /// <returns></returns>
-        public IActionResult Index(int CaseId)
+        public async Task<IActionResult> Index(int CaseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMovement, null, AuditConstants.Operations.View, CaseId))
-            {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMovement, null, AuditConstants.Operations.View, CaseId))
                 return Redirect_Denied();
-            }
-            SetViewBag(CaseId);
+
+            await SetViewBag(CaseId);
             SetHelpFile(HelpFileValues.CaseMovement);
             return View();
         }
@@ -57,9 +57,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="CaseId"></param>
         /// <returns></returns>
-        public JsonResult Select(int CaseId)
+        public async Task<JsonResult> Select(int CaseId)
         {
-            var model = service.Select(CaseId);
+            var model = await service.GetCaseMovementData(CaseId);
             return Json(model);
         }
 
@@ -68,9 +68,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="CaseId"></param>
         /// <returns></returns>
-        public JsonResult IsAddNewMovement(int CaseId)
+        public async Task<JsonResult> IsAddNewMovement(int CaseId)
         {
-            var IsAdd = service.IsAddNewMovement(CaseId);
+            var IsAdd = await service.IsAddNewMovement(CaseId);
             return Json(IsAdd);
         }
 
@@ -121,21 +121,20 @@ namespace IOWebApplication.Controllers
         /// <param name="CaseId"></param>
         /// <param name="cmId"></param>
         /// <returns></returns>
-        public IActionResult CreateMovement(int CaseId, int cmId)
+        public async Task<IActionResult> CreateMovement(int CaseId, int cmId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMovement, null, AuditConstants.Operations.Append, CaseId))
-            {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMovement, null, AuditConstants.Operations.Append, CaseId))
                 return Redirect_Denied();
-            }
-            SetViewBag(CaseId);
+
+            await SetViewBag(CaseId);
             var model = new CaseMovementVM();
             if (cmId > 0)
             {
-                model = service.GetById_CaseMovementVM(cmId);
+                model = await service.GetCaseMovementByEdit(cmId);
             }
             else
             {
-                if (!service.IsAddNewMovement(CaseId))
+                if (!await service.IsAddNewMovement(CaseId))
                 {
                     return Content("Не може да извършите тази операция (или делото не е при вас или последното движение не е прието)");
                 }
@@ -143,7 +142,7 @@ namespace IOWebApplication.Controllers
                 model.CaseId = CaseId;
                 model.CourtId = userContext.CourtId;
             }
-            
+
             return PartialView(model);
         }
 
@@ -153,7 +152,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult CreateMovement(CaseMovementVM model)
+        public async Task<JsonResult> CreateMovement(CaseMovementVM model)
         {
             string validationError = IsValid(model);
             if (!string.IsNullOrEmpty(validationError))
@@ -161,19 +160,18 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = validationError });
             }
 
-            var res = service.CreateMovement(model);
+            var res = await service.CreateMovement(model);
             SetAuditContext(service, SourceTypeSelectVM.CaseMovement, model.Id, true);
             return Json(new { result = res });
         }
 
-        private void SetViewBag(int CaseId)
+        private async Task SetViewBag(int caseId)
         {
-            ViewBag.caseId = CaseId;
-            var caseCase = service.GetById<Case>(CaseId);
-            ViewBag.CaseName = caseCase.RegNumber;
-
-            ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
-            ViewBag.MovementTypeId_ddl = nomService.GetDropDownList<MovementType>(false);
+            var model = await caseService.GetCaseInfo(caseId);
+            ViewBag.caseId = caseId;
+            ViewBag.CaseName = model.CaseTypeCodeShortNumberRegDate;
+            ViewBag.CourtOrganizationId_ddl = await organizationService.CourtOrganization_SelectForDropDownListAsync(userContext.CourtId);
+            ViewBag.MovementTypeId_ddl = await nomService.GetDropDownListAsync<MovementType>(false);
         }
 
         /// <summary>
@@ -181,10 +179,10 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="cmId"></param>
         /// <returns></returns>
-        public IActionResult StornoMovement(int cmId)
+        public async Task<IActionResult> StornoMovement(int cmId)
         {
-            var model = service.GetById_CaseMovementVM(cmId);
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMovement, cmId, AuditConstants.Operations.Delete))
+            var model = await service.GetCaseMovementByEdit(cmId);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMovement, cmId, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
@@ -197,10 +195,10 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult StornoMovement(CaseMovementVM model)
+        public async Task<JsonResult> StornoMovement(CaseMovementVM model)
         {
-            CheckAccess(service, SourceTypeSelectVM.CaseMovement, model.Id, AuditConstants.Operations.Delete);
-            return Json(new { result = service.StornoMovement(model) });
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseMovement, model.Id, AuditConstants.Operations.Delete);
+            return Json(new { result = await service.StornoMovement(model) });
         }
 
         /// <summary>
@@ -209,10 +207,10 @@ namespace IOWebApplication.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult AcceptMovement(int Id)
+        public async Task<JsonResult> AcceptMovement(int Id)
         {
-            CheckAccess(service, SourceTypeSelectVM.CaseMovement, Id, AuditConstants.Operations.Update);
-            return Json(new { result = service.AcceptMovement(Id) });
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseMovement, Id, AuditConstants.Operations.Update);
+            return Json(new { result = await service.AcceptMovement(Id) });
         }
 
         /// <summary>
@@ -220,10 +218,10 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="cmId"></param>
         /// <returns></returns>
-        public IActionResult EditAcceptMovement(int cmId)
+        public async Task<IActionResult> EditAcceptMovement(int cmId)
         {
-            var model = service.GetById_CaseMovementVM(cmId);
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMovement, cmId, AuditConstants.Operations.Update, model.CaseId))
+            var model = await service.GetCaseMovementByEdit(cmId);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMovement, cmId, AuditConstants.Operations.Update, model.CaseId))
             {
                 return Redirect_Denied();
             }
@@ -236,10 +234,10 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult EditAcceptMovement(CaseMovementVM model)
+        public async Task<JsonResult> EditAcceptMovement(CaseMovementVM model)
         {
-            SetAuditContext(service, SourceTypeSelectVM.CaseMovement, model.Id, false);
-            return Json(new { result = service.EditAcceptMovement(model) });
+            await SetAuditContextAsync(service, SourceTypeSelectVM.CaseMovement, model.Id, false);
+            return Json(new { result = await service.EditAcceptMovement(model) });
         }
 
         /// <summary>
@@ -248,9 +246,9 @@ namespace IOWebApplication.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult CreateReturnMovement(int Id)
+        public async Task<JsonResult> CreateReturnMovement(int Id)
         {
-            var res = service.CreateReturnMovement(Id);
+            var res = await service.CreateReturnMovement(Id);
             if (res > 0)
                 SetAuditContext(service, SourceTypeSelectVM.CaseMovement, res, true);
 
@@ -265,7 +263,7 @@ namespace IOWebApplication.Controllers
         public IActionResult MyMovment_LoadData(IDataTablesRequest request)
         {
             var data = service.Select_ToDo();
-            return request.GetResponse(data.AsQueryable());
+            return request.GetResponse(data, null, null, false);
         }
 
         /// <summary>
@@ -276,7 +274,7 @@ namespace IOWebApplication.Controllers
         public IActionResult Index_SprFromCaeId(int CaseId)
         {
             var caseCase = service.GetById<Case>(CaseId);
-            return RedirectToAction(nameof(Index_Spr), new { numberCase = caseCase.RegNumber }); 
+            return RedirectToAction(nameof(Index_Spr), new { numberCase = caseCase.RegNumber });
         }
 
         /// <summary>
@@ -284,8 +282,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="numberCase"></param>
         /// <returns></returns>
-        public IActionResult Index_Spr(string numberCase)
+        public async Task<IActionResult> Index_Spr(string numberCase)
         {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, null, AuditConstants.Operations.View))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран Справка местоположение на дело");
             var model = new CaseMovementFilterVM();
             model.CaseRegNum = numberCase;
             SetHelpFile(string.IsNullOrEmpty(numberCase) ? HelpFileValues.CaseLocation : HelpFileValues.CaseMovement);

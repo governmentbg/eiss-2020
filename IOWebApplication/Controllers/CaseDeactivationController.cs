@@ -1,5 +1,4 @@
 ﻿using DataTables.AspNet.Core;
-using ICSharpCode.SharpZipLib.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
@@ -37,7 +36,7 @@ namespace IOWebApplication.Controllers
             caseSessionService = _caseSessionService;
             caseSessionActService = _caseSessionActService;
         }
-
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult Index()
         {
             var model = new CaseDeactivationFilterVM()
@@ -55,6 +54,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        [DisableAudit]
         public IActionResult Add()
         {
             var model = new CaseDeactivation();
@@ -102,6 +102,10 @@ namespace IOWebApplication.Controllers
 
                 await prepareProtokolFile(model.Id);
 
+                var saveModel = service.Select(new CaseDeactivationFilterVM { Id = model.Id }).FirstOrDefault();
+                AddAuditInfo(AuditConstants.Operations.Append, $"{saveModel.CaseNumber}", "Протокол за анулиране", "Анулиране на дело");
+
+
                 return RedirectToAction(nameof(SendForSign), new { id = model.Id });
             }
             else
@@ -111,11 +115,14 @@ namespace IOWebApplication.Controllers
 
             return View(model);
         }
+
+        [DisableAudit]
         public async Task<IActionResult> recoverFile(int id)
         {
             await prepareProtokolFile(id);
             return Content("ok");
         }
+
         private async Task prepareProtokolFile(int id)
         {
             var model = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
@@ -138,9 +145,11 @@ namespace IOWebApplication.Controllers
             var model = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
             ViewBag.html = await this.RenderPartialViewAsync("~/Views/CaseDeactivation/", "_Protokol.cshtml", model, true);
             SetHelpFile(HelpFileValues.AnnulledCasesRegister);
+            AddAuditInfo(AuditConstants.Operations.View, $"{model.CaseNumber}", "Протокол за анулиране", "Анулиране на дело");
             return View(model);
         }
 
+        [DisableAudit]
         public async Task<IActionResult> SendForSign(int id)
         {
             var saved = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
@@ -150,7 +159,7 @@ namespace IOWebApplication.Controllers
             }
 
             var protokolFile = cdnService.Select(SourceTypeSelectVM.CaseDeactivate, id.ToString()).FirstOrDefault();
-            if(protokolFile == null)
+            if (protokolFile == null)
             {
                 await prepareProtokolFile(id);
             }
@@ -175,14 +184,15 @@ namespace IOWebApplication.Controllers
             return View("_SignPdf", model);
         }
 
-        public IActionResult Signed(int id)
+        public async Task<IActionResult> Signed(int id)
         {
             var model = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
             if (model.DeclaredDate == null)
             {
-                if (service.DeclareDeactivation(id))
+                if (await service.DeclareDeactivation(id))
                 {
                     SetSuccessMessage("Протоколът за анулиране беше подписан успешно.");
+                    AddAuditInfo(AuditConstants.Operations.Patch, $"{model.CaseNumber}", "Подписване на протокол за анулиране", "Анулиране на дело");
                     return RedirectToAction(nameof(View), new { id = id });
                 }
             }
@@ -190,9 +200,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.Case, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }

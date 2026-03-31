@@ -32,7 +32,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
             {
                 DocumentSelectAddressVM newAdr = new DocumentSelectAddressVM()
                 {
-                    Id = 0,
+                    Id = adr.AdrSid,
                     IsChecked = true,
                     AddressTypeName = adr.AddressTypeId.ToString(),
                     FullAddress = adr.FullAddress

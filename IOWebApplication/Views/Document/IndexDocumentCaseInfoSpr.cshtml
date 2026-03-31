@@ -14,12 +14,8 @@
 }
 
 <div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
 </div>
 
 <div class="row">
@@ -31,7 +27,7 @@
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+    <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
 </div>
 
 <div class="row">
@@ -61,12 +57,12 @@
                     "type": "POST",
                     "datatype": "json",
                     "data": function (d) {
-                        d.model = {
+                        d.filter = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
-                            CaseCodeId: $("#CaseCodeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
                             DocumentGroupId: $("#DocumentGroupId").val(),
                             DocumentTypeId: $("#DocumentTypeId").val(),
                             SessionDocTypeId: $("#SessionDocTypeId").val(),
@@ -131,6 +127,13 @@
                         searchable: true
                     },
                     {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия –докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -159,6 +162,7 @@
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
         $('#DocumentGroupId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
     });
 
     $('#CaseGroupId').change(function () {
@@ -169,7 +173,7 @@
         requestCombo('@Url.Action("GetDDL_DocumentTypeByCourt", "Ajax")', { documentGroupId: $(this).val(), addDefaultElement: true }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function () { $('#DocumentTypeId').trigger('change') });
     });
 
-    $(function () {
-        initCaseCode();
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
     });
 </script>

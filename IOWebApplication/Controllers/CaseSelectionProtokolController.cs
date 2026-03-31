@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Transactions;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -19,15 +14,20 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
-using Nest;
 using Rotativa.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
     public class CaseSelectionProtokolController : BaseController
     {
         private readonly ICaseSelectionProtokolService service;
+        private readonly ICaseSelectionProtocolSubstitutionService selectionProtocolSubstitutionService;
         private readonly INomenclatureService nomService;
         private readonly ICourtDutyService courtDutyService;
         private readonly ICourtGroupService courtGroupService;
@@ -35,19 +35,21 @@ namespace IOWebApplication.Controllers
         private readonly ICourtLoadPeriodService courtLoadPeriodService;
         private readonly ICdnService cdnService;
         private readonly ICommonService commonService;
+        private readonly IFastProcessSelectionCourtService fastProcessSelectionCourtService;
 
         private readonly ILogger<CaseSelectionProtokolController> logger;
 
-        public CaseSelectionProtokolController(
-            ICaseSelectionProtokolService _service,
-            INomenclatureService _nomService,
-            ICourtDutyService _courtDutyService,
-            ICourtGroupService _courtGroupService,
-            ICourtDepartmentService _courtDepartmentservice,
-            ICourtLoadPeriodService _courtLoadPeriodService,
-            ICdnService _cdnService,
-            ICommonService _commonService,
-            ILogger<CaseSelectionProtokolController> _logger)
+        public CaseSelectionProtokolController(ICaseSelectionProtokolService _service,
+                                               ICaseSelectionProtocolSubstitutionService _selectionProtocolSubstitutionService,
+                                               INomenclatureService _nomService,
+                                               ICourtDutyService _courtDutyService,
+                                               ICourtGroupService _courtGroupService,
+                                               ICourtDepartmentService _courtDepartmentservice,
+                                               ICourtLoadPeriodService _courtLoadPeriodService,
+                                               ICdnService _cdnService,
+                                               ICommonService _commonService,
+                                               IFastProcessSelectionCourtService _fastProcessSelectionCourtService,
+                                               ILogger<CaseSelectionProtokolController> _logger)
         {
             service = _service;
             nomService = _nomService;
@@ -57,6 +59,8 @@ namespace IOWebApplication.Controllers
             courtLoadPeriodService = _courtLoadPeriodService;
             cdnService = _cdnService;
             commonService = _commonService;
+            fastProcessSelectionCourtService = _fastProcessSelectionCourtService;
+            selectionProtocolSubstitutionService = _selectionProtocolSubstitutionService;
             logger = _logger;
         }
 
@@ -68,8 +72,11 @@ namespace IOWebApplication.Controllers
             }
 
             ViewBag.caseId = id;
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(id);
+            var bc = commonService.Breadcrumbs_GetForCase(id);
+            ViewBag.breadcrumbs = bc;
+            ViewBag.isViewCaseSelectionSubstitution = selectionProtocolSubstitutionService.GetCaseSelectionSubstitution(id).Any();
             SetHelpFile(HelpFileValues.CaseLawunit);
+            AddAuditInfo(AuditConstants.Operations.List, bc.LastOrDefault()?.Title, "", SourceTypeSelectVM.CaseSelectionProtokol);
             return View();
         }
         public IActionResult MakeLoadPeriodForAll()
@@ -98,15 +105,33 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSelectionProtokol(caseId);
             ViewBag.NextOpenMeating = service.NextCaseOpenSessionMeeting(caseId, DateTime.Now);
             SetHelpFile(HelpFileValues.CaseLawunit);
+            ViewBag.IsFastProcess = service.IsFastProcess(caseId);
+
+
+
         }
 
-        public IActionResult Add(int caseId)
+        public async Task<IActionResult> Add(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSelectionProtokol, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSelectionProtokol, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
-            var tcase = service.GetById<Case>(caseId);
+            var caseRegnumber = await service.GetPropByIdAsync<Case, string>(x => x.Id == caseId, x => x.RegNumber);
+            if (string.IsNullOrEmpty(caseRegnumber))
+            {
+                SetErrorMessage("Данните по делото не са обновени.");
+                return RedirectToAction("Edit", "Case", new { id = caseId });
+            }
+            var tcase = await service.GetReadonlyAsync<Case>(caseId);
+            var groupDateTo = await service.GetPropByIdAsync<CourtGroup, DateTime?>(x => x.Id == tcase.CourtGroupId, x => x.DateTo);
+            DateTime dateNow = DateTime.Now;
+            if ((groupDateTo?? dateNow)< dateNow)
+            {
+                SetErrorMessage("Групата на делото не е активна.");
+                return RedirectToAction("Index", "CaseSelectionProtokol", new { id = caseId });
+            }
+
             var model = new CaseSelectionProtokolVM()
             {
                 CaseId = caseId,
@@ -116,7 +141,14 @@ namespace IOWebApplication.Controllers
                 CourtGroupId = tcase.CourtGroupId,
                 SelectionModeId = 1
             };
+
             SetViewBag(model.CourtId, caseId);
+            if (ViewBag.IsFastProcess)
+            {
+                model.SelectionModeId = 2;
+                model.SelectedTab = "#tabManualSelect";
+            }
+
             var caseGroups = service.CaseGroup_WithLawUnits(model.CourtId, "");
             if (caseGroups.Length == 0)
             {
@@ -131,13 +163,16 @@ namespace IOWebApplication.Controllers
             else
             {
                 if (ViewBag.countAvailableJudgeRole > 0)
+                {
                     return View(nameof(Edit), model);
+                }
                 else
                 {
                     SetErrorMessage("Съдебният състав по делото е запълнен. Не могат да бъдат добавени повече позиции.");
                     return RedirectToAction("Index", new { id = caseId });
                 }
             }
+
 
         }
 
@@ -159,6 +194,15 @@ namespace IOWebApplication.Controllers
 
         void ValidateModel(CaseSelectionProtokolVM model)
         {
+
+            if (service.IsFastProcess(model.CaseId))
+            {
+                if (!service.CheckJudgeInCentralFastProcessGroup(model.LawUnits.FirstOrDefault().LawUnitId))
+                {
+                    ModelState.AddModelError("", "Съдията не е добавен в Група Централизирано разпределение ГД");
+                }
+
+            }
 
             if (model.SelectionModeId == NomenclatureConstants.SelectionMode.ManualSelect && model.Description == null)
             {
@@ -251,6 +295,12 @@ namespace IOWebApplication.Controllers
 
                 if (hasCaseGroup == true && hasActiveCourtGroup == true)
                     ModelState.AddModelError("", "Има активен съдия от групата на делото и добавен съдия от отделение");
+
+                if (model.CaseLawUnitDismisalId == -1)
+                {
+                    //Изберете, при повече от 1 отвод
+                    ModelState.AddModelError(nameof(model.CaseLawUnitDismisalId), "Изберете Предходен съдия");
+                }
             }
         }
 
@@ -275,6 +325,14 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult Edit(CaseSelectionProtokolVM model)
         {
+            var checkLock = service.CheckCaseLock(model.CaseId);
+
+            if (!checkLock)
+            {
+                SetErrorMessage("Непозволена операция, моля проверете последните протоколи!");
+                return RedirectToAction(nameof(Index), new { id = model.CaseId });
+            }
+
             //logger.LogCritical($"[POST] Edit {DateTime.Now.ToString("mm:ss.FFF")}");
             bool ExitByTime = false;
             SetViewBag(model.CourtId, model.CaseId);
@@ -306,8 +364,8 @@ namespace IOWebApplication.Controllers
             else
             {
                 ///////////////////////////////////////////////////////////////////////////////
-                ///Взема се номер и се коригира
-                ///
+                //////Взема се номер и се коригира
+                //////
                 /////////////////////////////////////////////////////////////////////////////////
                 ///////////////Denislav Angelov 2020.08.27
                 //int currentLockNumber = service.TakeCaseSelectionProtocolLockNumber(model.CourtGroupId, model.CourtDutyId);
@@ -393,6 +451,7 @@ namespace IOWebApplication.Controllers
         void SetViewBagLawUnits(int selectionMode)
         {
             ViewBag.states = nomService.GetSelectionLawUnitState(selectionMode);
+            ViewBag.statesExclude = nomService.GetSelectionLawUnitState(selectionMode, true);
         }
 
         public IActionResult LawUnits_LoadByGroup(int caseId, int judgeRoleId, int specialityId)
@@ -468,16 +527,36 @@ namespace IOWebApplication.Controllers
             {
                 return Redirect_Denied();
             }
+
             var model = service.CaseSelectionProtokol_Preview(id);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSelectionProtokol(model.CaseId);
             ViewBag.comparement_ddl = service.GetJudgeComprentmetList((model.SelectedLawUnitId ?? 0), model.CourtId, model.CaseId);
 
+            if (service.IsFastProcess(model.CaseId))
+            {
+                return RedirectToAction("PreviewFastDoc", new { id = model.Id });
+            }
+
+
             return View("PreviewDoc", model);
+        }
+        public async Task<IActionResult> PreviewFastDoc(int id)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CaseSelectionProtokol, id, AuditConstants.Operations.View))
+            {
+                return Redirect_Denied();
+            }
+            var model = await fastProcessSelectionCourtService.FastProcessSelectionProtokol_Preview(id);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSelectionProtokol(model.CaseId);
+
+
+            return View("PreviewFastDoc", model);
         }
 
         [HttpPost]
         public IActionResult PreviewDoc(CaseSelectionProtokolPreviewVM model)
         {
+            model.InitialProtocolCheck = true;
             var res = service.CaseSelectionProtokol_UpdateBeforeDocForSign(model);
             return RedirectToAction("SignDoc", new { id = model.Id });
         }
@@ -512,8 +591,20 @@ namespace IOWebApplication.Controllers
         public async Task<IActionResult> SignDoc(int id)
         {
             var protokolModel = service.CaseSelectionProtokol_Preview(id);
+            var IsFastProcess = service.IsFastProcess(protokolModel.CaseId);
+            string html = "";
+            if (IsFastProcess)
+            {
+                var fastprotokolModel = await fastProcessSelectionCourtService.FastProcessSelectionProtokol_Preview(id);
+                html = await this.RenderPartialViewAsync("~/Views/FastProcessSelectionCourt/", "Preview.cshtml", fastprotokolModel, true);
+            }
+            else
+            {
+                html = await this.RenderPartialViewAsync("~/Views/CaseSelectionProtokol/", "Preview.cshtml", protokolModel, true);
+            }
 
-            string html = await this.RenderPartialViewAsync("~/Views/CaseSelectionProtokol/", "Preview.cshtml", protokolModel, true);
+            //string html = await this.RenderPartialViewAsync("~/Views/CaseSelectionProtokol/", "Preview.cshtml", protokolModel, true);
+            //string 
             var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true).GetByte(this.ControllerContext);
             var pdfRequest = new CdnUploadRequest()
             {
@@ -560,12 +651,12 @@ namespace IOWebApplication.Controllers
             return View("_SignPdf", signModel);
         }
 
-        public IActionResult SignedDoc(int id)
+        public async Task<IActionResult> SignedDoc(int id)
         {
             //logger.LogCritical($"SignedDoc start  {DateTime.Now.ToString("mm: ss.FFF")}");
             //TODO
             //Update status i horata v delata!!!
-            service.CaseSelectionProtokol_UpdateBeforeAfterSign(id);
+            await service.CaseSelectionProtokol_UpdateBeforeAfterSign(id);
             SetSuccessMessage("Протоколът беше подписан успешно!");
             var case_id = service.IfJuryReturnCaseIdToRedirect(id);
             //logger.LogCritical($"SignedDoc end  {DateTime.Now.ToString("mm: ss.FFF")}");
@@ -578,6 +669,11 @@ namespace IOWebApplication.Controllers
 
         public IActionResult CaseSelectionProtokolList()
         {
+            if (!CheckAccess(service, SourceTypeSelectVM.Case, null, AuditConstants.Operations.View))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран Информация за разпределение");
             var model = new CaseSelectionProtokolFilterVM();
             ViewBag.CaseGroupIds_ddl = nomService.GetDropDownList<CaseGroup>(false);
             ViewBag.JudgeRoleId_ddl = service.SelectJudgeRole_ForDropDownList();
@@ -606,25 +702,25 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-    [HttpPost]
-    public IActionResult ListDataCaseSelectionProtokolCaseInGroups(IDataTablesRequest request, int court_id)
-    {
-      var data = service.CaseSelectionProtokolCaseInGroups(court_id);
+        [HttpPost]
+        public IActionResult ListDataCaseSelectionProtokolCaseInGroups(IDataTablesRequest request, int court_id)
+        {
+            var data = service.CaseSelectionProtokolCaseInGroups(court_id);
 
-      return request.GetResponse(data);
-    }
-    public IActionResult ListSelectionInGroup(int id)
-    {
-    
-      ViewBag.Id = id;
+            return request.GetResponse(data);
+        }
+        public IActionResult ListSelectionInGroup(int id)
+        {
+
+            ViewBag.Id = id;
 
 
-     // var data = service.CaseSelectionProtokolCaseInGroups(id);
-     
+            // var data = service.CaseSelectionProtokolCaseInGroups(id);
 
-      return View();
-    }
-    public IActionResult LoadByCaseGroup(string idStr, string groups, int caseId, int judgeRoleId)
+
+            return View();
+        }
+        public IActionResult LoadByCaseGroup(string idStr, string groups, int caseId, int judgeRoleId)
         {
             //string[] groupsExcludeArr = (groups ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
             //int[] groupsWithLawUnits = service.CaseGroup_WithLawUnits(userContext.CourtId, idStr);
@@ -669,6 +765,8 @@ namespace IOWebApplication.Controllers
             SetViewBagLawUnits(NomenclatureConstants.SelectionMode.SelectByGroups);
             return PartialView("_LoadedLawUnits", modelView);
         }
+
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexSpr()
         {
             var model = new CourtLawUnitFilter()
@@ -688,14 +786,14 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-
-
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult LawUnitGroupReport()
         {
             var model = new CaseSelectionProtokoLUGrouplFilterVM();
 
 
             ViewBag.GroupId_ddl = service.GetCourtGroups(userContext.CourtId);
+            ViewBag.ResetPeriodId_ddl = service.GetCourtResetPeriod(userContext.CourtId);
 
 
             return View(model);
@@ -703,7 +801,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ListLawUnitGroup(IDataTablesRequest request, CaseSelectionProtokoLUGrouplFilterVM model)
         {
-            var data = service.LawUnitReportByGroup(userContext.CourtId, model.GroupId, model.LawUnitID);
+            var data = service.LawUnitReportByGroup(userContext.CourtId, model.GroupId, model.LawUnitID, model.ResetPeriodId);
             Dictionary<string, object> addParams = new Dictionary<string, object>();
             addParams.Add("total", data.Sum(x => x.CaseCount));
             return request.GetResponse(data, null, addParams);

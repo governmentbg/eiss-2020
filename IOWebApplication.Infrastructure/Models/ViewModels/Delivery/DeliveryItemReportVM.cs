@@ -36,6 +36,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         [Display(Name = "Състояние")]
         public string NotificationState { get; set; }
 
-        public DeliveryItemOper DeliveryItemOper { get; set; }
+        public List<DeliveryItemOper> DeliveryItemOpers { get; set; }
     }
 }

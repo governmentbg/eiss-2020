@@ -5,21 +5,15 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.EntityFrameworkCore;
-using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using ZXing;
 
 namespace IOWebApplication.Core.Services
 {
@@ -35,33 +29,28 @@ namespace IOWebApplication.Core.Services
             statisticsService = _statisticsService;
         }
 
-        public async Task<byte[]> GetReport(int courtId, int reportYear, int reportMonth)
+        public async Task<byte[]> GetReport(int courtId, int reportYear, int reportMonth, int reportTypeId)
         {
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             _reportDate = _reportDate.AddMonths(1).AddSeconds(-1);
-            var reportCourt = repo.AllReadonly<Court>()
+            var reportCourt = await repo.AllReadonly<Court>()
                                   .Include(x => x.CourtType)
                                   .Where(x => x.Id == courtId)
-                                  .FirstOrDefault();
-            var _template = repo.AllReadonly<ExcelReportTemplate>()
-                        .Where(x => x.CourtTypeId == reportCourt.CourtType.MainCourtTypeId)
-                        .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
-                        .FirstOrDefault();
+                                  .FirstOrDefaultAsync();
+            var _template = await repo.AllReadonly<ExcelReportTemplate>()
+                        .Where(x => x.CourtTypeId == reportCourt.CourtType.MainCourtTypeId && x.ReportTypeId == reportTypeId)
+                        .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue).Date >= _reportDate.Date)
+                        .FirstOrDefaultAsync();
             if (_template == null)
             {
                 return null;
             }
 
-            var blankFile = await cdnService.MongoCdn_Download(new CdnFileSelect() { SourceType = SourceTypeSelectVM.ExcelReportTemplate, SourceId = _template.Id.ToString() }).ConfigureAwait(false);
-            if (blankFile == null)
-            {
-                return null;
-            }
-            XSSFWorkbook workBook = FromArray(Convert.FromBase64String(blankFile.FileContentBase64));
+            XSSFWorkbook workBook = FromArray(_template.Content);
 
-            var reportData = repo.AllReadonly<ExcelReportData>()
+            var reportData = await repo.AllReadonly<ExcelReportData>()
                                         .Where(x => x.ExcelReportTemplateId == _template.Id && x.CourtId == courtId
-                                        && x.ReportYear == reportYear && x.ReportMonth == reportMonth).ToList();
+                                        && x.ReportYear == reportYear && x.ReportMonth == reportMonth).ToListAsync();
 
             FillWorkBook(reportData, workBook);
 
@@ -112,7 +101,7 @@ namespace IOWebApplication.Core.Services
 
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId)
+                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId && x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
                      .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
                      .FirstOrDefault();
 
@@ -150,7 +139,7 @@ namespace IOWebApplication.Core.Services
 
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId)
+                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId && x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
                      .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
                      .FirstOrDefault();
 
@@ -169,11 +158,11 @@ namespace IOWebApplication.Core.Services
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 3, 0, 13, $"месеца на {reportYear}г.");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 4, 0, 2, $"Справка за дейността на съдиите в {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))}");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 4, 1, 2, $"за {polugodie} {reportYear}г. (НАКАЗАТЕЛНИ ДЕЛА)");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 5, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИТЕ дела на съдиите от {court.CourtType.Label} гр.{ (court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. ");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 5, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИТЕ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. ");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 6, 1, 2, $"Справка за дейността на съдиите в {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))}");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 6, 2, 2, $"за {polugodie} {reportYear}г. (ГРАЖДАНСКИ  ДЕЛА)");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 7, 1, 1, $"Справка за резултатите от върнати обжалвани и протестирани ГРАЖДАНСКИ и ТЪРГОВСКИ дела на съдиите от {court.CourtType.Label} гр.{ (court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. ");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 8, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани АДМИНИСТРАТИВНИ дела на съдиите от {court.CourtType.Label} гр.{ (court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. ");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 7, 1, 1, $"Справка за резултатите от върнати обжалвани и протестирани ГРАЖДАНСКИ и ТЪРГОВСКИ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. ");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 8, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани АДМИНИСТРАТИВНИ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. ");
 
 
 
@@ -193,7 +182,7 @@ namespace IOWebApplication.Core.Services
 
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId)
+                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId && x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
                      .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
                      .FirstOrDefault();
 
@@ -217,9 +206,9 @@ namespace IOWebApplication.Core.Services
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 5, 1, 12, reportMonth.ToString());
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 5, 1, 13, $"месеца на {reportYear}г.");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 6, 1, 2, $"Справка за дейността на съдиите в {court.CourtType.Code} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. (НАКАЗАТЕЛНИ ДЕЛА)");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 7, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИ дела на съдиите от { court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 7, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 8, 1, 2, $"Справка за дейността на съдиите в {court.CourtType.Code} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г. (ГРАЖДАНСКИ  И ТЪРГОВСКИ ДЕЛА)");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 9, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани ГРАЖДАНСКИ и ТЪРГОВСКИ дела на съдиите от { court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 9, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани ГРАЖДАНСКИ и ТЪРГОВСКИ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
 
 
 
@@ -240,7 +229,7 @@ namespace IOWebApplication.Core.Services
 
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId)
+                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId && x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
                      .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
                      .FirstOrDefault();
 
@@ -254,8 +243,8 @@ namespace IOWebApplication.Core.Services
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 2, 0, 10, (court.CityName ?? GetCourtCity(court.Label)));
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 2, 0, 12, reportMonth.ToString());
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 2, 0, 13, $"месеца на {reportYear}г.");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 3, 1, 2, $"Справка за дейността на съдиите във { court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 4, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИ дела на съдиите от { court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 3, 1, 2, $"Справка за дейността на съдиите във {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 4, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
 
                 result = true;
             }
@@ -272,7 +261,7 @@ namespace IOWebApplication.Core.Services
 
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId)
+                     .Where(x => x.CourtTypeId == court.CourtType.MainCourtTypeId && x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
                      .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
                      .FirstOrDefault();
 
@@ -287,7 +276,7 @@ namespace IOWebApplication.Core.Services
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 2, 0, 11, reportMonth.ToString());
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 2, 0, 12, $"месеца на {reportYear}г.");
                 InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 3, 1, 2, $"Справка за дейността на съдиите във Военно-апелативния съд през {polugodie} {reportYear}г.");
-                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 4, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИТЕ дела на съдиите от { court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
+                InsertExcelReportData(court.Id, _template.Id, reportYear, reportMonth, 4, 1, 2, $"Справка за резултатите от върнати обжалвани и протестирани НАКАЗАТЕЛНИТЕ дела на съдиите от {court.CourtType.Label} гр.{(court.CityName ?? GetCourtCity(court.Label))} през {polugodie} {reportYear}г.");
 
                 result = true;
             }
@@ -466,7 +455,7 @@ namespace IOWebApplication.Core.Services
             var _reportDate = new DateTime(reportYear, reportMonth, 1);
             _reportDate = _reportDate.AddMonths(1).AddSeconds(-1);
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                     .Where(x => x.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
+                     .Where(x => x.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt && x.ReportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
                      .Where(x => x.DateFrom <= _reportDate && (x.DateTo ?? DateTime.MaxValue) >= _reportDate)
                      .FirstOrDefault();
 
@@ -558,29 +547,30 @@ namespace IOWebApplication.Core.Services
         }
         #endregion
 
-        public async Task<byte[]> GetReport_Test(int courtId, DateTime fromDate, DateTime toDate)
+        public async Task<byte[]> GetReport_Test(int courtId, DateTime fromDate, DateTime toDate, int reportTypeId)
         {
             var reportCourt = repo.AllReadonly<Court>()
                                   .Include(x => x.CourtType)
                                   .Where(x => x.Id == courtId)
                                   .FirstOrDefault();
             var _template = repo.AllReadonly<ExcelReportTemplate>()
-                        .Where(x => x.CourtTypeId == reportCourt.CourtType.MainCourtTypeId)
-                        .Where(x => x.DateFrom <= toDate && (x.DateTo ?? DateTime.MaxValue) >= toDate)
+                        .Where(x => x.CourtTypeId == reportCourt.CourtType.MainCourtTypeId && x.ReportTypeId == reportTypeId)
+                        .Where(x => x.DateFrom <= toDate && (x.DateTo ?? DateTime.MaxValue).Date >= toDate.Date)
                         .FirstOrDefault();
             if (_template == null)
             {
                 return null;
             }
 
-            var blankFile = await cdnService.MongoCdn_Download(new CdnFileSelect() { SourceType = SourceTypeSelectVM.ExcelReportTemplate, SourceId = _template.Id.ToString() }).ConfigureAwait(false);
-            if (blankFile == null)
-            {
-                return null;
-            }
-            XSSFWorkbook workBook = FromArray(Convert.FromBase64String(blankFile.FileContentBase64));
+            XSSFWorkbook workBook = FromArray(_template.Content);
 
-            var reportData = statisticsService.FillExcelData(fromDate, toDate, courtId);
+            List<ExcelReportData> reportData = null;
+
+            if (reportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Normal)
+                reportData = await statisticsService.FillExcelData(fromDate, toDate, courtId).ConfigureAwait(false);
+            else if (reportTypeId == NomenclatureConstants.ExcelReportTemplateReportTypes.Mediation)
+                reportData = await statisticsService.FillExcelData_Mediation(fromDate, toDate, courtId).ConfigureAwait(false);
+
             FillWorkBook(reportData, workBook);
 
             return ToArray(workBook);
@@ -604,15 +594,27 @@ namespace IOWebApplication.Core.Services
                                 _cell.SetCellValue(item.CellValue);
                             else if (item.CellValueType == NomenclatureConstants.ExcelReportCellValueTypes.IntValue)
                                 _cell.SetCellValue(item.CellValueInt ?? 0);
+                            else if (item.CellValueType == NomenclatureConstants.ExcelReportCellValueTypes.IntervalValue)
+                                _cell.SetCellValue(item.CellValueInterval?.TotalDays ?? 0);
                         }
                     }
                 }
             }
         }
 
-        public void StatisticsGenerate(DateTime date)
+        public async Task StatisticsGenerate(DateTime date)
         {
-            statisticsService.Statistics_DeleteSaveData(new DateTime(date.Year, 1, 1), date, 0);
+            await statisticsService.Statistics_DeleteSaveData(new DateTime(date.Year, 1, 1), date, 0).ConfigureAwait(false);
+        }
+
+        public async Task StatisticsGenerateMediation(DateTime date)
+        {
+            await statisticsService.Statistics_DeleteSaveDataMediation(new DateTime(date.Year, 1, 1), date, 0).ConfigureAwait(false);
+        }
+
+        public async Task<byte[]> TestPrintSisma(int courtId, DateTime fromDate, DateTime toDate, int sheetIndex)
+        {
+            return await statisticsService.TestPrintSisma(fromDate, toDate, courtId, sheetIndex).ConfigureAwait(false);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IOWebApplication.Infrastructure.Data.Models.Common
 {
     [Table("common_institution")]
-    public class Institution : PersonNamesBase
+    public class Institution : PersonNamesBase, IHaveId
     {
         [Key]
         [Column("id")]
@@ -17,14 +18,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         /// 1-съд,2-прокуратура,3-од мвр,чси,нотариуси и други
         /// </summary>
         [Column("institution_type_id")]
-        public int InstitutionTypeId { get; set; }       
+        public int InstitutionTypeId { get; set; }
 
         [Column("code")]
-        [Display(Name ="Код/Номер")]
+        [Display(Name = "Код/Номер")]
         public string Code { get; set; }
 
         [Column("eispp_code")]
-        [Display(Name ="ЕИСПП код")]
+        [Display(Name = "ЕИСПП код")]
         public string EISPPCode { get; set; }
 
         [Column("date_from")]

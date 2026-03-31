@@ -2,11 +2,10 @@
     var caseGroupId = ViewBag.caseGroupId;
     ViewData["Title"] = "Списък Точен вид дело към " + ViewBag.caseGrouplabel;
 }
-@inject IViewLocalizer Localizer
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 
@@ -135,8 +134,8 @@
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
-        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
-        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="Нагоре"><i class="fa fa-angle-up"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="Надолу"><i class="fa fa-angle-down"></i></a>
         <a href="@Url.Action("EditCaseType")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
         <a href="@Url.Action("IndexCaseTypeUnit")/{{this}}" class="btn btn-def btn-sm" title="Състави"><i class="fa fa-users"></i><span class="hidden-sm hidden-xs"> Състави</span></a>
     </script>

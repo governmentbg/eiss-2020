@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using IOWebApplication.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IOWebApplication.Components
 {
@@ -22,12 +23,13 @@ namespace IOWebApplication.Components
             {
                 case "MyMovement":
                     {
-                        var model = cmService.Select_ToDo();
+                        var model = await cmService.Select_ToDoForComponent().Take(5).ToListAsync();
+                        ViewBag.movementCount = await cmService.Select_ToDoForComponent().CountAsync();
                         return await Task.FromResult<IViewComponentResult>(View(view, model));
                     }
                 case "MovementCount":
                     {
-                        var model = cmService.Select_ToDoCount();
+                        var model = await cmService.Select_ToDoForComponent().CountAsync();
                         return await Task.FromResult<IViewComponentResult>(View(view, model));
                     }
                 default:

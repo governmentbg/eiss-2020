@@ -1,0 +1,34 @@
+﻿@model IEnumerable<CaseSelectionProtokolLawUnitVM>
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@{ var lu = Model.OrderBy(x => x.LawUnitFullName).ToList();}
+@{ var lu1 = Model.OrderBy(x => x.LawUnitFullName);}
+@if (Model != null)
+{
+    @if (Model.Count() > 0)
+    {
+        <div class="row">
+            <div class="col-lg-3 col-md-3">
+                <label>Имена</label>
+            </div>
+            @if (NomenclatureConstants.JudgeRole.JudgeRolesList.Contains((int)(ViewBag.RoleId)))
+            {
+                <div class="col-lg-2 col-md-2">
+                    <label>Натовареност</label>
+                </div>}
+
+            <div class="col-lg-2 col-md-3">
+                <label>Статус</label>
+            </div>
+            <div class="col-lg-5 col-md-4">
+                <label>Забележка</label>
+            </div>
+        </div>}
+    @for (int i = 0; i < lu.Count(); i++)
+    {
+        lu.ElementAt(i).Index = lu.ElementAt(i).LawUnitId;
+        ViewData.TemplateInfo.HtmlFieldPrefix = lu.ElementAt(i).GetPath;
+        <partial name="_LawUnitsItem" model="lu.ElementAt(i)" />
+        ViewData.TemplateInfo.HtmlFieldPrefix = string.Empty;
+    }
+}

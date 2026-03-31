@@ -1,5 +1,4 @@
-﻿using IO.SignTools.Contracts;
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -15,10 +14,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
-using System.Net.Http;
-using IOWebApplication.Infrastructure.Extensions;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -30,7 +28,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         private Uri serviceUri;
         //private string CertificatePath;
         //private string CertificatePassword;
-       // private readonly ICsrdHttpRequester csrdRequester;
+        // private readonly ICsrdHttpRequester csrdRequester;
         private HttpRequester requester;
         private readonly IHttpClientFactory clientFactory;
 
@@ -56,7 +54,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
             requester = new HttpRequester(clientFactory.CreateClient("csrdHttpClient"));
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         protected override Task CloseChanel()
@@ -95,16 +93,28 @@ namespace IOWebApplicationService.Infrastructure.Services
                     var content = await response.Content.ReadAsStringAsync();
                     if (!string.IsNullOrEmpty(content))
                     {
-                        long assignmentId = long.Parse(content);
-                        if (assignmentId > 0)
+                        long assignmentId = 0;
+                        if (long.TryParse(content.Replace("\"", ""), out assignmentId))
                         {
                             mq.IntegrationStateId = IntegrationStates.TransferOK;
                             mq.DateTransfered = DateTime.Now;
                             mq.ReturnGuidId = assignmentId.ToString();
-                            repo.Update(mq);
-                            repo.SaveChanges();
+                            //repo.Update(mq);
+                            await repo.SaveChangesAsync();
                             return;
                         }
+                        else
+                        {
+                            mq.ErrorDescription = content;
+                            SetErrorToMQ(mq, IntegrationStates.TransferError);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        mq.ErrorDescription = "Empty response";
+                        SetErrorToMQ(mq, IntegrationStates.TransferError);
+                        return;
                     }
                 }
                 else
@@ -137,18 +147,18 @@ namespace IOWebApplicationService.Infrastructure.Services
         {
             AssignmentRequestModel request = new AssignmentRequestModel();
 
-            var protcol = repo.AllReadonly<CaseSelectionProtokol>()
-              .Include(x => x.SelectedLawUnit)
+            var protcol = await repo.AllReadonly<CaseSelectionProtokol>()
+                                      .Include(x => x.SelectedLawUnit)
+                                      .Where(x => x.Id == protocolId)
+                                      .FirstOrDefaultAsync();
 
-              .Where(x => x.Id == protocolId)
-              .FirstOrDefault();
-
-            Case current_case = repo.AllReadonly<Case>()
-              .Include(x => x.Court)
-              .Include(x => x.CaseCharacter)
-              .Include(x => x.CaseClassifications)
-              .Where(x => x.Id == protcol.CaseId)
-              .FirstOrDefault();
+            Case current_case = await repo.AllReadonly<Case>()
+                                          .Include(x => x.Court)
+                                          .Include(x => x.CaseCharacter)
+                                          .Include(x => x.CaseClassifications)
+                                          .Where(x => x.Id == protcol.CaseId)
+                                          .AsSplitQuery()
+                                          .FirstOrDefaultAsync();
             request.Judge_ID = (protcol.SelectedLawUnitId ?? 0);
             request.TypeOfAssignment = protcol.SelectionModeId;
             if (protcol.SelectionModeId == 2)

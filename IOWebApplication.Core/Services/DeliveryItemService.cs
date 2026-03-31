@@ -1,149 +1,315 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
+using IOWebApplication.Core.Helper;
+using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
-using IOWebApplication.Infrastructure.Constants;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using System.IO;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
-using NPOI.HSSF.UserModel;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
-using IOWebApplication.Core.Helper.GlobalConstants;
-using IOWebApplication.Core.Extensions;
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Infrastructure.Extensions;
-using IOWebApplication.Core.Helper;
-using Newtonsoft.Json;
-using Integration.Epep;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
+using System.Threading.Tasks;
 
+//([a-zA-Z]+.DeliveryAreaSelectDDL)
+//await $1
 namespace IOWebApplication.Core.Services
 {
     public class DeliveryItemService : BaseService, IDeliveryItemService
     {
         private readonly INomenclatureService nomenclatureService;
         private readonly IWorkingDaysService workingDaysService;
+        private readonly IWorkNotificationService workNotificationService;
+        private readonly ICaseDeadlineService caseDeadlineService;
         public DeliveryItemService(
             ILogger<DeliveryItemService> _logger,
             IRepository _repo,
             IUserContext _userContext,
             INomenclatureService _nomenclatureService,
-            IWorkingDaysService _workingDaysService)
+            IWorkingDaysService _workingDaysService,
+            IWorkNotificationService _workNotificationService,
+            ICaseDeadlineService _caseDeadlineService)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
             nomenclatureService = _nomenclatureService;
             workingDaysService = _workingDaysService;
+            workNotificationService = _workNotificationService;
+            caseDeadlineService = _caseDeadlineService;
         }
         private Expression<Func<DeliveryItem, bool>> IsNotExpired()
         {
             return x => x.DateExpired == null;
         }
 
+        private Expression<Func<DeliveryItem, bool>> GetNotificationStateIdWhere(int notificationStateId)
+        {
+            Expression<Func<DeliveryItem, bool>> notificationStateIdWhere = x => true;
+            if (notificationStateId > 0)
+                notificationStateIdWhere = x => x.NotificationStateId == notificationStateId;
+
+            return notificationStateIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetNotificationTypeIdWhere(int notificationTypeId)
+        {
+            Expression<Func<DeliveryItem, bool>> notificationTypeIdWhere = x => true;
+            if (notificationTypeId > 0)
+                notificationTypeIdWhere = x => x.NotificationTypeId == notificationTypeId;
+
+            return notificationTypeIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetLawUnitIdWhere(int lawUnitId)
+        {
+            Expression<Func<DeliveryItem, bool>> lawUnitIdWhere = x => true;
+            if (lawUnitId > 0)
+                lawUnitIdWhere = x => x.LawUnitId == lawUnitId;
+
+            return lawUnitIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetCourtIdWhere(int courtId)
+        {
+            Expression<Func<DeliveryItem, bool>> courtIdWhere = x => true;
+            if (courtId > 0)
+                courtIdWhere = x => x.CourtId == courtId;
+
+            return courtIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetFromCourtIdWhere(int fromCourtId)
+        {
+            Expression<Func<DeliveryItem, bool>> fromCourtIdWhere = x => true;
+            if (fromCourtId > 0)
+                fromCourtIdWhere = x => x.FromCourtId == fromCourtId;
+
+            return fromCourtIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetFilterTypeWhere(int filterType, int courtId, int fromCourtId)
+        {
+            Expression<Func<DeliveryItem, bool>> filterTypeWhere = x => true;
+            if (filterType > 0)
+            {
+                switch (filterType)
+                {
+                    case NomenclatureConstants.DeliveryItemFilterType.FromOther:
+                        filterTypeWhere = x => x.FromCourtId != courtId &&
+                                               x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
+                        break;
+                    case NomenclatureConstants.DeliveryItemFilterType.ToOther:
+                        filterTypeWhere = x => x.CourtId != fromCourtId;
+                        break;
+                    default:
+                        filterTypeWhere = x => true;
+                        break;
+                }
+            }
+
+            return filterTypeWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetDateSendFromWhere(DateTime? dateSendFrom)
+        {
+            Expression<Func<DeliveryItem, bool>> dateSendFromWhere = x => true;
+            if (dateSendFrom != null)
+            {
+                dateSendFrom = dateSendFrom.ForceStartDate();
+                dateSendFromWhere = x => x.DateSend >= dateSendFrom;
+            }
+
+            return dateSendFromWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetDateSendToWhere(DateTime? dateSendTo)
+        {
+            Expression<Func<DeliveryItem, bool>> dateSendToWhere = x => true;
+            if (dateSendTo != null)
+            {
+                dateSendTo = dateSendTo.ForceEndDate();
+                dateSendToWhere = x => x.DateSend <= dateSendTo;
+            }
+
+            return dateSendToWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetDateAcceptedFromWhere(DateTime? dateAcceptedFrom)
+        {
+            Expression<Func<DeliveryItem, bool>> dateAcceptedFromWhere = x => true;
+            if (dateAcceptedFrom != null)
+            {
+                dateAcceptedFrom = dateAcceptedFrom.ForceStartDate();
+                dateAcceptedFromWhere = x => x.DateAccepted >= dateAcceptedFrom;
+            }
+
+            return dateAcceptedFromWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetDateAcceptedToWhere(DateTime? dateAcceptedTo)
+        {
+            Expression<Func<DeliveryItem, bool>> dateAcceptedToWhere = x => true;
+            if (dateAcceptedTo != null)
+            {
+                dateAcceptedTo = dateAcceptedTo.ForceEndDate();
+                dateAcceptedToWhere = x => x.DateAccepted <= dateAcceptedTo;
+            }
+
+            return dateAcceptedToWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetRegNumberWhere(string regNumber)
+        {
+            Expression<Func<DeliveryItem, bool>> regNumberWhere = x => true;
+            if (!string.IsNullOrEmpty(regNumber) && regNumber.Length < 12)
+            {
+                var regNumberPatern = regNumber.ToPaternSearch();
+                regNumberWhere = x => EF.Functions.ILike(x.RegNumber, regNumberPatern);
+            }
+            if (!string.IsNullOrEmpty(regNumber) && regNumber.Length >= 12)
+            {
+                regNumberWhere = x => x.RegNumber == regNumber;
+            }
+
+            return regNumberWhere;
+        }
+
+
+        private Expression<Func<DeliveryItem, bool>> GetNotificationDeliveryGroupIdWhere(int notificationDeliveryGroupId)
+        {
+            Expression<Func<DeliveryItem, bool>> notificationDeliveryGroupIdWhere = x => true;
+            if (notificationDeliveryGroupId > 0)
+                notificationDeliveryGroupIdWhere = x => x.NotificationDeliveryGroupId == notificationDeliveryGroupId;
+
+            return notificationDeliveryGroupIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetPreparedByIdWhere(int preparedById)
+        {
+            Expression<Func<DeliveryItem, bool>> preparedByIdWhere = x => true;
+            if (preparedById > 0)
+                preparedByIdWhere = x => x.PreparedById == preparedById;
+
+            return preparedByIdWhere;
+        }
+
+        private Expression<Func<DeliveryItem, bool>> GetCourtDepartmentIdWhere(int courtDepartmentId)
+        {
+            Expression<Func<DeliveryItem, bool>> courtDepartmentIdWhere = x => true;
+            if (courtDepartmentId > 0)
+                courtDepartmentIdWhere = x => x.CaseSession.CaseLawUnits.Any(l => l.CourtDepartmentId == courtDepartmentId &&
+                                                                                  l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter);
+
+            return courtDepartmentIdWhere;
+        }
+
         public IQueryable<DeliveryItemVM> DeliveryItemSelect(DeliveryItemFilterVM filter)
         {
-            filter.CaseRegNumber = filter.CaseRegNumber.ToShortCaseNumber() ?? filter.CaseRegNumber;
-            DateTime dNull = DateTime.Now;
+              DateTime dNull = DateTime.Now;
+
             filter.ResetCourtByType(userContext.CourtId);
-            var deliveryOpers = repo.AllReadonly<DeliveryItemOper>();
-                                    
-            return repo.AllReadonly<DeliveryItem>()
-                .Where(x =>
-                         (filter.NotificationStateId <= 0 || x.NotificationStateId == filter.NotificationStateId) &&
-                         (filter.NotificationTypeId <= 0 || x.NotificationTypeId == filter.NotificationTypeId) &&
-                         (filter.LawUnitId <= 0 || x.LawUnitId == filter.LawUnitId) &&
-                         (filter.CourtId <= 0 || x.CourtId == filter.CourtId) &&
-                         (filter.FromCourtId <= 0 || x.FromCourtId == filter.FromCourtId) &&
-                         (filter.FilterType != NomenclatureConstants.DeliveryItemFilterType.FromOther || x.FromCourtId != filter.CourtId) &&
-                         (filter.FilterType != NomenclatureConstants.DeliveryItemFilterType.ToOther || x.CourtId != filter.FromCourtId) &&
-                         (filter.DateSendFrom == null || ((((x.DateSend ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Send).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
-                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
-                                     ).Min(o => (DateTime?)o.DateOper)) >= (filter.DateSendFrom ?? dNull).Date) &&
-                         (filter.DateSendTo == null || (((((x.DateSend ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Send).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
-                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
-                                     ).Min(o => (DateTime?)o.DateOper)) ?? dNull).Date <= (filter.DateSendTo ?? dNull).Date) &&
-                         (filter.DateAcceptedFrom == null || (((x.DateAccepted ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
-                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
-                                     ).Min(o => (DateTime?)o.DateOper)) >= (filter.DateAcceptedFrom ?? dNull).Date) &&
-                         (filter.DateAcceptedTo == null || ((((x.DateAccepted ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
-                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
-                                     ).Min(o => (DateTime?)o.DateOper)) ?? dNull).Date <= (filter.DateAcceptedTo ?? dNull).Date) &&
-                         (string.IsNullOrEmpty(filter.RegNumber) || EF.Functions.ILike(x.RegNumber,filter.RegNumber.ToPaternSearch())) &&
-                         (string.IsNullOrEmpty(filter.CaseRegNumber) || 
-                             (x.CaseNotificationId != null ?
-                               EF.Functions.ILike(x.CaseNotification.Case.RegNumber ?? "", filter.CaseRegNumber.ToPaternSearch()) :
-                               x.DocumentNotificationId == null && EF.Functions.ILike(x.CaseInfo ?? "", filter.CaseRegNumber.ToPaternSearch())
-                             )
-                         ) &&
-                         (filter.NotificationDeliveryGroupId <= 0 ||
-                          ((x.CaseNotification.NotificationDeliveryGroupId ?? 0) == filter.NotificationDeliveryGroupId) ||
-                          ((x.DocumentNotification.NotificationDeliveryGroupId ?? 0) == filter.NotificationDeliveryGroupId)
-                         )
-                      )
-                .Where(IsNotExpired())
-                .Select(x => new DeliveryItemVM()
-                {
-                    Id = x.Id,
-                    FromCourtName = x.FromCourt.Label,
-                    CourtName = x.Court.Label,
-                    LawUnitName = x.LawUnitId == null ? x.CaseNotification.GetNotificationDeliveryGroup.Label : x.LawUnit.FullName,
-                    AreaName = x.DeliveryArea == null ? "" : x.DeliveryArea.Description,
-                    PersonName = x.PersonName,
-                    Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
-                    StateName = x.NotificationState == null ? "" : x.NotificationState.Label,
-                    RegNumber = x.RegNumber,
-                    DateSend = (((x.DateSend ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Send).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
-                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
-                                     ).Min(o => (DateTime?)o.DateOper),
-                    DateAccepted = ((x.DateAccepted ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper))??
-                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && 
-                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
-                                     ).Min(o => (DateTime?)o.DateOper)
-                                                       ,
-                    // DeliveryDate = deliveryOpers.Where(o => o.DeliveryItemId == x.Id).Max(o => (DateTime?)o.DateOper),
-                    DeliveryDate = deliveryOpers.Where(o => o.DeliveryItemId == x.Id).OrderByDescending(r => r.Id).Select(o => (DateTime?)o.DateOper).FirstOrDefault(),
-                    CaseInfo = x.CaseInfo,
-                    NotificationDeliveryGroupId = x.CaseNotification == null ? 0 : x.CaseNotification.NotificationDeliveryGroupId ?? 0,
-                    NotificationType = x.NotificationType.Label ?? "",
-                    CaseNotificationId = x.CaseNotificationId,
-                    DocumentNotificationId = x.DocumentNotificationId
-                })
-                .AsQueryable();
+
+            var notificationGroups = NotificationDeliveryGroup(filter.FilterType);
+
+            Expression<Func<DeliveryItem, bool>> isGenerated = x => true;
+            if (filter.IsGenerated == NomenclatureConstants.YesNo.Yes)
+            {
+                isGenerated = x => x.CaseNotificationId != null && x.CaseNotification.DatePrint != null;
+            }
+            if (filter.IsGenerated == NomenclatureConstants.YesNo.No)
+            {
+                isGenerated = x => x.CaseNotificationId == null || x.CaseNotification.DatePrint == null;
+            }
+            Expression<Func<DeliveryItem, bool>> isFastProcess = x => true;
+            if (filter.IsFastProcess == NomenclatureConstants.YesNo.Yes)
+            {
+                isFastProcess = x => x.Case.IsFastProcess == true;
+            }
+            if (filter.IsFastProcess == NomenclatureConstants.YesNo.No)
+            {
+                isFastProcess = x => x.Case.IsFastProcess != true;
+            }
+            var query = repo.AllReadonly<DeliveryItem>()
+                       .Where(GetNotificationStateIdWhere(filter.NotificationStateId))
+                       .Where(GetNotificationTypeIdWhere(filter.NotificationTypeId))
+                       .Where(GetLawUnitIdWhere(filter.LawUnitId))
+                       .Where(GetCourtIdWhere(filter.CourtId))
+                       .Where(GetFromCourtIdWhere(filter.FromCourtId))
+                       .Where(GetFilterTypeWhere(filter.FilterType, filter.CourtId, filter.FromCourtId))
+                       .Where(GetDateSendFromWhere(filter.DateSendFrom))
+                       .Where(GetDateSendToWhere(filter.DateSendTo))
+                       .Where(GetDateAcceptedFromWhere(filter.DateAcceptedFrom))
+                       .Where(GetDateAcceptedToWhere(filter.DateAcceptedTo))
+                       .Where(GetRegNumberWhere(filter.RegNumber))
+                       .Where(isFastProcess)
+                       .Where(GetNotificationDeliveryGroupIdWhere(filter.NotificationDeliveryGroupId))
+                       .Where(GetPreparedByIdWhere(filter.PreparedById))
+                       .Where(GetCourtDepartmentIdWhere(filter.CourtDepartmentId))
+                       .Where(IsNotExpired())
+                       .Where(isGenerated);
+            if (!string.IsNullOrEmpty(filter.CaseRegNumber))
+            {
+                var caseRegNumber = (filter.CaseRegNumber.ToShortCaseNumber() ?? filter.CaseRegNumber).ToPaternSearch();
+                var docRegNumber = filter.CaseRegNumber.ToPaternSearch();
+
+                query = query.Where(x => x.CaseId != null && EF.Functions.ILike(x.Case.RegNumber, caseRegNumber))
+                             .Union(query.Where(x => x.CaseId == null && x.DocumentNotificationId == null && EF.Functions.ILike(x.CaseInfo, docRegNumber)));
+            }
+            return query.Select(x => new DeliveryItemVM()
+                       {
+                           Id = x.Id,
+                           FromCourtName = x.FromCourt.Label,
+                           CourtName = x.Court.Label,
+                           LawUnitName = x.LawUnitId != null && x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons ?
+                                                      x.LawUnit.FullName:
+                                                      x.NotificationDeliveryGroup.Label,
+                           AreaName = x.DeliveryAreaId != null && x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons ?
+                                                                  x.DeliveryArea.Description:
+                                                                  string.Empty,
+                           PersonName = x.PersonName,
+                           FullAddress = x.Address.FullAddress,
+                           AddressPhone = x.Address.Phone ,
+                           AddressEmail = x.Address.Email ,
+                           AddressFax = x.Address.Fax ,
+                           StateName = x.NotificationState.Label,
+                           RegNumber = x.RegNumber,
+                           DateSend = x.DateSend,
+                           DateAccepted = x.DateAccepted,
+                           PreparedBy = x.PreparedBy.FullName,
+                           DepartmentLabel = x.CaseSession
+                                              .CaseLawUnits
+                                              .OrderBy(l => l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                              .Select(l => l.CourtDepartment.Label)
+                                              .FirstOrDefault(),
+                           DeliveryDate = x.DeliveryDate ?? x.RegDate,
+                           CaseInfo = x.DocumentNotificationId != null ? "Документ "+(x.CaseInfo ?? string.Empty)
+                                                                        : x.CaseInfo,
+                           NotificationDeliveryGroupId = x.NotificationDeliveryGroupId,
+                           NotificationType = x.NotificationType.Label,
+                           CaseNotificationId = x.CaseNotificationId,
+                           DocumentNotificationId = x.DocumentNotificationId,
+                           FastCaseInfo = x.Case.IsFastProcess == true ? NomenclatureConstants.DeliveryItemMessage.FastProcess: string.Empty,
+                       })
+                       .AsQueryable();
         }
         public List<NotificationState> DeliveryItemTransNotificationState(int toNotificationStateId)
         {
             int[] states = new int[] { NomenclatureConstants.NotificationState.Ready, 0, 0 };
-            if (toNotificationStateId == NomenclatureConstants.NotificationState.Received || 
+            if (toNotificationStateId == NomenclatureConstants.NotificationState.Received ||
                 toNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery
                )
                 states[1] = NomenclatureConstants.NotificationState.Send;
@@ -154,101 +320,218 @@ namespace IOWebApplication.Core.Services
                        .ToList();
         }
 
-        public IQueryable<DeliveryItemVM> DeliveryItemTransSelect(DeliveryItemTransFilterVM filter, bool allFor)
+        public IQueryable<DeliveryItem> DeliveryItemTransSelectQuery(DeliveryItemTransFilterVM filter, bool allCourt)
         {
-            DateTime dNull = NullDateStart();
-            DateTime dNullEnd = NullDateEnd();
+            filter.DateFrom = filter.DateFrom?.Date;
+            filter.DateTo = filter.DateTo?.Date;
+
+            filter.RegDateFrom = filter.RegDateFrom?.Date;
+            filter.RegDateTo = filter.RegDateTo?.Date;
+
             int courtId = 0;
             int fromCourtId = 0;
             int lawUnitId = 0;
             if (filter.ToNotificationStateId == NomenclatureConstants.NotificationState.Send)
             {
                 fromCourtId = userContext.CourtId;
-                if (!allFor)
+                if (!allCourt)
                     courtId = filter.ForId;
             }
             if (filter.ToNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery)
             {
                 courtId = userContext.CourtId;
-                if (!allFor)
+                if (!allCourt)
                     lawUnitId = filter.ForId;
             }
             if (filter.ToNotificationStateId == NomenclatureConstants.NotificationState.Received)
             {
                 courtId = userContext.CourtId;
-                if (!allFor)
+                if (!allCourt)
                     fromCourtId = filter.ForId;
             }
 
             var opers = repo.AllReadonly<DeliveryItemOper>()
-                            .Where(x => x.NotificationStateId == filter.NotificationStateId)
-                            .AsQueryable();
+                            .Where(x => x.NotificationStateId == filter.NotificationStateId);
+
             var deliveryItems = repo.AllReadonly<DeliveryItem>();
+
             if (filter.NotificationStateId == NomenclatureConstants.NotificationState.NoDeliveryArea ||
                 filter.NotificationStateId == NomenclatureConstants.NotificationState.AllForReceived)
             {
-                deliveryItems = deliveryItems.Where(x => (x.NotificationStateId == NomenclatureConstants.NotificationState.Ready ||
-                                                          x.NotificationStateId == NomenclatureConstants.NotificationState.Send) &&
-                                                          (filter.NotificationStateId == NomenclatureConstants.NotificationState.AllForReceived ||
-                                                          x.DeliveryAreaId == null));
+                var states = new int[]{ NomenclatureConstants.NotificationState.Ready, NomenclatureConstants.NotificationState.Send};
+                deliveryItems = deliveryItems.Where(x => states.Contains(x.NotificationStateId));
+                if (filter.NotificationStateId != NomenclatureConstants.NotificationState.AllForReceived) {
+                    deliveryItems = deliveryItems.Where(x => x.DeliveryAreaId == null);
+                }
+                opers = repo.AllReadonly<DeliveryItemOper>();
             }
             else
             {
                 deliveryItems = deliveryItems.Where(x => x.NotificationStateId == filter.NotificationStateId);
             }
-            return deliveryItems.Where(x =>
-                         (courtId <= 0 || x.CourtId == courtId) &&
-                         (fromCourtId <= 0 || x.FromCourtId == fromCourtId) &&
-                         (lawUnitId == -2 ? x.LawUnitId == null : (lawUnitId <= 0 || x.LawUnitId == lawUnitId)) &&
-                         (filter.DateFrom == null || opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper >= (filter.DateFrom ?? dNull).Date).Any()) &&
-                         (filter.DateTo == null || opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper.Date <= (filter.DateTo ?? dNullEnd).Date).Any()) &&
-                         (filter.RegDateFrom == null || x.RegDate >= (filter.RegDateFrom ?? dNull).Date) &&
-                         (filter.RegDateTo == null || x.RegDate <= (filter.RegDateTo ?? dNullEnd).Date) &&
-                         (filter.NotificationTypeId <= 0 || 
-                          x.CaseNotification.NotificationTypeId == filter.NotificationTypeId || 
-                          x.DocumentNotification.NotificationTypeId == filter.NotificationTypeId)
-                      )
-                .Where(IsNotExpired())
-                .Select(x => new DeliveryItemVM()
+            Expression<Func<DeliveryItem, bool>> isFastProcess = x => true;
+            if (filter.IsFastProcess == NomenclatureConstants.YesNo.Yes)
+            {
+                isFastProcess = x => x.Case.IsFastProcess == true;
+            }
+            if (filter.IsFastProcess == NomenclatureConstants.YesNo.No)
+            {
+                isFastProcess = x => x.Case.IsFastProcess != true;
+            }
+
+            deliveryItems = deliveryItems.Where(isFastProcess)
+                                         .Where(GetCourtIdWhere(courtId))
+                                         .Where(GetFromCourtIdWhere(fromCourtId))
+                                         .Where(IsNotExpired());
+            //.Where(x => (lawUnitId == -2 ? x.LawUnitId == null : (lawUnitId <= 0 || x.LawUnitId == lawUnitId)) &&
+            //         (filter.DateFrom == null || opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper >= filter.DateFrom).Any()) &&
+            //         (filter.DateTo == null || opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper.Date <= filter.DateTo).Any()) &&
+            //         (filter.RegDateFrom == null || x.RegDate >= filter.RegDateFrom) &&
+            //         (filter.RegDateTo == null || x.RegDate <= filter.RegDateTo) &&
+            //         (filter.NotificationTypeId <= 0 || x.NotificationTypeId == filter.NotificationTypeId) &&
+            //         (filter.NotificationDeliveryGroupId <= 0 || x.NotificationDeliveryGroupId == filter.NotificationDeliveryGroupId)
+            //      )
+
+            //x => (lawUnitId == -2 ? x.LawUnitId == null : (lawUnitId <= 0 || x.LawUnitId == lawUnitId)
+            if (lawUnitId == -2)
+            {
+                deliveryItems = deliveryItems.Where(x => x.LawUnitId == null);
+            }
+            if (lawUnitId > 0)
+            {
+                deliveryItems = deliveryItems.Where(x => x.LawUnitId == lawUnitId);
+            }
+
+            //      (filter.DateFrom == null || opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper >= filter.DateFrom).Any()) &&
+            if (filter.DateFrom != null)
+            {
+                deliveryItems = deliveryItems.Where(x => opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper >= filter.DateFrom).Any());
+            }
+            // (filter.DateTo == null || opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper.Date <= filter.DateTo).Any()) &&     
+            if (filter.DateTo != null)
+            {
+                deliveryItems = deliveryItems.Where(x => opers.Where(op => op.DeliveryItemId == x.Id && op.DateOper.Date <= filter.DateTo).Any());
+            }
+            // (filter.RegDateFrom == null || x.RegDate >= filter.RegDateFrom)
+            if (filter.RegDateFrom != null)
+            {
+                deliveryItems = deliveryItems.Where(x => x.RegDate >= filter.RegDateFrom);
+            }
+            // (filter.RegDateTo == null || x.RegDate <= filter.RegDateTo) 
+            if (filter.RegDateTo != null)
+            {
+                deliveryItems = deliveryItems.Where(x => x.RegDate <= filter.RegDateTo);
+            }
+            //         (filter.NotificationTypeId <= 0 || x.NotificationTypeId == filter.NotificationTypeId) &&
+            if (filter.NotificationTypeId > 0)
+            {
+                deliveryItems = deliveryItems.Where(x => x.NotificationTypeId == filter.NotificationTypeId);
+            }
+            //         (filter.NotificationDeliveryGroupId <= 0 || x.NotificationDeliveryGroupId == filter.NotificationDeliveryGroupId)
+            if (filter.NotificationDeliveryGroupId > 0)
+            {
+                deliveryItems = deliveryItems.Where(x => x.NotificationDeliveryGroupId == filter.NotificationDeliveryGroupId);
+            }
+            if (filter.ToNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery)
+            {
+                deliveryItems = deliveryItems.Where(x => x.CaseNotificationId == null || x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons);
+            }
+            // през епеп, ел поща, по телефон, в заседание да не се показват
+            if (filter.NotificationDeliveryGroupId == 0 && filter.ToNotificationStateId != NomenclatureConstants.NotificationState.ForDelivery)
+            {
+                deliveryItems = deliveryItems.Where(x => x.CaseNotificationId == null || (
+                          x.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.ByEPEP &&
+                          x.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnPhone &&
+                          x.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+                          x.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnSession
+                       ));
+            }
+            return deliveryItems;
+        }
+
+        public IQueryable<DeliveryItemRecapTransVM> DeliveryItemTransSelectRecap(DeliveryItemTransFilterVM filter)
+        {
+            var deliveryItems = DeliveryItemTransSelectQuery(filter, true);
+            
+                if (filter.ToNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery)
                 {
-                    Id = x.Id,
-                    FromCourtName = x.FromCourt.Label,
-                    CourtName = x.Court.Label,
-                    LawUnitName = x.LawUnit == null ? "" : x.LawUnit.FullName,
-                    AreaName = x.DeliveryArea == null ? "" : x.DeliveryArea.Description,
-                    PersonName = x.PersonName,
-                    Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
-                    StateName = x.NotificationState == null ? "" : x.NotificationState.Label,
-                    RegNumber = x.RegNumber,
-                    DateSend = x.DateSend,
-                    DateAccepted = x.DateAccepted,
-                    DeliveryDate = x.DeliveryDate,
-                    CourtId = x.CourtId,
-                    FromCourtId = x.FromCourtId,
-                    LawUnitId = x.LawUnitId ?? 0,
-                    DateReady = opers.Where(op => op.DeliveryItemId == x.Id).OrderBy(r => r.DateOper).Select(op => op.DateOper).LastOrDefault(),
-                    CheckRow = false,
-                    CaseInfo = x.CaseInfo,
-                    DeliveryAreaId = x.DeliveryAreaId,
-                    CheckRowOrder = "1Z" + x.RegNumber,
-                    NotificationType = x.CaseNotification.NotificationType.Label ?? (x.DocumentNotification.NotificationType.Label ?? ""),
-                    CaseNotificationId = x.CaseNotificationId,
-                    DocumentNotificationId = x.DocumentNotificationId
-                })
-                .AsQueryable();
+                    return deliveryItems
+                     .Select(x => new DeliveryItemRecapTransVM()
+                     {
+                         Id = x.Id,
+                         FromCourtName = x.FromCourt.Label,
+                         FromCourtId = x.FromCourtId,
+                         CourtId = x.CourtId,
+                         CourtName = x.Court.Label,
+                         LawUnitName = x.LawUnit.FullName,
+                         LawUnitId = x.LawUnitId,
+                     });
+                }
+                else
+                {
+                    return deliveryItems
+                     .Select(x => new DeliveryItemRecapTransVM()
+                     {
+                         Id = x.Id,
+                         FromCourtName = x.FromCourt.Label,
+                         FromCourtId = x.FromCourtId,
+                         CourtId = x.CourtId,
+                         CourtName = x.Court.Label,
+                         LawUnitId = x.LawUnitId,
+                     });
+                }
+        }
+        public IQueryable<DeliveryItemVM> DeliveryItemTransSelect(DeliveryItemTransFilterVM filter)
+        {
+            var deliveryItems = DeliveryItemTransSelectQuery(filter, false);
+            
+                return deliveryItems
+                  .Select(x => new DeliveryItemVM()
+                  {
+                      Id = x.Id,
+                      FromCourtName = x.FromCourt.Label,
+                      CourtName = x.Court.Label,
+                      LawUnitName = x.LawUnit.FullName,
+                      AreaName = x.DeliveryArea.Description,
+                      PersonName = x.PersonName,
+                      FullAddress = x.Address.FullAddress,
+                      AddressPhone = x.Address.Phone,
+                      AddressEmail = x.Address.Email,
+                      AddressFax = x.Address.Fax,
+                      StateName = x.NotificationState.Label,
+                      RegNumber = x.RegNumber,
+                      DateSend = x.DateSend,
+                      DateAccepted = x.DateAccepted,
+                      DeliveryDate = x.DeliveryDate,
+                      CourtId = x.CourtId,
+                      FromCourtId = x.FromCourtId,
+                      LawUnitId = x.LawUnitId,
+                      CheckRow = false,
+                      CaseInfo = x.DocumentNotificationId != null ? $"Документ {x.CaseInfo}" : x.CaseInfo,
+                      DeliveryAreaId = x.DeliveryAreaId,
+                      CheckRowOrder = "1Z" + x.RegNumber,
+                      NotificationType = x.NotificationType.Label,
+                      CaseNotificationId = x.CaseNotificationId,
+                      DocumentNotificationId = x.DocumentNotificationId,
+                      FastCaseInfo = x.Case.IsFastProcess == true ? NomenclatureConstants.DeliveryItemMessage.FastProcess : string.Empty,
+                  });
         }
         public IQueryable<DeliveryItemVM> DeliveryItemChangeLawUnitSelect(DeliveryItemChangeLawUnitVM filterData, int[] newLawUnitId)
         {
-            int[] states = NotificationStateEnd();
+            int[] states = NomenclatureConstants.NotificationState.NotificationEndState();
             var deliveries = repo.AllReadonly<DeliveryItem>()
                 .Where(IsNotExpired())
                 .Where(x => x.CourtId == filterData.CourtId)
                 .Where(x => filterData.NotificationTypeId <= 0 || x.NotificationTypeId == filterData.NotificationTypeId)
-                .Where(x => x.CaseNotification == null || x.CaseNotification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons);
+                .Where(x => x.CaseNotificationId == null || x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons);
             if (filterData.NotificationStateId <= 0)
+            {
                 deliveries = deliveries.Where(x => !states.Contains(x.NotificationStateId));
+            }
             else
+            {
                 deliveries = deliveries.Where(x => x.NotificationStateId == filterData.NotificationStateId);
+            }
             switch (filterData.LawUnitId)
             {
                 case -1: break;
@@ -278,11 +561,14 @@ namespace IOWebApplication.Core.Services
                 Id = x.Id,
                 FromCourtName = x.FromCourt.Label,
                 CourtName = x.Court.Label,
-                LawUnitName = x.LawUnit == null ? "" : x.LawUnit.FullName,
-                AreaName = x.DeliveryArea == null ? "" : x.DeliveryArea.Description,
+                LawUnitName = x.LawUnit.FullName,
+                AreaName =  x.DeliveryArea.Description,
                 PersonName = x.PersonName,
-                Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
-                StateName = x.NotificationState == null ? "" : x.NotificationState.Label,
+                FullAddress = x.Address.FullAddress,
+                AddressPhone = x.Address.Phone,
+                AddressEmail = x.Address.Email,
+                AddressFax = x.Address.Fax,
+                StateName = x.NotificationState.Label,
                 RegNumber = x.RegNumber,
                 DateSend = x.DateSend,
                 DateAccepted = x.DateAccepted,
@@ -291,83 +577,77 @@ namespace IOWebApplication.Core.Services
                 FromCourtId = x.FromCourtId,
                 LawUnitId = x.LawUnitId,
                 DeliveryAreaId = x.DeliveryAreaId,
-                DateReady = null,
                 CheckRow = false,
-                NotificationType = x.CaseNotification.NotificationType.Label ?? (x.DocumentNotification.NotificationType.Label ?? ""),
+                NotificationType = x.NotificationType.Label,
                 CaseNotificationId = x.CaseNotificationId,
                 DocumentNotificationId = x.DocumentNotificationId
             })
                 .AsQueryable();
             return result;
         }
-        public List<Select2ItemVM> DeliveryItemTransForIdDDL(DeliveryItemTransFilterVM filter)
+        public async Task<List<Select2ItemVM>> DeliveryItemTransForIdDDL(DeliveryItemTransFilterVM filter)
         {
-            var list = DeliveryItemTransSelect(filter, true).ToList();
+            var list = DeliveryItemTransSelectRecap(filter);
             switch (filter.ToNotificationStateId)
             {
                 case NomenclatureConstants.NotificationState.Send:
-                    var toCourts = list
-                              .GroupBy(x => x.CourtId)
-                              .Select(gr => new Select2ItemVM()
+                    var recapListSend =await list
+                              .GroupBy(x => new { x.CourtId, x.CourtName })
+                              .Select(gr => new DeliveryItemRecapVM()
                               {
-                                  Text = gr.Max(x => x.CourtName) + "  " + gr.Count().ToString(),
-                                  Id = gr.Max(x => x.CourtId)
-                              })
-                              .OrderBy(x => x.Text)
-                              .ToList() ?? new List<Select2ItemVM>();
-                    toCourts.Add(new Select2ItemVM()
-                    {
-                        Id = 0,
-                        Text = $"Всички {list.Count}"
-                    });
-                    return toCourts;
+                                  Id = gr.Key.CourtId,
+                                  Name = gr.Key.CourtName,
+                                  Count = gr.Count()
+                              }).ToListAsync();
+                    return RecapToSelect2ItemList(recapListSend, true);
                 case NomenclatureConstants.NotificationState.Received:
-                    var fromCourts = list
-                              .GroupBy(x => x.FromCourtId)
-                              .Select(gr => new Select2ItemVM()
+                    var recapListReceived = await list
+                              .GroupBy(x => new { x.FromCourtId, x.FromCourtName })
+                              .Select(gr => new DeliveryItemRecapVM()
                               {
-                                  Text = gr.Max(x => x.FromCourtName) + "  " + gr.Count().ToString(),
-                                  Id = gr.Max(x => x.FromCourtId)
+                                  Id = gr.Key.FromCourtId,
+                                  Name = gr.Key.FromCourtName,
+                                  Count = gr.Count()
                               })
-                              .OrderBy(x => x.Text)
-                              .ToList() ?? new List<Select2ItemVM>();
-                    fromCourts.Add(new Select2ItemVM()
-                    {
-                        Id = 0,
-                        Text = $"Всички {list.Count}"
-                    });
-                    return fromCourts;
+                              .ToListAsync();
+                    return RecapToSelect2ItemList(recapListReceived, true);
                 case NomenclatureConstants.NotificationState.ForDelivery:
-                    var lawUnits = list
-                              .GroupBy(x => x.LawUnitId)
-                              .Select(gr => new Select2ItemVM()
+                    var recapListForDelivery = await list
+                              .GroupBy(x => new { x.LawUnitId, x.LawUnitName })
+                              .Select(gr => new DeliveryItemRecapVM()
                               {
-                                  Text = (gr.First().LawUnitId > 0 ? gr.First().LawUnitName : " БЕЗ ИЗБРАН ПРИЗОВКАР") + "  " + gr.Count().ToString(),
-                                  Id = (gr.First().LawUnitId >0 ? gr.First().LawUnitId : -2) ?? 0
+                                  Id = (gr.Key.LawUnitId > 0 ? gr.Key.LawUnitId : -2) ?? 0,
+                                  Name = gr.Key.LawUnitId > 0 ? gr.Key.LawUnitName : " БЕЗ ИЗБРАН ПРИЗОВКАР",
+                                  Count = gr.Count()
                               })
-                              .OrderBy(x => x.Text)
-                              .ToList() ?? new List<Select2ItemVM>();
-                    return lawUnits;
+                              .ToListAsync();
+                    return RecapToSelect2ItemList(recapListForDelivery, false);
             }
             return new List<Select2ItemVM>();
         }
-        public IQueryable<DeliveryItemRecieveVM> getRecived(int id)
+
+        private static List<Select2ItemVM> RecapToSelect2ItemList(List<DeliveryItemRecapVM> recapList, bool addAll)
         {
-            return repo.AllReadonly<DeliveryItem>()
-                .Where(x => x.Id == id)
-                .Where(IsNotExpired())
-                .Select(x => new DeliveryItemRecieveVM()
+            var result = recapList
+                        .Select(r => new Select2ItemVM()
+                        {
+                            Text = $"{r.Name}  {r.Count}",
+                            Id = r.Id
+                        })
+                      .OrderBy(x => x.Text)
+                      .ToList();
+            if (addAll)
+            {
+                result.Insert(0, new Select2ItemVM()
                 {
-                    Id = x.Id,
-                    FromCourtName = x.FromCourt.Label,
-                    LawUnitName = x.LawUnit == null ? "" : x.LawUnit.FullName,
-                    AreaName = x.DeliveryArea == null ? "" : x.DeliveryArea.Description,
-                    PersonName = x.PersonName,
-                    Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
-                    RegNumber = x.RegNumber
-                })
-                .AsQueryable();
+                    Id = 0,
+                    Text = $"Всички {recapList.Sum(x => (int?)x.Count) ?? 0}"
+                });
+            }
+            return result;
         }
+
+    
         public DeliveryItem GetDeliveryItemByRegNumber(string regNum)
         {
             return repo.AllReadonly<DeliveryItem>()
@@ -377,6 +657,7 @@ namespace IOWebApplication.Core.Services
         public DeliveryItem GetDeliveryItemByCaseNotificationId(int notificationId)
         {
             return repo.AllReadonly<DeliveryItem>()
+                .Include(x => x.CaseNotification)
                 .Where(x => x.CaseNotificationId == notificationId)
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefault();
@@ -385,6 +666,14 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<DeliveryItem>()
                 .Where(x => x.DocumentNotificationId == notificationId)
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefault();
+        }
+
+        public DeliveryItem GetDeliveryItemByMediationNotificationId(int notificationId)
+        {
+            return repo.AllReadonly<DeliveryItem>()
+                .Where(x => x.MediationNotificationId == notificationId)
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefault();
         }
@@ -405,6 +694,8 @@ namespace IOWebApplication.Core.Services
 
         public DeliveryItemOper CreateDeliveryItemOper(DeliveryItem deliveryItem, int deliverOperId)
         {
+            if (deliverOperId == NomenclatureConstants.NotificationState.Delivered)
+                deliverOperId = NomenclatureConstants.DeliveryOper.Visit1;
             int? operId = repo.AllReadonly<DeliveryOper>()
                               .Where(x => x.Id == deliverOperId)
                               .Select(x => (int?)x.Id)
@@ -412,7 +703,7 @@ namespace IOWebApplication.Core.Services
             if (operId == null)
                 return null;
             DeliveryItemOper oper = new DeliveryItemOper();
-            oper.CourtId = userContext.CourtId;
+            oper.CourtId = deliveryItem.CourtId;
             oper.DeliveryOperId = deliverOperId;
             oper.DateOper = DateTime.Now;
             oper.NotificationStateId = deliveryItem.NotificationStateId;
@@ -428,7 +719,7 @@ namespace IOWebApplication.Core.Services
             return oper;
         }
 
-        public bool DeliveryItemSaveDataAddReceived(DeliveryItem model)
+        public async Task<bool> DeliveryItemSaveDataAddReceived(DeliveryItem model, DeliveryLogVM logVM)
         {
             try
             {
@@ -444,15 +735,15 @@ namespace IOWebApplication.Core.Services
                     var saved = repo.GetById<DeliveryItem>(model.Id);
                     saved.FromCourtId = model.FromCourtId;
                     saved.CourtId = userContext.CourtId;
-                    saved.DateSend = model.DateSend;
-                    saved.DateAccepted = model.DateAccepted;
-                    saved.DeliveryDate = model.DeliveryDate;
                     saved.ReturnDate = model.ReturnDate;
                     saved.RegNumber = model.RegNumber;
                     saved.RegDate = model.RegDate;
                     saved.CaseNotificationId = model.CaseNotificationId;
+                    saved.CaseId = model.CaseId;
+                    saved.CaseSessionId = model.CaseSessionId;
                     saved.DeliveryAreaId = model.DeliveryAreaId;
                     saved.NotificationStateId = model.NotificationStateId;
+                    saved.NotificationDeliveryGroupId = model.NotificationDeliveryGroupId ?? NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
                     saved.LawUnitId = model.LawUnitId;
                     saved.PersonName = model.PersonName;
                     saved.AddressId = model.AddressId;
@@ -460,64 +751,154 @@ namespace IOWebApplication.Core.Services
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     nomenclatureService.SetFullAddress(saved.Address);
-                    CreateDeliveryItemOper(saved, model.NotificationStateId);
+                    var oper = CreateDeliveryItemOper(saved, model.NotificationStateId);
+                    await SetDeliveryItemDates(saved, oper);
                     repo.Update(saved);
+                    repo.SaveChanges();
+                    // DeliveryLog
+                    CreateDeliveryItemOperLog(saved, oper, logVM);
                     repo.SaveChanges();
                 }
                 else
                 {
                     //Insert
+                    model.NotificationDeliveryGroupId = model.NotificationDeliveryGroupId ?? NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
                     model.NotificationStateId = NomenclatureConstants.NotificationState.Received;
                     model.CourtId = userContext.CourtId;
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
                     nomenclatureService.SetFullAddress(model.Address);
-                    CreateDeliveryItemOper(model, model.NotificationStateId);
-
+                    var oper = CreateDeliveryItemOper(model, model.NotificationStateId);
+                    await SetDeliveryItemDates(model, oper);
                     repo.Add<DeliveryItem>(model);
+                    repo.SaveChanges();
+
+                    // DeliveryLog
+                    CreateDeliveryItemOperLog(model, oper, logVM);
                     repo.SaveChanges();
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на DeliveryItem с Id={ model.Id } DeliveryItemSaveDataAddReceived");
+                logger.LogError(ex, $"Грешка при запис на DeliveryItem с Id={model.Id} DeliveryItemSaveDataAddReceived");
                 return false;
             }
         }
-        public bool SaveTrans(int[] deliveryItemIds, int notificationStateId, int deliverOperId)
+        public async Task<bool> SaveTrans(int[] deliveryItemIds, int notificationStateId, int deliverOperId, DeliveryLogVM logVM)
         {
-            foreach (int id in deliveryItemIds)
+            try
             {
-                var deliveryItem = repo.GetById<DeliveryItem>(id);
-                if (deliveryItem == null)
-                {
-                    return false;
-                }
-                deliveryItem.NotificationStateId = notificationStateId;
-                DeliveryItemOper oper = CreateDeliveryItemOper(deliveryItem, deliverOperId);
-                UpdateOperToNotification(deliveryItem, oper);
-                repo.Update(deliveryItem);
+                    foreach (int id in deliveryItemIds)
+                    {
+                        var deliveryItem = await repo.GetByIdAsync<DeliveryItem>(id);
+                        if (deliveryItem == null)
+                        {
+                            return false;
+                        }
+                        deliveryItem.NotificationStateId = notificationStateId;
+                        DeliveryItemOper oper = CreateDeliveryItemOper(deliveryItem, deliverOperId);
+                        await UpdateOperToNotification(deliveryItem, oper);
+                        await CreateDeliveryItemOperLogExAsync(deliveryItem, oper, logVM, userContext.CourtId, userContext.UserId);
+                    }
+                    await repo.SaveChangesAsync();
+
+                return true;
             }
-            repo.SaveChanges();
-            return true;
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return false;
+            }
         }
-        public bool SaveChangeLawUnit(int[] deliveryItemIds, DeliveryItemChangeLawUnitVM filterData)
+        private string ChangeLawUnitNewDataAuditInfo(DeliveryItemChangeLawUnitVM filterData)
         {
+            var changeInfo = " сменено на ";
+            var toCourt = repo.AllReadonly<Court>()
+                                      .FirstOrDefault(x => x.Id == filterData.NewCourtId);
+            if (toCourt != null)
+            {
+                changeInfo += " " + toCourt.Label;
+            }
+            if (filterData.NewLawUnitId != -1)
+            {
+                var delivererName = FromDelivererSpecialName(filterData.NewLawUnitId);
+                if (delivererName == null)
+                {
+                    var lawUnit = repo.AllReadonly<LawUnit>()
+                                      .Where(x => x.Id == filterData.NewLawUnitId)
+                                      .FirstOrDefault();
+                    delivererName = lawUnit?.FullName;
+                }
+                if (delivererName != null)
+                    changeInfo += " " + delivererName;
+            };
+            if (filterData.NewDeliveryAreaId != -1)
+            {
+                var deliveryArea = repo.AllReadonly<DeliveryArea>()
+                                       .Where(x => x.Id == filterData.NewDeliveryAreaId)
+                                       .FirstOrDefault();
+                if (deliveryArea != null)
+                    changeInfo += " " + deliveryArea.Description;
+            };
+            return changeInfo;
+
+        }
+        public string ChangeLawUnitAuditInfo(DeliveryItemChangeLawUnitVM filterData)
+        {
+            var changeInfo = "От";
+
+            var fromCourt = repo.AllReadonly<Court>()
+                                .FirstOrDefault(x => x.Id == filterData.CourtId);
+            if (fromCourt != null)
+            {
+                changeInfo += " " + fromCourt.Label;
+            }
+
+            if (filterData.LawUnitId != -1 && filterData.LawUnitId != null)
+            {
+                var delivererName = FromDelivererSpecialName(filterData.LawUnitId ?? 0);
+                if (delivererName == null)
+                {
+                    var lawUnit = repo.AllReadonly<LawUnit>()
+                                      .Where(x => x.Id == filterData.LawUnitId)
+                                      .FirstOrDefault();
+                    delivererName = lawUnit?.FullName;
+                }
+                if (delivererName != null)
+                    changeInfo += " " + delivererName;
+            };
+
+            if (filterData.DeliveryAreaId != -1 && filterData.DeliveryAreaId != null)
+            {
+                var deliveryArea = repo.AllReadonly<DeliveryArea>()
+                                       .Where(x => x.Id == filterData.DeliveryAreaId)
+                                       .FirstOrDefault();
+                if (deliveryArea != null)
+                    changeInfo += " " + deliveryArea.Description;
+            };
+
+            changeInfo += ChangeLawUnitNewDataAuditInfo(filterData);
+            return changeInfo;
+        }
+
+        public async Task<bool> SaveChangeLawUnit(int[] deliveryItemIds, DeliveryItemChangeLawUnitVM filterData, DeliveryLogVM logVM)
+        {
+
             foreach (int id in deliveryItemIds)
             {
-                var deliveryItem = repo.GetById<DeliveryItem>(id);
+                var deliveryItem = await repo.GetByIdAsync<DeliveryItem>(id);
                 if (deliveryItem == null)
                 {
                     return false;
                 }
                 deliveryItem.CourtId = filterData.NewCourtId;
-                
+
                 if (filterData.CourtId != filterData.NewCourtId || filterData.NewLawUnitId != -1)
                     deliveryItem.LawUnitId = filterData.NewLawUnitId;
                 if (deliveryItem.LawUnitId == -1)
                     deliveryItem.LawUnitId = null;
-                
+
                 if (filterData.CourtId != filterData.NewCourtId || filterData.NewDeliveryAreaId != -1)
                     deliveryItem.DeliveryAreaId = filterData.NewDeliveryAreaId;
                 if (deliveryItem.DeliveryAreaId == -1)
@@ -529,16 +910,16 @@ namespace IOWebApplication.Core.Services
                     deliveryItem.CaseNotification.DeliveryAreaId = deliveryItem.DeliveryAreaId;
                     deliveryItem.CaseNotification.ToCourtId = deliveryItem.CourtId;
                 }
-                repo.Update(deliveryItem);
+                await CreateDeliveryItemOperLogExAsync(deliveryItem, null, logVM, userContext.CourtId, userContext.UserId);
             }
-            repo.SaveChanges();
+            await repo.SaveChangesAsync();
             return true;
         }
 
-        public DeliveryItemRecieveVM SaveRecieved(string regNumber, bool saveIfErr, out string messageErr)
+        public async Task<(DeliveryItemRecieveVM, string)> SaveRecieved(string regNumber, bool saveIfErr, DeliveryLogVM logVM)
         {
             DeliveryItemRecieveVM deliveryVM = null;
-            messageErr = "";
+            var messageErr = string.Empty;
             var deliveryItem = repo.AllReadonly<DeliveryItem>()
                        .Where(x => (x.RegNumber == regNumber))
                        .Include(x => x.FromCourt)
@@ -568,10 +949,12 @@ namespace IOWebApplication.Core.Services
                 if (saveIfErr || string.IsNullOrEmpty(messageErr))
                 {
                     deliveryItem.NotificationStateId = NomenclatureConstants.NotificationState.Received;
-                    deliveryItem.DateAccepted = DateTime.Now;
                     deliveryItem.DateWrt = DateTime.Now;
                     deliveryItem.UserId = userContext.UserId;
+                    var oper = CreateDeliveryItemOper(deliveryItem, deliveryItem.NotificationStateId);
+                    await SetDeliveryItemDates(deliveryItem, oper);
                     repo.Update(deliveryItem);
+                    CreateDeliveryItemOperLog(deliveryItem, null, logVM);
                     repo.SaveChanges();
                 }
             }
@@ -579,7 +962,7 @@ namespace IOWebApplication.Core.Services
             {
                 messageErr = $"Няма призовка с номер {regNumber}";
             }
-            return deliveryVM;
+            return (deliveryVM, messageErr);
         }
 
         public IQueryable<DeliveryItem> GetReceivedForToday(string userId, DateTime forDate)
@@ -610,7 +993,7 @@ namespace IOWebApplication.Core.Services
                            Address = deliveryItem.Address == null ? "" : deliveryItem.Address.FullAddress
                        });
         }
-        public bool DeliveryItemSaveArea(int id, int courtId, int? deliveryAreaId, int? lawUnitId)
+        public bool DeliveryItemSaveArea(int id, int courtId, int? deliveryAreaId, int? lawUnitId, DeliveryLogVM logVM)
         {
             try
             {
@@ -628,12 +1011,13 @@ namespace IOWebApplication.Core.Services
                     saved.LawUnitId = lawUnitId;
 
                 repo.Update(saved);
+                CreateDeliveryItemOperLog(saved, null, logVM);
                 repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на районииране DeliveryItemId={ id }");
+                logger.LogError(ex, $"Грешка при запис на райониране DeliveryItemId={id}");
                 return false;
             }
         }
@@ -654,7 +1038,7 @@ namespace IOWebApplication.Core.Services
                       .Include(x => x.CaseNotification)
                       .FirstOrDefault();
         }
-        public bool DeliveryItemSaveOper(DeliveryItemOperVM model)
+        public async Task<bool> DeliveryItemSaveOper(DeliveryItemOperVM model, DeliveryLogVM logVM)
         {
             try
             {
@@ -672,8 +1056,11 @@ namespace IOWebApplication.Core.Services
                     }
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
-                    UpdateOperToNotification(saved, oper);
+                    await UpdateOperToNotification(saved, oper);
                     repo.Update(saved);
+                    repo.SaveChanges();
+
+                    CreateDeliveryItemOperLog(saved, oper, logVM);
                     repo.SaveChanges();
                     model.Id = oper.Id;
                 }
@@ -686,7 +1073,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на операция за разнос към DeliveryItem Id={ model.DeliveryItemId }");
+                logger.LogError(ex, $"Грешка при запис на операция за разнос към DeliveryItem Id={model.DeliveryItemId}");
                 return false;
             }
         }
@@ -700,12 +1087,7 @@ namespace IOWebApplication.Core.Services
             if (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Send)
                 documentNotification.DateSend = deliveryItemOper.DateOper;
 
-            if (
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered) ||
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered47) ||
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered50) ||
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered51)
-               )
+            if (NomenclatureConstants.NotificationState.NotificationDelivered().Contains(deliveryItem.NotificationStateId))
                 documentNotification.DeliveryDate = deliveryItemOper.DateOper;
             var deliveryItemOperL = repo.AllReadonly<DeliveryItemOper>()
                                         .Where(x => x.DeliveryItemId == deliveryItem.Id &&
@@ -725,10 +1107,25 @@ namespace IOWebApplication.Core.Services
             }
             return true;
         }
-        private bool UpdateOperToNotification(DeliveryItem deliveryItem, DeliveryItemOper deliveryItemOper)
+        private async Task<bool> UpdateOperToNotification(DeliveryItem deliveryItem, DeliveryItemOper deliveryItemOper)
         {
             if (deliveryItem.DocumentNotificationId != null)
                 return UpdateOperToDocumentNotification(deliveryItem, deliveryItemOper);
+            var deliveryItemOperL = repo.AllReadonly<DeliveryItemOper>()
+                                     .Where(x => x.DeliveryItemId == deliveryItem.Id &&
+                                                 x.DeliveryOperId >= deliveryItemOper.DeliveryOperId &&
+                                                 x.DeliveryOperId >= NomenclatureConstants.DeliveryOper.Visit1)
+                                     .OrderBy(x => x.DeliveryOperId)
+                                     .ThenBy(x => x.Id)
+                                     .LastOrDefault();
+            if (deliveryItemOperL == null || deliveryItemOperL.DeliveryOperId == deliveryItemOper.DeliveryOperId)
+            {
+                await SetDeliveryItemDates(deliveryItem, deliveryItemOper);
+            }
+            else
+            {
+                await SetDeliveryItemDates(deliveryItem, deliveryItemOperL);
+            }
             if (deliveryItem.CaseNotificationId == null)
                 return false;
             var caseNotification = repo.GetById<CaseNotification>(deliveryItem.CaseNotificationId);
@@ -739,19 +1136,9 @@ namespace IOWebApplication.Core.Services
             if (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Send)
                 caseNotification.DateSend = deliveryItemOper.DateOper;
 
-            if (
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered) ||
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered47) ||
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered50) ||
-                (deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered51)
-               )
+            if (NomenclatureConstants.NotificationState.NotificationDelivered().Contains(deliveryItem.NotificationStateId))
                 caseNotification.DeliveryDate = deliveryItemOper.DateOper;
-            var deliveryItemOperL = repo.AllReadonly<DeliveryItemOper>()
-                                        .Where(x => x.DeliveryItemId == deliveryItem.Id &&
-                                                    x.DeliveryOperId >= deliveryItemOper.DeliveryOperId)
-                                        .OrderBy(x => x.DeliveryOperId)
-                                        .ThenBy(x => x.Id)
-                                        .LastOrDefault();
+
             if (deliveryItemOperL == null || deliveryItemOperL.DeliveryOperId == deliveryItemOper.DeliveryOperId)
             {
                 caseNotification.DeliveryOperId = deliveryItemOper.DeliveryOperId;
@@ -762,11 +1149,13 @@ namespace IOWebApplication.Core.Services
                 caseNotification.DeliveryOperId = deliveryItemOperL.DeliveryOperId;
                 caseNotification.DeliveryInfo = deliveryItemOperL.DeliveryInfo;
             }
+
             return true;
         }
         public IQueryable<DeliveryItemReportVM> GetDeliveryItemOutReport(DeliveryItemListVM filter, bool forCurrentCourt)
         {
-            int[] states = NotificationStateEndAndVisited();
+            int[] states = NomenclatureConstants.NotificationState.NotificationStateEndAndVisited();
+            int[] opers = GetDeliveryOperMobile().Select(x => x.Id).ToArray();
             return repo.AllReadonly<DeliveryItem>()
                        .Where(x => //states.Contains(x.NotificationStateId) &&
                                    (userContext.CourtId == x.CourtId) &&
@@ -783,8 +1172,8 @@ namespace IOWebApplication.Core.Services
                        {
                            RegNumber = x.RegNumber,
                            NotificationTypeLabel = (x.NotificationType == null ? "" : x.NotificationType.Label) + " " +
-                                                   (x.CaseNotification.HaveАppendix == true ? " +прил.": "") + " " +
-                                                   (x.CaseNotification.CaseSession.DateTo != null ? x.CaseNotification.CaseSession.DateTo.Value.ToString(FormattingConstant.NormalDateFormat) : "")
+                                                   (x.CaseNotification.HaveАppendix == true ? " +прил." : "") + " " +
+                                                   (x.CaseSession.DateTo != null ? x.CaseSession.DateTo.Value.ToString(FormattingConstant.NormalDateFormat) : "")
                                                    //+" "+ ((x.DateAccepted ?? x.DateSend) ?? x.RegDate).Value.ToString(FormattingConstant.NormalDateFormat)
                                                    ,
                            CaseInfo = x.CaseInfo ?? "",
@@ -792,39 +1181,19 @@ namespace IOWebApplication.Core.Services
                            Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
                            DeliveryInfo = x.DeliveryInfo,
                            ReturnDate = x.ReturnDate,
-                           NotificationState = states.Contains(x.NotificationStateId)? x.NotificationState.Label ?? "" :"",
+                           NotificationState = states.Contains(x.NotificationStateId) ? x.NotificationState.Label ?? "" : "",
                            DeliveryDate = x.DeliveryDate,
-                           DeliveryItemOper = x.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault()
+                           DeliveryItemOpers = x.DeliveryItemOpers.Where(x =>  opers.Contains(x.DeliveryOperId)).ToList()
                        })
                        .AsQueryable();
+
+            //x.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault()
         }
-        public int[] NotificationStateEnd()
-        {
-            return new int[]
-            {
-               NomenclatureConstants.NotificationState.Delivered,
-               NomenclatureConstants.NotificationState.Delivered47,
-               NomenclatureConstants.NotificationState.Delivered50,
-               NomenclatureConstants.NotificationState.Delivered51,
-               NomenclatureConstants.NotificationState.UnDelivered
-            };
-        }
-        public int[] NotificationStateEndAndVisited()
-        {
-            return new int[]
-            {
-               NomenclatureConstants.NotificationState.Delivered,
-               NomenclatureConstants.NotificationState.Delivered47,
-               NomenclatureConstants.NotificationState.Delivered50,
-               NomenclatureConstants.NotificationState.Delivered51,
-               NomenclatureConstants.NotificationState.UnDelivered,
-               NomenclatureConstants.NotificationState.Visited
-            };
-        }
+      
         public IQueryable<DeliveryItemReportResultVM> GetDeliveryItemReportResult(DeliveryItemListVM filter)
         {
             DateTime nullDate = new DateTime(2000, 1, 1);
-            int[] states = NotificationStateEndAndVisited();
+            int[] states = NomenclatureConstants.NotificationState.NotificationStateEndAndVisited();
             return repo.AllReadonly<DeliveryItem>()
                        .Where(x => states.Contains(x.NotificationStateId) &&
                                    (userContext.CourtId == x.CourtId) &&
@@ -834,7 +1203,7 @@ namespace IOWebApplication.Core.Services
                                    (filter.CaseTypeId <= 0 || filter.CaseTypeId == x.CaseTypeId) &&
                                    (filter.DateFrom == null || filter.DateFrom <= ((x.DateAccepted ?? x.DateSend) ?? x.RegDate)) &&
                                    (filter.DateTo == null || filter.DateTo >= ((x.DateAccepted ?? x.DateSend) ?? x.RegDate)) &&
-                                   (x.PersonName.Contains(filter.PersonName)) 
+                                   (x.PersonName.Contains(filter.PersonName))
                               )
                        .Where(IsNotExpired())
                        .Select(x => new DeliveryItemReportResultVM()
@@ -845,17 +1214,17 @@ namespace IOWebApplication.Core.Services
                            DateFrom = x.DateSend,
                            DateFromStr = ((x.DateAccepted ?? x.DateSend) ?? x.RegDate) != null ? ((x.DateAccepted ?? x.DateSend) ?? x.RegDate).Value.ToString(FormattingConstant.NormalDateFormatHHMM) : "",
                            LawUnitName = x.LawUnit.FullName,
-                           DocumentType = (x.NotificationType == null ? "" : x.NotificationType.Label) + 
+                           DocumentType = (x.NotificationType == null ? "" : x.NotificationType.Label) +
                                           (x.HtmlTemplate == null ? "" : ", " + x.HtmlTemplate.Label) + " " +
-                                          ((x.CaseNotification.CaseSession.SessionType.Label ?? "") != "" ? " от " : " ")+
-                                           (x.CaseNotification.CaseSession.SessionType.Label ?? "").Trim() + " " +
-                                          (x.CaseNotification.CaseSession.DateFrom != null ? x.CaseNotification.CaseSession.DateFrom.ToString(FormattingConstant.NormalDateFormat): ""),
+                                          ((x.CaseSession.SessionType.Label ?? "") != "" ? " от " : " ") +
+                                           (x.CaseSession.SessionType.Label ?? "").Trim() + " " +
+                                          x.CaseSession.DateFrom.ToString(FormattingConstant.NormalDateFormat),
                            HtmlTemplateName = x.HtmlTemplate.Label,
                            StateName = x.NotificationState == null ? "" : x.NotificationState.Label,
                            DateResult = x.DeliveryDate,
                            DateResultStr = x.ReturnDate == null ? "" : x.ReturnDate.Value.ToString(FormattingConstant.NormalDateFormatHHMM),
                            ReasonReturn = x.NotificationStateId != NomenclatureConstants.NotificationState.Delivered ?
-                                          (x.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault().DeliveryReason.Label ?? "")+" "+x.DeliveryInfo :
+                                          (x.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault().DeliveryReason.Label ?? "") + " " + x.DeliveryInfo :
                                           "",
                            PersonName = x.PersonName,
                            Address = x.Address == null ? "" : x.Address.FullAddressNotification()
@@ -865,10 +1234,10 @@ namespace IOWebApplication.Core.Services
         public IQueryable<DeliveryItemReturnNewVM> GetDeliveryItemReportResultNew(DeliveryItemListVM filter)
         {
             DateTime nullDate = new DateTime(2000, 1, 1);
-            int[] states = NotificationStateEndAndVisited();
+            int[] states = NomenclatureConstants.NotificationState.NotificationStateEndAndVisited();
             var deliveryItemOper = repo.AllReadonly<DeliveryItemOper>()
                                        .Where(x => x.DeliveryOperId == NomenclatureConstants.DeliveryOper.ToLawUnit);
-            
+
             return repo.AllReadonly<DeliveryItem>()
                        .Include(x => x.NotificationState)
                        .Where(x => states.Contains(x.NotificationStateId) &&
@@ -884,16 +1253,16 @@ namespace IOWebApplication.Core.Services
                        .Where(IsNotExpired())
                        .Select(x => new DeliveryItemReturnNewVM()
                        {
-                           DateAccepted = (x.DateAccepted  ?? x.RegDate),
+                           DateAccepted = (x.DateAccepted ?? x.RegDate),
                            CaseRegNumber = x.CaseInfo,
                            LawUnitName = x.LawUnit.FullName,
                            PersonName = x.PersonName,
-                           DateToLawUnit = deliveryItemOper.Where(o => o.DeliveryItemId == x.Id).Max(d => (DateTime?)d.DateOper) ,
-                           NotificationState =  x.NotificationState.Label,
+                           DateToLawUnit = deliveryItemOper.Where(o => o.DeliveryItemId == x.Id).Max(d => (DateTime?)d.DateOper),
+                           NotificationState = x.NotificationState.Label,
                            DeliveryInfo = x.DeliveryInfo,
                            DeliveryDate = x.DeliveryItemOpers.Max(op => (DateTime?)op.DateOper), //x.DeliveryDate,
                            ReturnReason = x.NotificationStateId != NomenclatureConstants.NotificationState.Delivered ?
-                                          (x.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault().DeliveryReason.Label ?? "") :"",
+                                          (x.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault().DeliveryReason.Label ?? "") : "",
                            DateReturn = x.ReturnDate,
                            DateSend = x.DateSend
                        });
@@ -917,7 +1286,7 @@ namespace IOWebApplication.Core.Services
         }
         public DeliveryItemReturnVM GetDeliveryItemReturn(int id)
         {
-            int[] states = NotificationStateEnd();
+            int[] states = NomenclatureConstants.NotificationState.NotificationEndState475051();
             var model = repo.AllReadonly<DeliveryItem>()
                 .Where(x => (x.Id == id))
                 .Select(x => new DeliveryItemReturnVM()
@@ -936,10 +1305,10 @@ namespace IOWebApplication.Core.Services
                     DocumentNotificationId = x.DocumentNotificationId,
                     ReturnDate = x.CaseNotification == null ? x.ReturnDate : x.CaseNotification.ReturnDate,
                     ReturnInfo = x.CaseNotification == null ? x.DeliveryInfo : x.CaseNotification.ReturnInfo,
-                    NotificationDeliveryGroupId = x.CaseNotification == null ? null : x.CaseNotification.NotificationDeliveryGroupId
+                    NotificationDeliveryGroupId = x.NotificationDeliveryGroupId
                 })
                 .FirstOrDefault();
-             return model;
+            return model;
         }
         public List<DeliveryItemReportVM> FillDeliveryItemForCourierList(List<DeliveryItemReportVM> deliveries)
         {
@@ -948,23 +1317,23 @@ namespace IOWebApplication.Core.Services
 
 
             foreach (var delivery in deliveries)
-            {   
+            {
                 string deliveryInfo = delivery.DeliveryInfo;
                 delivery.DeliveryInfo = "";
                 if (delivery.ReturnDate != null)
                     delivery.DeliveryInfo += "Дата на връщане " + delivery.ReturnDate?.ToString(FormattingConstant.NormalDateFormat) + " ";
-
-                if (delivery.DeliveryItemOper != null)
+                var deliveryItemOper = delivery.DeliveryItemOpers.OrderBy(o => o.DeliveryOperId).ThenBy(o => o.Id).LastOrDefault();
+                if (deliveryItemOper != null)
                 {
-                    var oper = opers.Where(x => x.Id == delivery.DeliveryItemOper.DeliveryOperId).FirstOrDefault();
+                    var oper = opers.Where(x => x.Id == deliveryItemOper.DeliveryOperId).FirstOrDefault();
                     if (oper != null)
                     {
                         delivery.DeliveryInfo += oper.Label + " " +
-                                                 delivery.DeliveryItemOper.DateOper.ToString(FormattingConstant.NormalDateFormat) + " " +
+                                                 deliveryItemOper.DateOper.ToString(FormattingConstant.NormalDateFormat) + " " +
                                                  delivery.NotificationState + " ";
-                        if (delivery.DeliveryItemOper?.DeliveryReasonId > 0)
+                        if (deliveryItemOper?.DeliveryReasonId > 0)
                         {
-                            var reason = reasons.FirstOrDefault(x => x.Id == delivery.DeliveryItemOper?.DeliveryReasonId);
+                            var reason = reasons.FirstOrDefault(x => x.Id == deliveryItemOper?.DeliveryReasonId);
                             if (reason != null)
                                 delivery.DeliveryInfo += reason.Label + " ";
                         }
@@ -1073,7 +1442,7 @@ namespace IOWebApplication.Core.Services
                 }
             );
         }
-       
+
         public (byte[], string) GetDeliveryItemReportResultToExcel(DeliveryItemListVM filter)
         {
             int colCnt = 10;
@@ -1213,8 +1582,8 @@ namespace IOWebApplication.Core.Services
                 item.DateReturnRep = item.DateReturn?.ToString(FormattingConstant.NormalDateFormatHHMM) ?? "";
                 item.DateSendRep = item.DateSend?.ToString(FormattingConstant.NormalDateFormatHHMM) ?? "";
                 item.DeliveryInfoRep = item.NotificationState + " " + item.DeliveryDate?.ToString(FormattingConstant.NormalDateFormatHHMM) + "  " +
-                                       item.DeliveryInfo + " " + item.ReturnReason; 
-                       
+                                       item.DeliveryInfo + " " + item.ReturnReason;
+
             }
             excelService.rowIndex = dataRow;
             excelService.InsertList(
@@ -1247,7 +1616,7 @@ namespace IOWebApplication.Core.Services
         public List<MobileValueLabelGroupVM> GetNotificationStateMobile()
         {
             var operState = repo.AllReadonly<DeliveryOperState>();
-            int[] states = NotificationStateEnd();
+            int[] states = NomenclatureConstants.NotificationState.NotificationEndState();
             var result = repo.AllReadonly<NotificationState>()
                 .Where(x => operState.Any(o => o.NotificationStateId == x.Id) || x.Id == NomenclatureConstants.NotificationState.ForDelivery)
                 .Select(x => new MobileValueLabelGroupVM()
@@ -1257,7 +1626,7 @@ namespace IOWebApplication.Core.Services
                     orderNumber = x.OrderNumber,
                 })
                 .ToList();
-            foreach(var item in result)
+            foreach (var item in result)
             {
                 item.group = states.Contains(int.Parse(item.value)) ? "1" : "0";
             }
@@ -1304,15 +1673,12 @@ namespace IOWebApplication.Core.Services
         }
         public List<DeliveryItemMobileVM> GetDeliveryItemMobileVM(int courtId, int lawUnitId, DateTime? fromDate, DateTime? toDate)
         {
-            int[] states = new int[]
-            {
-               NomenclatureConstants.NotificationState.Visited,
-               NomenclatureConstants.NotificationState.ForDelivery,
-            };
+            int[] states = NomenclatureConstants.NotificationState.NotificationForDelivery();
+            int[] statesVisit = NomenclatureConstants.NotificationState.NotificationForVisit();
             DateTime dateWD = fromDate ?? DateTime.Now;
             dateWD = dateWD.AddDays(-365);
             DateTime dateWDTo = (toDate ?? DateTime.Now).Date;
-            var dictWD = workingDaysService.GetWorkingDays(courtId ,dateWD, dateWDTo);
+            var dictWD = workingDaysService.GetWorkingDays(courtId, dateWD, dateWDTo);
             var listWD = dictWD.Where(kv => kv.Value == CommonContants.WorkingDays.NotWorkDay).Select(kv => kv.Key).ToList();
 
             DateTime dStart = DateTime.Now;
@@ -1329,31 +1695,38 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.DeliveryItemOpers)
                 .ToList();
             var result = deliveries.Select(x => new DeliveryItemMobileVM()
-                {
-                    Id = x.Id,
-                    CourtId = x.FromCourtId,
-                    ItemDate = x.DateAccepted ?? dStart,
-                    RegNumber = x.RegNumber,
-                    PersonName = x.PersonName,
-                    Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
-                    StateId = x.NotificationStateId,
-                    CaseInfo = x.CaseInfo,
-                    ReasonId = 0,
-                    VisitCount = x.DeliveryItemOpers
-                                  .Where(o => o.NotificationStateId == NomenclatureConstants.NotificationState.Visited)
-                                  .GroupBy(gr => gr.DeliveryOperId)
-                                  .Select(gr => gr.First())
-                                  .Count(),//,Max(o => (int?)o.DeliveryOperId) ?? 0,
-                    LastVisit = x.DeliveryItemOpers.Where(o => o.NotificationStateId == NomenclatureConstants.NotificationState.Visited).Max(o => (DateTime?)o.DateOper),
-                    HaveHolidayVisit = listWD.Where(wd => x.DeliveryItemOpers.Where(o => 
-                      o.NotificationStateId == NomenclatureConstants.NotificationState.Visited && 
-                      o.DateOper.Date == wd).Any()).Any(),
-                    NotificationTypeId = x.NotificationTypeId ?? 0
-                })
+            {
+                Id = x.Id,
+                CourtId = x.FromCourtId,
+                ItemDate = x.DateAccepted ?? dStart,
+                RegNumber = x.RegNumber,
+                PersonName = x.PersonName,
+                Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
+                StateId = x.NotificationStateId,
+                CaseInfo = x.CaseInfo,
+                ReasonId = 0,
+                VisitCount = x.DeliveryItemOpers
+                                  .Where(o => o.DeliveryOperId > 20)
+                                  //.GroupBy(gr => gr.DeliveryOperId)
+                                  //.Select(gr => gr.Key)
+                                  .Max(o => (int?)(o.DeliveryOperId - 20)) ?? 0,
+                FirstVisit = x.DeliveryItemOpers.Where(o =>
+                   statesVisit.Contains(o.NotificationStateId) &&
+                   o.DeliveryOperId <= NomenclatureConstants.DeliveryOper.Visit2)
+                   .Min(o => (DateTime?)o.DateOper),
+                LastVisit = x.DeliveryItemOpers.Where(
+                    o => statesVisit.Contains(o.NotificationStateId) &&
+                    o.DeliveryOperId <= NomenclatureConstants.DeliveryOper.Visit2)
+                .Max(o => (DateTime?)o.DateOper),
+                HaveHolidayVisit = listWD.Where(wd => x.DeliveryItemOpers.Where(o =>
+                  statesVisit.Contains(o.NotificationStateId) &&
+                  o.DateOper.Date == wd).Any()).Any(),
+                NotificationTypeId = x.NotificationTypeId ?? 0
+            })
                 .ToList();
             return result;
         }
-        public bool DeliveryItemSaveOperMobile(DeliveryItemVisitMobile model)
+        public async Task<bool> DeliveryItemSaveOperMobile(DeliveryItemVisitMobile model)
         {
             try
             {
@@ -1364,14 +1737,16 @@ namespace IOWebApplication.Core.Services
                 repo.SaveChanges();
                 if (model.NotificationStateId <= 0)
                     return true;
-                var opers = repo.AllReadonly<DeliveryOperState>()
-                                .GroupBy(gr => gr.DeliveryOperId) 
-                                .Select(gr => gr.First().DeliveryOper)
-                                .OrderBy(x => x.Id).ToList();
+                var states = repo.AllReadonly<DeliveryOperState>();
+                var opers = repo.AllReadonly<DeliveryOper>()
+                                .Where(x => states.Any(s => s.DeliveryOperId == x.Id))
+                                .OrderBy(x => x.Id)
+                                .ToList();
                 var dOper = opers.Last();
-                if (opers.Count > model.DeliveryOperId) 
+                if (opers.Count > model.DeliveryOperId)
                     dOper = opers[model.DeliveryOperId];
-                
+
+
                 var saved = repo.GetById<DeliveryItem>(model.DeliveryItemId);
 
                 saved.NotificationStateId = model.NotificationStateId;
@@ -1383,22 +1758,39 @@ namespace IOWebApplication.Core.Services
                 oper.UserId = model.UserId;
                 oper.DateWrt = model.DateOper;
                 oper.DateOper = model.DateOper;
-
+                //oper.CourtId = model.CourtId;
                 saved.DeliveryReasonId = oper.DeliveryReasonId;
                 saved.DeliveryInfo = "";
                 saved.DateWrt = DateTime.Now;
-                saved.UserId =  model.UserId;
+                saved.UserId = model.UserId;
 
-                UpdateOperToNotification(saved, oper);
+                await UpdateOperToNotification(saved, oper);
                 repo.Update(saved);
                 model.IsOK = true;
                 repo.Update(model);
                 repo.SaveChanges();
+
+                var logVM = new DeliveryLogVM()
+                {
+                    IsFromMobile = true,
+                    Action = "Добавяне",
+                    PageLabel = "Посещения въведени през мобилно устройство"
+                };
+                CreateDeliveryItemOperLogEx(saved, oper, logVM, oper.CourtId, oper.UserId);
+                try
+                {
+                    repo.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"Грешка при запис на log от мобилното устройство Id={model.Id}" + JsonConvert.SerializeObject(model));
+                    return false;
+                }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на посещение от мобилното устройство Id={ model.Id }" + JsonConvert.SerializeObject(model));
+                logger.LogError(ex, $"Грешка при запис на посещение от мобилното устройство Id={model.Id}" + JsonConvert.SerializeObject(model));
                 return false;
             }
         }
@@ -1406,14 +1798,24 @@ namespace IOWebApplication.Core.Services
         {
             return repo.GetById<Court>(courtId);
         }
+
+        private string FromDelivererSpecialName(int lawUnitId)
+        {
+            if (lawUnitId == 0)
+                return "Без избран призовкар";
+            if (lawUnitId == -2)
+                return "Без деистващ призовкар";
+            return null;
+        }
         public List<SelectListItem> LawUnitForCourt_SelectDdlAllInDeliveryItem(int forCourtId, List<SelectListItem> newLawUnits)
         {
-            int[] states = NotificationStateEnd();
+            int[] states = NomenclatureConstants.NotificationState.NotificationEndState();
             var deliveries = repo.AllReadonly<DeliveryItem>()
                              .Include(x => x.LawUnit)
                              .Where(x => x.CourtId == forCourtId)
                              .Where(x => !states.Contains(x.NotificationStateId))
-                             .Where(x => x.LawUnitId != null);
+                             .Where(x => x.LawUnitId != null)
+                             .Where(x => x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons);
             var result = repo.AllReadonly<LawUnit>()
                               .Where(x => deliveries.Any(d => d.LawUnitId == x.Id))
                        .Select(x => new SelectListItem()
@@ -1427,8 +1829,8 @@ namespace IOWebApplication.Core.Services
                     item.Text += " *";
             }
 
-            result.Insert(0, new SelectListItem() { Text = "Без избран призовкар", Value = "0" });
-            result.Insert(0, new SelectListItem() { Text = "Без деистващ призовкар", Value = "-2" });
+            result.Insert(0, new SelectListItem() { Text = FromDelivererSpecialName(0), Value = "0" });
+            result.Insert(0, new SelectListItem() { Text = FromDelivererSpecialName(-2), Value = "-2" });
             result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
             foreach (var item in newLawUnits)
             {
@@ -1438,7 +1840,7 @@ namespace IOWebApplication.Core.Services
 
             return result;
         }
-       
+
         public List<SelectListItem> SelectNewLawUnitType()
         {
             var result = new List<SelectListItem>();
@@ -1446,12 +1848,29 @@ namespace IOWebApplication.Core.Services
             result.Insert(0, new SelectListItem() { Text = "Призовкари", Value = NomenclatureConstants.LawUnitTypes.MessageDeliverer.ToString() });
             return result;
         }
-        public List<SelectListItem> NotificationDeliveryGroupSelect()
+        private int[] NotificationDeliveryGroup(int filterType)
         {
+            var result = new List<int>
+            {
+                NomenclatureConstants.NotificationDeliveryGroup.WithSummons,
+                NomenclatureConstants.NotificationDeliveryGroup.WithCourier,
+                NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ,
+                NomenclatureConstants.NotificationDeliveryGroup.WithRegistry,
+                NomenclatureConstants.NotificationDeliveryGroup.WithSecurity
+            };
+            if (filterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
+            {
+                result.Add(NomenclatureConstants.NotificationDeliveryGroup.ByEPEP);
+                result.Add(NomenclatureConstants.NotificationDeliveryGroup.OnEMail);
+                result.Add(NomenclatureConstants.NotificationDeliveryGroup.ByRNFL);
+            }
+            return result.ToArray();
+        }
+        public List<SelectListItem> NotificationDeliveryGroupSelect(int filterType)
+        {
+            var notificationGroups = NotificationDeliveryGroup(filterType);
             var result = repo.AllReadonly<NotificationDeliveryGroup>()
-                              .Where(x => x.Id == NomenclatureConstants.NotificationDeliveryGroup.WithSummons ||
-                                          x.Id == NomenclatureConstants.NotificationDeliveryGroup.WithCourier ||
-                                          x.Id == NomenclatureConstants.NotificationDeliveryGroup.WithCityHall)
+                             .Where(x => notificationGroups.Any(n => n == x.Id))
                        .Select(x => new SelectListItem()
                        {
                            Text = x.Label,
@@ -1461,7 +1880,7 @@ namespace IOWebApplication.Core.Services
 
             return result;
         }
-        public bool DeliveryItemSaveState(int deliveryItemId, int notificationStateId, DateTime? deliveryDate, string deliveryInfo)
+        public async Task<bool> DeliveryItemSaveState(int deliveryItemId, int notificationStateId, DateTime? deliveryDate, string deliveryInfo, DeliveryLogVM logVM)
         {
             try
             {
@@ -1472,31 +1891,35 @@ namespace IOWebApplication.Core.Services
                 {
                     deliveryOperId = NomenclatureConstants.DeliveryOper.Visit1;
                 }
-                
+
                 DeliveryItemOper oper = CreateDeliveryItemOper(saved, deliveryOperId);
                 if (oper != null)
                 {
                     oper.DateOper = deliveryDate ?? DateTime.Now;
                 }
-                saved.DeliveryDate = deliveryDate ?? DateTime.Now;
                 saved.DeliveryInfo = deliveryInfo;
                 saved.DateWrt = DateTime.Now;
                 saved.UserId = userContext.UserId;
-                UpdateOperToNotification(saved, oper);
+                await UpdateOperToNotification(saved, oper);
                 repo.Update(saved);
+                repo.SaveChanges();
+
+                CreateDeliveryItemOperLog(saved, oper, logVM);
                 repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на статус на призовка deliveryItemId={ deliveryItemId }");
+                logger.LogError(ex, $"Грешка при запис на статус на призовка deliveryItemId={deliveryItemId}");
                 return false;
             }
         }
         public List<Select2ItemVM> GetCourtsSelect2(List<DeliveryArea> deliveryAreaList)
         {
+            var courtIds = deliveryAreaList.Select(x => x.CourtId).ToArray();
+            var blankDeliveryAreaList = !deliveryAreaList.Any();
             var result = repo.AllReadonly<Court>()
-                        .Where(x => deliveryAreaList.Any(d => d.CourtId == x.Id) || !deliveryAreaList.Any())
+                        .Where(x => courtIds.Contains(x.Id) || blankDeliveryAreaList)
                         .OrderBy(x => x.Label)
                         .Select(x => new Select2ItemVM()
                         {
@@ -1506,6 +1929,329 @@ namespace IOWebApplication.Core.Services
             result.Insert(0, new Select2ItemVM() { Text = "Избери", Id = -1 });
             return result;
         }
+        public void CreateDeliveryItemOperLog(
+           DeliveryItem deliveryItem,
+           DeliveryItemOper deliveryItemOper,
+           DeliveryLogVM logVM)
+        {
+            CreateDeliveryItemOperLogEx(deliveryItem, deliveryItemOper, logVM, userContext.CourtId, userContext.UserId);
+        }
+        public void CreateDeliveryItemOperLogEx(
+            DeliveryItem deliveryItem,
+            DeliveryItemOper deliveryItemOper,
+            DeliveryLogVM logVM,
+            int courtId,
+            string userId)
+        {
+            try
+            {
+                if (deliveryItem == null)
+                    return;
+                var operLog = new DeliveryItemOperLog();
+                operLog.CourtWrtId = courtId;
+                operLog.DateWrt = DateTime.Now;
+                operLog.UserId = userId;
+                if (deliveryItemOper != null)
+                {
+                    operLog.DeliveryItemOperId = deliveryItemOper.Id;
+                    operLog.DeliveryOperId = deliveryItemOper.DeliveryOperId;
+                    operLog.DateOper = deliveryItemOper.DateOper;
+                    operLog.Long = deliveryItemOper.Long;
+                    operLog.Lat = deliveryItemOper.Lat;
+                    operLog.LawUnitId = deliveryItemOper.LawUnitId;
+                    operLog.DeliveryAreaId = deliveryItemOper.DeliveryAreaId;
+                    operLog.NotificationStateId = deliveryItemOper.NotificationStateId;
+                }
+                else
+                {
+                    operLog.DateOper = deliveryItem.DateWrt;
+                    operLog.NotificationStateId = deliveryItem.NotificationStateId;
+                    operLog.DeliveryAreaId = deliveryItem.DeliveryAreaId;
+                    operLog.LawUnitId = deliveryItem.LawUnitId;
+                }
+                operLog.AddressStr = deliveryItem.Address?.FullAddress;
+                if (string.IsNullOrEmpty(operLog.AddressStr) && deliveryItem.AddressId > 0)
+                {
+                    var address = repo.AllReadonly<Address>()
+                                      .Where(x => x.Id == deliveryItem.AddressId)
+                                      .FirstOrDefault();
 
+                    operLog.AddressStr = address?.FullAddress;
+                }
+                operLog.PersonName = deliveryItem.PersonName;
+                operLog.RegNumber = deliveryItem.RegNumber;
+                operLog.RegDate = deliveryItem.RegDate;
+                operLog.CaseInfo = deliveryItem.CaseInfo;
+                operLog.CaseNotificationId = deliveryItem.CaseNotificationId;
+                operLog.DocumentNotificationId = deliveryItem.DocumentNotificationId;
+                operLog.DeliveryItemId = deliveryItem.Id;
+                operLog.DeliveryInfo = deliveryItem.DeliveryInfo;
+                operLog.FromCourtId = deliveryItem.FromCourtId;
+                operLog.ToCourtId = deliveryItem.CourtId;
+                operLog.Action = logVM.Action;
+                operLog.PageUrl = logVM.PageUrl;
+                operLog.PageLabel = logVM.PageLabel;
+                operLog.IsFromMobile = logVM.IsFromMobile;
+                operLog.NotificationDeliveryGroupId = deliveryItem.NotificationDeliveryGroupId;
+                repo.Add(operLog);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при CreateDeliveryItemOperLog");
+            }
+        }
+
+        public async Task CreateDeliveryItemOperLogExAsync(
+            DeliveryItem deliveryItem,
+            DeliveryItemOper deliveryItemOper,
+            DeliveryLogVM logVM,
+            int courtId,
+            string userId)
+        {
+            try
+            {
+                if (deliveryItem == null)
+                    return;
+                var operLog = new DeliveryItemOperLog();
+                operLog.CourtWrtId = courtId;
+                operLog.DateWrt = DateTime.Now;
+                operLog.UserId = userId;
+                if (deliveryItemOper != null)
+                {
+                    operLog.DeliveryItemOper = deliveryItemOper;
+                    operLog.DeliveryOperId = deliveryItemOper.DeliveryOperId;
+                    operLog.DateOper = deliveryItemOper.DateOper;
+                    operLog.Long = deliveryItemOper.Long;
+                    operLog.Lat = deliveryItemOper.Lat;
+                    operLog.LawUnitId = deliveryItemOper.LawUnitId;
+                    operLog.DeliveryAreaId = deliveryItemOper.DeliveryAreaId;
+                    operLog.NotificationStateId = deliveryItemOper.NotificationStateId;
+                }
+                else
+                {
+                    operLog.DateOper = deliveryItem.DateWrt;
+                    operLog.NotificationStateId = deliveryItem.NotificationStateId;
+                    operLog.DeliveryAreaId = deliveryItem.DeliveryAreaId;
+                    operLog.LawUnitId = deliveryItem.LawUnitId;
+                }
+                operLog.AddressStr = deliveryItem.Address?.FullAddress;
+                if (string.IsNullOrEmpty(operLog.AddressStr) && deliveryItem.AddressId > 0)
+                {
+                    var address = repo.AllReadonly<Address>()
+                                      .Where(x => x.Id == deliveryItem.AddressId)
+                                      .FirstOrDefault();
+
+                    operLog.AddressStr = address?.FullAddress;
+                }
+                operLog.PersonName = deliveryItem.PersonName;
+                operLog.RegNumber = deliveryItem.RegNumber;
+                operLog.RegDate = deliveryItem.RegDate;
+                operLog.CaseInfo = deliveryItem.CaseInfo;
+                operLog.CaseNotificationId = deliveryItem.CaseNotificationId;
+                operLog.DocumentNotificationId = deliveryItem.DocumentNotificationId;
+                operLog.DeliveryItemId = deliveryItem.Id;
+                operLog.DeliveryInfo = deliveryItem.DeliveryInfo;
+                operLog.FromCourtId = deliveryItem.FromCourtId;
+                operLog.ToCourtId = deliveryItem.CourtId;
+                operLog.Action = logVM.Action;
+                operLog.PageUrl = logVM.PageUrl;
+                operLog.PageLabel = logVM.PageLabel;
+                operLog.IsFromMobile = logVM.IsFromMobile;
+                operLog.NotificationDeliveryGroupId = deliveryItem.NotificationDeliveryGroupId;
+                await repo.AddAsync(operLog);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при CreateDeliveryItemOperLogAsync");
+            }
+        }
+
+        public List<DeliveryItemOperLogVM> SelectLog(int deliveryItemId)
+        {
+            var operIds = NomenclatureConstants.DeliveryOper.Visits();
+            var courts = repo.AllReadonly<Court>();
+            var groups = repo.AllReadonly<NotificationDeliveryGroup>();
+            var opers = repo.AllReadonly<DeliveryOper>()
+                            .Where(x => operIds.Contains(x.Id));
+            return repo.AllReadonly<DeliveryItemOperLog>()
+                       .Where(x => x.DeliveryItemId == deliveryItemId)
+                       .Select(x => new DeliveryItemOperLogVM()
+                       {
+                           DateWrt = x.DateWrt,
+                           UserName = x.User.LawUnit.FullName + " " + (x.CourtWrtId == userContext.CourtId ? "" : x.CourtWrt.Label),
+                           Action = x.Action,
+                           PageLabel = x.PageLabel,
+                           FromCourtName = courts.Where(c => c.Id == x.FromCourtId).Select(c => c.Label).FirstOrDefault(),
+                           ToCourtName = courts.Where(c => c.Id == x.FromCourtId).Select(c => c.Label).FirstOrDefault(),
+                           LawUnitName = x.LawUnitId == null ?
+                                         groups.Where(g => g.Id == x.NotificationDeliveryGroupId).Select(g => g.Label).FirstOrDefault() :
+                                         x.LawUnit.FullName,
+                           AreaName = x.DeliveryArea == null ? "" : x.DeliveryArea.Description,
+                           PersonName = x.PersonName,
+                           Address = x.AddressStr,
+                           StateName = x.NotificationState == null ? "" : x.NotificationState.Label,
+                           RegNumber = x.RegNumber,
+                           CaseInfo = x.CaseInfo,
+                           DateOper = (operIds.Contains(x.DeliveryOperId) ? x.DateOper : null),
+                           OperName = opers.Where(o => o.Id == x.DeliveryOperId).Select(o => o.Label).FirstOrDefault()
+                       })
+                       .OrderBy(x => x.DateWrt)
+                       .ToList();
+        }
+
+        public async Task SetDeliveryItemDates(DeliveryItem deliveryItem, DeliveryItemOper oper)
+        {
+            if (oper == null || deliveryItem == null)
+                return;
+            if (deliveryItem.DateSend == null && deliveryItem.NotificationStateId != NomenclatureConstants.NotificationState.Ready)
+            {
+                deliveryItem.DateSend = oper.DateOper;
+            }
+            if (deliveryItem.DateAccepted == null &&
+                deliveryItem.NotificationStateId != NomenclatureConstants.NotificationState.Ready &&
+                deliveryItem.NotificationStateId != NomenclatureConstants.NotificationState.Send
+                )
+            {
+                deliveryItem.DateAccepted = oper.DateOper;
+                //if (deliveryItem.CaseNotificationId != null)
+                //{
+                //   await workNotificationService.SaveNotificationsForReceivedMessageDeliveryFastProcess(deliveryItem.CaseNotificationId ?? 0, oper.DateOper, false);
+                //}
+            }
+
+            if (deliveryItem.NotificationStateId != NomenclatureConstants.NotificationState.Ready)
+            {
+                deliveryItem.DeliveryDate = oper.DateOper;
+            }
+
+            if (deliveryItem.PreparedById == null)
+            {
+                deliveryItem.PreparedById = repo.AllReadonly<ApplicationUser>().Where(x => x.Id == oper.UserId).FirstOrDefault()?.LawUnitId;
+            }
+
+            var notificationId = deliveryItem.CaseNotificationId ?? 0;
+
+            bool isFastProcess = await repo.GetPropByIdAsync<Case, bool>(x => x.Id == deliveryItem.CaseId, x => x.IsFastProcess ?? false);
+
+            if (isFastProcess)
+            {
+                if ((deliveryItem.CaseNotificationId ?? 0) > 0 && deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Received)
+                {
+                    await workNotificationService.SaveNotificationsForNoticeServiceReceivedFastProcess(notificationId, oper.DateOper, false);
+                }
+
+                if ((deliveryItem.CaseNotificationId ?? 0) > 0 && deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.UnDelivered)
+                {
+                    await workNotificationService.SaveNotificationsForNotDeliveredMessageDeliveryFastProcess(deliveryItem.CaseNotificationId ?? 0, oper.DateOper, false);
+                    await caseDeadlineService.CompleteExpiredUnreturnedMessageFastProcess(notificationId, false);
+                }
+
+                if (notificationId > 0 && deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered)
+                {
+                    await workNotificationService.SaveNotificationsForLackSubmittedObjectionFastProcess(notificationId, oper.DateOper, false);
+                    await workNotificationService.EditDateEventNotificationsForLackSubmittedObjectionFastProcess(notificationId, oper.DateOper, false);
+
+                    await workNotificationService.SaveNotificationsForAppealActFastProcess(notificationId, oper.DateOper, false);
+
+                    await workNotificationService.SaveNotificationsForExpressingOpinionObjectionFastProcess(notificationId, oper.DateOper, false);
+                    await workNotificationService.SaveNotificationsForFilingClaimFastProcess(notificationId, oper.DateOper, false);
+
+                    await workNotificationService.SaveNotificationsForMessageDeliveredCaseFastProcess(notificationId, oper.DateOper, false);
+                    await workNotificationService.EditDateEventNotificationsForMessageDeliveredCaseFastProcess(notificationId, oper.DateOper, false);
+
+                    await workNotificationService.EditDateEventNotificationsForNoProceduralActionTakenFastProcess(notificationId, oper.DateOper, false);
+
+                    await workNotificationService.EditDateEventNotificationsForExpressingOpinionObjectionFastProcess(notificationId, oper.DateOper, false);
+
+                    await workNotificationService.EditDateEventNotificationsForFilingClaimFastProcess(notificationId, oper.DateOper, false);
+
+                    await caseDeadlineService.CompleteExpiredUnreturnedMessageFastProcess(notificationId, false);
+                }
+            }
+
+            if (notificationId > 0)
+            {
+                var workNotification = await workNotificationService.NewWorkNotification(notificationId, deliveryItem.NotificationStateId);
+                if (workNotification != null)
+                    repo.Update(workNotification);
+            }
+        }
+        public async Task<DeliveryItem> CreateDeliveryItem(CaseNotification notification, bool operIsChanged)
+        {
+            if (notification.NotificationStateId == NomenclatureConstants.NotificationState.Proekt)
+                return null;
+            if (!NomenclatureConstants.NotificationDeliveryGroup.DeliveryGroupForDeliveryItem.Contains(notification.NotificationDeliveryGroupId ?? 0))
+                return null;
+            DeliveryItem deliveryItem = null;
+            if (notification.Id > 0)
+            {
+                deliveryItem = repo.AllReadonly<DeliveryItem>()
+                                   .Where(x => x.CaseNotificationId == notification.Id)
+                                   .OrderByDescending(x => x.Id)
+                                   .FirstOrDefault();
+            }
+            deliveryItem = deliveryItem ?? new DeliveryItem();
+            bool stateIsChanged = (deliveryItem.NotificationStateId != notification.NotificationStateId);
+            deliveryItem.FromCourtId = notification.CourtId ?? userContext.CourtId;
+            deliveryItem.ReturnDate = notification.ReturnDate;
+            deliveryItem.RegNumber = notification.RegNumber ?? "";
+            deliveryItem.RegDate = notification.RegDate;
+            deliveryItem.CaseNotificationId = notification.Id;
+            deliveryItem.CaseId = notification.CaseId;
+            deliveryItem.CaseSessionId = notification.CaseSessionId;
+            deliveryItem.NotificationStateId = notification.NotificationStateId;
+            deliveryItem.NotificationTypeId = notification.NotificationTypeId;
+            deliveryItem.NotificationDeliveryGroupId = notification.NotificationDeliveryGroupId;
+            deliveryItem.PersonName = notification.NotificationPersonName;
+            deliveryItem.Address = null;
+            deliveryItem.AddressId = notification.NotificationAddressId ?? 0;
+
+            deliveryItem.CourtId = notification.ToCourtId ?? (notification.CourtId ?? 0);
+            deliveryItem.DeliveryAreaId = notification.DeliveryAreaId; //deliveryAreaService.GetDeliveryAreaIdByLawUnitId(deliveryItem.CourtId, notification.LawUnitId);
+            deliveryItem.LawUnitId = notification.LawUnitId;
+
+            Case aCase = notification.Case;
+            if (aCase == null)
+            {
+                aCase = repo.AllReadonly<Case>()
+                        .Where(x => x.Id == notification.CaseId)
+                        .Include(x => x.CaseType)
+                        .FirstOrDefault();
+            }
+            CaseType aCaseType = aCase?.CaseType;
+            if (aCase != null && aCaseType == null)
+                aCaseType = repo.AllReadonly<CaseType>()
+                                .Where(x => x.Id == aCase.CaseTypeId)
+                                .FirstOrDefault();
+            if (aCase != null)
+            {
+                if (aCaseType != null)
+                    deliveryItem.CaseInfo = $"{aCaseType.Code} {aCase.RegNumber} / {aCase.RegDate.ToString(FormattingConstant.NormalDateFormat)}";
+                deliveryItem.CaseGroupId = aCase.CaseGroupId;
+                deliveryItem.CaseTypeId = aCase.CaseTypeId;
+            }
+
+            deliveryItem.HtmlTemplateId = notification.HtmlTemplateId;
+            deliveryItem.PersonName = deliveryItem.PersonName ?? "";
+            deliveryItem.DateWrt = DateTime.Now;
+            deliveryItem.UserId = userContext.UserId;
+            if (stateIsChanged || operIsChanged)
+            {
+                var oper = CreateDeliveryItemOper(deliveryItem, notification.DeliveryOperId ?? notification.NotificationStateId);
+                await SetDeliveryItemDates(deliveryItem, oper);
+            }
+
+            notification.DeliveryItems = notification.DeliveryItems ?? new HashSet<DeliveryItem>();
+            notification.DeliveryItems.Add(deliveryItem);
+            if (deliveryItem.Id > 0)
+            {
+                //KBorisov: Гърми при attach на deliveryItem.CaseNotification
+                // deliveryItem.CaseNotification = null;
+                repo.Update(deliveryItem);
+            }
+            else
+                repo.Add(deliveryItem);
+            return deliveryItem;
+        }
     }
 }

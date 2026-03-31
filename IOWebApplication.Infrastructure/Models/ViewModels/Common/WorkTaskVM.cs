@@ -31,6 +31,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public bool OverDue { get; set; }
         public DateTime? DateCompleted { get; set; }
         public string Description { get; set; }
+
+        public bool LongDescription
+        {
+            get
+            {
+                if (!WorkTaskConstants.LongDescriptionTasks.Contains(this.SourceType))
+                {
+                    return false;
+                }
+                return (Description ?? "").Length > 50;
+            }
+        }
         public string DescriptionCreated { get; set; }
         public int TaskTypeId { get; set; }
         public string TaskTypeName { get; set; }

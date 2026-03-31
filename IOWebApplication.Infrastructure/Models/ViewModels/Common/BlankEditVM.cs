@@ -25,6 +25,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         public string AutoSaveKey { get; set; }
 
+        public int BlankSourceType { get; set; }
+        public int BlankSourceId { get; set; }
+        public int BlankCaseId { get; set; }
+        public int? RelatedActId { get; set; }
+
         public BlankEditVM()
         {
             AppendWatermarkforTest = true;

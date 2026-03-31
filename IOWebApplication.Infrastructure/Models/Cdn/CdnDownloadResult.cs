@@ -22,6 +22,10 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
 
         public DateTime DateUploaded { get; set; }
 
+        public int SourceType { get; set; }
+        public string SourceId { get; set; }
+        public string MongoTypeCode { get; set; }
+
         public byte[] GetBytes()
         {
             return Convert.FromBase64String(this.FileContentBase64);

@@ -1,5 +1,5 @@
 ﻿@model ExpiredInfoVM
-<form id="frmExpireObject" action="@Html.Raw(Model.ExpireSubmitUrl)" onsubmit="validationCheck(event);" method="post">
+<form id="frmExpireObject" action="@Html.Raw(Model.ExpireSubmitUrl)" method="post">
     @Html.HiddenFor(x => x.Id)
     @Html.HiddenFor(x => x.LongId)
     @Html.HiddenFor(x => x.StringId)
@@ -10,13 +10,30 @@
     @Html.HiddenFor(x => x.OtherId, "Int32Nullable")
     @Html.EditorFor(x => x.DescriptionExpired, "Textarea")
     <div class="form-group">
-        <input type="submit" id="btnExpireObjectSubmit" onclick="validationCheck();" value="Премахване" class="btn btn-danger submit" />
+        <input type="submit" id="btnExpireObjectSubmit" value="Премахване" class="btn btn-danger submit" />
     </div>
 </form>
 <div id="modalMessageContainer">
 </div>
 <script>
     $(function () {
+
+        let frm = $('#frmExpireObject');
+        frm.submit(function (evt) {
+            let validateText = validationCheck();
+            if(validateText){
+                swal({
+                    title: 'Грешка',
+                    text: validateText,
+                    icon: "warning"
+                });
+                //debugger;
+                evt.preventDefault();
+                return false;
+            }
+            
+        });
+
         attachAjaxForm('#frmExpireObject', function (data) {
             if (data.responseJSON.result == true) {
                 if (data.responseJSON.fileContainer) {
@@ -44,19 +61,26 @@
         }, function () {
             $('#modalMessageContainer').html('');
         });
+
+        
     })
-    function validationCheck(e) {
+    function validationCheck() {
         if ($('#DescriptionExpired').val().length < 5) {
-            swal({
-                title: 'Грешка',
-                text: 'Моля, въведете Причина за премахването',
-                icon: "warning"
-            });
-            e.preventDefault();
-            $(e.target).find('input[type="submit"]').removeAttr('disabled');
-            return false;
+            return 'Моля, въведете Причина за премахването';
         }
 
-        return true;
+        return null;
+        //    swal({
+        //        title: 'Грешка',
+        //        text: 'Моля, въведете Причина за премахването',
+        //        icon: "warning"
+        //    });
+        //    debugger;
+        //    e.preventDefault();
+        //    $(e.target).find('input[type="submit"]').removeAttr('disabled');
+        //    return false;
+        //}
+
+        //return true;
     }
 </script>

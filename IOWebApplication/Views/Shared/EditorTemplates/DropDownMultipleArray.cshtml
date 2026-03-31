@@ -1,0 +1,33 @@
+﻿@model string[]
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ddl";
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+
+    IEnumerable<SelectListItem> ddl = null;
+    if (ViewData[fieldName] != null)
+    {
+        ddl = (List<SelectListItem>)ViewData[fieldName];
+    }
+    else
+    {
+        ddl = new List<SelectListItem>();
+    }
+    var nddl = new MultiSelectList(ddl, "Value", "Text", Model);
+}
+
+
+
+<div class="form-group">
+    @if (ViewData["label"] != null)
+    {
+        <label class="control-label @reqClass">@ViewData["label"]</label>
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+    }
+    @Html.ListBoxFor(model => model, nddl, new { @class = "form-control", @multiple = "multiple" })
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

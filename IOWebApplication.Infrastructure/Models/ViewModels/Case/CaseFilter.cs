@@ -5,8 +5,21 @@ using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels
 {
+    /// <summary>
+    /// Модел за филтър на дела
+    /// </summary>
     public class CaseFilter
     {
+        /// <summary>
+        /// Идентификатор на делото
+        /// </summary>
+        public int? CaseId { get; set; }
+
+        /// <summary>
+        /// Дата на образуване на дело
+        /// </summary>
+        public DateTime? RegDate { get; set; }
+
         [Display(Name = "Основен вид дело")]
         public string CaseGroupIds { get; set; }
         public string CaseGroupIds_text { get; set; }
@@ -24,6 +37,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Шифър")]
         public int CaseCodeId { get; set; }
 
+        [Display(Name = "Шифър")]
+        public string[] CaseCodeIds { get; set; }
+
         [Display(Name = "От дата")]
         public DateTime? DateFrom { get; set; }
 
@@ -36,7 +52,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Година")]
         public int? CaseYear { get; set; }
 
-        [Display(Name = "Номер на инициращ документ")]
+        [Display(Name = "Номер на иницииращ документ")]
         public string DocumentNumber { get; set; }
 
         [Display(Name = "Съдия-докладчик")]

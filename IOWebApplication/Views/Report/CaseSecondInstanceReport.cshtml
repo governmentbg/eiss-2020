@@ -26,7 +26,7 @@
         <div class="col-lg-4">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
     </div>
     <div class="row">
-        <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
+        <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
         <div class="col-lg-4">@Html.EditorFor(m => m.DepartmentId, "GenericDropDown")</div>
     </div>
     <div class="row">

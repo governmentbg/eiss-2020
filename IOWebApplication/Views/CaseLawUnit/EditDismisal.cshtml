@@ -18,7 +18,6 @@
     {
         access.CanChange = false;
     }
-    var hasEpro = (bool)ViewBag.hasEproReq;
 }
 
 @section breadcrumb{
@@ -52,7 +51,10 @@
                     {
                         <div class="row">
                             <div id="act">
-                                <div class="col-lg-6">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                                <div class="col-lg-6">
+                                    @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
+                                    <div id="signersInfo" class="text-info"></div>
+                                </div>
                             </div>
                         </div>
                     }
@@ -60,18 +62,48 @@
                     <div class="row">
                         <div class="col-lg-6">@Html.EditorFor(x => x.DismisalDate, "DateTimeDivided")</div>
                     </div>
-                    @if (hasEpro)
-                    {
-                        <div class="row dt-otvod">
+
+                    <div class="dt-otvod">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <label>
+                                    @Html.RadioButtonFor(x => x.DismissalRequestType, NomenclatureConstants.DismissalRequestTypes.Document)
+                                    &nbsp;
+                                    Искане за отвод, подадено на регистратура
+                                </label>
+                                &nbsp;
+                                &nbsp;
+                                &nbsp;
+                                <label>
+                                    @Html.RadioButtonFor(x => x.DismissalRequestType, NomenclatureConstants.DismissalRequestTypes.Session)
+                                    &nbsp;
+                                    Искане за отвод, подадено в заседание
+                                </label>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row drt-document">
                             <div class="col-lg-6">@Html.EditorFor(x => x.DocumentId, "GenericDropDownLong")</div>
                             <div class="col-lg-6">@Html.EditorFor(x => x.DocumentPersonId, "GenericDropDownLong")</div>
                         </div>
-                        <div class="row dt-otvod">
+                        <div class="row drt-session">
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DismissalSessionActId, "GenericDropDown")</div>
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DismissalCasePersonId, "GenericDropDown")</div>
+                        </div>
+                        <div class="row">
                             <div class="col-lg-6">@Html.EditorFor(x => x.DismissalStateId, "GenericDropDown")</div>
                         </div>
-                    }
+                    </div>
+
                     <div class="row">
-                        <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                        <div class="col-lg-12">
+                            @Html.EditorFor(x => x.Description, "Textarea")
+                            <span class="text-danger" style="display:block; margin-top:-15px;" @*style="font-style:italic;font-weight:bold;color:#666;"*@>
+                                Моля, проверете дали всички данни в полето са обезличени.
+                                <br />
+                                Полето трябва да съдържа само обезличени данни.
+                            </span>
+                        </div>
                     </div>
                 </div>
             </fieldset>
@@ -86,10 +118,9 @@
                 {
                     <div class="pull-right">
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "EditDismisal" })
-                        @if (hasEpro)
-                        {
-                            <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseLawUnitDismisal, SourceId = Model.Id })" />
-                        }
+
+                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseLawUnitDismisal, SourceId = Model.Id })" />
+
                     </div>
                 }
             </div>
@@ -100,6 +131,7 @@
 
 @section scripts{
     <script>
+        var signerInfo = {};
         $(function () {
             $('#DismisalTypeId').change(function () {
                 var typeId = $(this).val();
@@ -110,9 +142,7 @@
                     $("#act").hide();
                 }
             }).trigger('change');
-            @if (hasEpro)
-            {
-            <text>
+
             $('#DismisalTypeId').change(function () {
                 let dt = $(this).val();
                 if (dt == @(NomenclatureConstants.DismisalType.Otvod)) {
@@ -122,12 +152,57 @@
                 }
             }).trigger('change');
 
+            $('#CaseSessionActId').change(function () {
+                requestGET_Json('@Url.Action("CheckActSignersForDismissal")'
+                    , { lawUnitId:@(Model.CaseLawUnitId), actId: $(this).val() }
+                    , function (res) {
+                        signerInfo = res;
+                        if (signerInfo.result == true) {
+                            let signerText = 'Подписали акта: ' + signerInfo.signers;
+                            if (!signerInfo.dismisalSigner) {
+                                signerText += '. Актът не е подписан от ' + signerInfo.dissmissedJudgeName + ' !';
+                                $('#signersInfo').addClass('text-danger').removeClass('text-info');
+                            } else {
+                                $('#signersInfo').removeClass('text-danger').addClass('text-info');
+                            }
+                            $('#signersInfo').text(signerText);
+
+                        }
+                    });
+                CaseSessionActId
+            }).trigger('change');
+
             $('#DocumentId').change(function () {
                 requestCombo('@Url.Action("Get_PersonsByDocument", "Document")', { documentId: $(this).val() }, '#DocumentPersonId');
             }).trigger('change');
 
-                </text>
+            $('#DismissalSessionActId').change(function () {
+                requestCombo('@Url.Action("GetDDL_CasePersonByActId", "CasePerson")', { actId: $(this).val() }, '#DismissalCasePersonId');
+            }).trigger('change');
+
+            $('input[name="DismissalRequestType"]').change(function () {
+                if (!$(this).is(':checked')) {
+                    return;
+                }
+                debugger;
+                var drt = $(this).val();
+                switch (drt) {
+                    case '@NomenclatureConstants.DismissalRequestTypes.Document':
+                        $('.drt-document').show();
+                        $('.drt-session').hide();
+                        break;
+                    case '@NomenclatureConstants.DismissalRequestTypes.Session':
+                        $('.drt-document').hide();
+                        $('.drt-session').show();
+                        break;
                 }
             });
+
+            $('input[name="DismissalRequestType"]:checked').trigger('change');
+
+
+        });
+
+
     </script>
 }

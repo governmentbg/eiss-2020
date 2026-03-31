@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.ComponentModel.DataAnnotations;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels
@@ -11,11 +9,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int CourtId { get; set; }
         public string CourtLabel { get; set; }
         public int CaseGroupId { get; set; }
-        
+
         [Display(Name = "Основен вид дело")]
         public string CaseGroupLabel { get; set; }
         public int? CaseTypeId { get; set; }
-        
+
         [Display(Name = "Точен вид дело")]
         public string CaseTypeLabel { get; set; }
         public string CaseTypeCode { get; set; }
@@ -35,7 +33,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public string CaseStateLabel { get; set; }
         public long DocumentId { get; set; }
         public string DocumentLabel { get; set; }
-        
+
         [Display(Name = "Документ: ")]
         public string DocumentName { get; set; }
 
@@ -45,7 +43,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "ЕИСПП номер на НП")]
         public string EISSPNumber { get; set; }
-        
+
         [Display(Name = "Кратък номер")]
         public string ShortNumber { get; set; }
 
@@ -54,7 +52,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Номер на дело")]
         public string RegNumber { get; set; }
-        
+
+        [Display(Name = "Номер на дело")]
+        public string RegNumberText { get; set; }
+
         [Display(Name = "Дата на образуване")]
         public DateTime RegDate { get; set; }
 
@@ -66,6 +67,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Архивен номер на дело")]
         public string ArchRegNumber { get; set; }
+
+        public bool HasArchive { get; set; }
 
         [Display(Name = "Архивна дата на образуване")]
         public DateTime? ArchRegDate { get; set; }
@@ -99,5 +102,67 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Отделение/Състав")]
         public string DepartmentOtdelenieText { get; set; }
+
+
+        [Display(Name = "Основни страни")]
+        public string CasePersonMain { get; set; }
+
+        public bool IsSecret { get; set; }
+        public bool IsRestriction { get; set; }
+        public bool IsUnderAge { get; set; }
+        public bool IsDeceased { get; set; }
+        public bool IsSpecial { get; set; }
+
+        /// <summary>
+        /// Флаг дали има подписан изпълнителен лист
+        /// </summary>
+        public bool IsExistsSignedExecList { get; set; }
+
+        /// <summary>
+        /// Делото на първа инстанция е електронно бързо производство
+        /// </summary>
+        public bool IsFirsInstantsFastProcessCase { get; set; }
+
+        /// <summary>
+        /// Флаг оказващ делото дали е бързо производство
+        /// </summary>
+        public bool IsFastProcess { get; set; }
+
+        /// <summary>
+        /// Стринг с номера на дела дали съществува дело с тези хора за бързо производство
+        /// </summary>
+        public string IsExsistCaseWithSamePeople { get; set; }
+
+        /// <summary>
+        /// Документ регистратура централно управление
+        /// </summary>
+        public long? AssignmentDocumentId { get; set; }
+
+        /// <summary>
+        /// Id на електронен документ от ЕПЕП
+        /// </summary>
+        public long? ElectronicDocumentId { get; set; }
+
+        /// <summary>
+        /// Има плащане по иницииращ документ
+        /// </summary>
+        public bool ExistsPayToAssignmentDocument { get; set; }
+
+        /// <summary>
+        /// Флаг, дали подлежи на медиация делото
+        /// </summary>
+        public bool IsMediation { get; set; }
+
+        /// <summary>
+        /// Флаг, дали има обвързано дело за бързо производство
+        /// </summary>
+        public bool IsCaseCode_0602_0604 { get; set; }
+
+        /// <summary>
+        /// Флаг показващ дали са заредени данни за сходни дела за бързо производство
+        /// </summary>
+        public bool IsReadSimilarCases { get; set; }
+
+        public string DebugInfo { get; set; }
     }
 }

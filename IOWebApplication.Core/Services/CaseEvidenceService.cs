@@ -5,6 +5,7 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.EntityFrameworkCore;
@@ -43,27 +44,42 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseEvidenceVM> CaseEvidence_Select(int CaseId, DateTime? DateFrom, DateTime? DateTo, string RegNumber, string CaseRegNumber, int EvidenceTypeId)
         {
+            var dateNow = DateTime.Now;
+            
             Expression<Func<CaseEvidence, bool>> caseRegnumberSearch = x => true;
             if (!string.IsNullOrEmpty(CaseRegNumber))
                 caseRegnumberSearch = x => EF.Functions.ILike(x.Case.RegNumber,CaseRegNumber.ToCasePaternSearch());
 
+            Expression<Func<CaseEvidence, bool>> caseIdSearch = x => true;
+            if (CaseId > 0)
+                caseIdSearch = x => x.CaseId == CaseId;
+
+            Expression<Func<CaseEvidence, bool>> dateFromSearch = x => true;
+            if (DateFrom != null)
+                dateFromSearch = x => (x.DateAccept.Date >= (DateFrom ?? dateNow).Date) && (x.DateAccept.Date <= (DateTo ?? dateNow).Date);
+
+            Expression<Func<CaseEvidence, bool>> regNumberSearch = x => true;
+            if (!string.IsNullOrEmpty(RegNumber))
+                regNumberSearch = x => EF.Functions.ILike(x.RegNumber, RegNumber.ToPaternSearch());
+
+            Expression<Func<CaseEvidence, bool>> evidenceTypeIdSearch = x => true;
+            if (EvidenceTypeId > 0)
+                evidenceTypeIdSearch = x => x.EvidenceTypeId == EvidenceTypeId;
+
             return repo.AllReadonly<CaseEvidence>()
-                       .Include(x => x.Case)
-                       .Include(x => x.EvidenceType)
-                       .Include(x => x.EvidenceState)
-                       .Where(x => ((CaseId > 0) ? (x.CaseId == CaseId) : true) &&
-                                   (x.DateExpired == null) &&
-                                   ((DateFrom != null) ? ((x.DateAccept.Date >= (DateFrom ?? DateTime.Now).Date) && (x.DateAccept.Date <= (DateTo ?? DateTime.Now).Date)) : true) &&
-                                   (!string.IsNullOrEmpty(RegNumber) ? x.RegNumber.ToUpper().Contains(RegNumber.ToUpper()) : true) &&
-                                   x.Case.CourtId == userContext.CourtId &&
-                                   (EvidenceTypeId > 0 ? x.EvidenceTypeId == EvidenceTypeId : true))
+                       .Where(x => (x.DateExpired == null) &&
+                                   x.Case.CourtId == userContext.CourtId)
+                       .Where(caseIdSearch)
+                       .Where(dateFromSearch)
+                       .Where(regNumberSearch)
+                       .Where(evidenceTypeIdSearch)
                        .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                        .Where(caseRegnumberSearch)
                        .Select(x => new CaseEvidenceVM()
                        {
                            Id = x.Id,
                            CaseId = x.CaseId,
-                           CaseName = x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"),
+                           CaseName = x.Case.RegNumber,
                            EvidenceTypeLabel = x.EvidenceType.Label,
                            RegNumber = x.RegNumber,
                            FileNumber = x.FileNumber,
@@ -131,17 +147,12 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseEvidenceMovementVM> CaseEvidenceMovement_Select(int CaseEvidenceId)
         {
-            var caseEvidence = repo.GetById<CaseEvidence>(CaseEvidenceId);
-            var caseSessionActs = repo.AllReadonly<CaseSessionAct>()
-                                      .Include(x => x.CaseSession)
-                                      .Include(x => x.ActType)
-                                      .Where(x => x.CaseSession.CaseId == caseEvidence.CaseId)
-                                      .ToList();
+            Expression<Func<CaseEvidenceMovement, bool>> caseEvidenceIdSearch = x => true;
+            if (CaseEvidenceId > 0)
+                caseEvidenceIdSearch = x => x.CaseEvidenceId == CaseEvidenceId;
 
             return repo.AllReadonly<CaseEvidenceMovement>()
-                       .Include(x => x.CaseEvidence)
-                       .Include(x => x.EvidenceMovementType)
-                       .Where(x => ((CaseEvidenceId > 0) ? (x.CaseEvidenceId == CaseEvidenceId) : true))
+                       .Where(caseEvidenceIdSearch)
                        .Select(x => new CaseEvidenceMovementVM()
                        {
                            Id = x.Id,
@@ -151,7 +162,7 @@ namespace IOWebApplication.Core.Services
                            EvidenceMovementTypeId = x.EvidenceMovementTypeId,
                            MovementDate = x.MovementDate,
                            ActDescription = x.ActDescription,
-                           CaseSessionActName = ((x.CaseSessionActId ?? 0) > 0) ? (caseSessionActs.Where(a => a.Id == x.CaseSessionActId).FirstOrDefault().ActType.Label + " " + caseSessionActs.Where(a => a.Id == x.CaseSessionActId).FirstOrDefault().RegNumber + "/" + (caseSessionActs.Where(a => a.Id == x.CaseSessionActId).FirstOrDefault().RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty,
+                           CaseSessionActName = x.CaseSessionActId != null ? (x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty,
                            Description = x.Description,
                        })
                        .AsQueryable();
@@ -166,6 +177,8 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
+                model.CaseSessionActId = model.CaseSessionActId.NumberEmptyToNull();
+
                 if (model.Id > 0)
                 {
                     //Update
@@ -174,6 +187,7 @@ namespace IOWebApplication.Core.Services
                     saved.EvidenceMovementTypeId = model.EvidenceMovementTypeId;
                     saved.Description = model.Description;
                     saved.ActDescription = model.ActDescription;
+                    saved.CaseSessionActId = model.CaseSessionActId;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
 

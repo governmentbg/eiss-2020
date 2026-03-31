@@ -12,19 +12,19 @@ namespace IOWebApplication.Components
         {
             userContext = _userContext;
         }
-        public async Task<IViewComponentResult> InvokeAsync(string currentItem = "", bool rightBar = false, bool script = false)
+        public Task<IViewComponentResult> InvokeAsync(string currentItem = "", bool rightBar = false, bool script = false)
         {
             if (rightBar)
             {
-                return await Task.FromResult<IViewComponentResult>(View("Horizontal_RightNavBar", currentItem));
+                return Task.FromResult<IViewComponentResult>(View("Horizontal_RightNavBar", currentItem));
             }
 
             if (userContext.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
             {
-                return await Task.FromResult<IViewComponentResult>(View("Horizontal_Jury", currentItem));
+                return Task.FromResult<IViewComponentResult>(View("Horizontal_Jury", currentItem));
             }
-
-            return await Task.FromResult<IViewComponentResult>(View("Horizontal", currentItem));
+            
+            return Task.FromResult<IViewComponentResult>(View("Horizontal", currentItem));
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace IOWebApplication.Models
+﻿namespace IOWebApplication.Models
 {
     /// <summary>
     /// Information needed for signing PDF document
@@ -10,17 +8,24 @@ namespace IOWebApplication.Models
         /// <summary>
         /// Identifier of PDF to be signed
         /// </summary>
-        public string PdfId { get; set; }
+        public string TempFileId { get; set; }
 
         /// <summary>
         /// Extracted hash to be signed
         /// </summary>
-        public string PdfHash { get; set; }
+        public string FileHash { get; set; }
 
         /// <summary>
         /// Url to PDF file
         /// </summary>
-        public string PdfUrl { get; set; }
+        public string PreviewPdfUrl { get; set; }
+
+        /// <summary>
+        /// PDF Signature
+        /// </summary>
+        public string Signature { get; set; }
+
+        public int SignituresCount { get; set; }
 
         /// <summary>
         /// Name of the PDF file
@@ -55,10 +60,14 @@ namespace IOWebApplication.Models
         /// </summary>
         public int SourceType { get; set; }
 
-        public int? SignituresCount { get; set; }
-
         public string SignerName { get; set; }
         public string SignerUic { get; set; }
         public string ErrorMessage { get; set; }
+        public long ClientCode { get; set; }
+
+        public long WorkTaskId { get; set; }
+
+        public int ErrorCode { get; set; }
+
     }
 }

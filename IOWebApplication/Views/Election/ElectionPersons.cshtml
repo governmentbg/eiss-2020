@@ -1,0 +1,147 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Data.Models.Election
+@model ElectionGroup;
+
+@{
+
+
+    ViewData["Title"] = @ViewBag.Title;
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Election")">Списък избори</a></li>
+    </ol>
+}
+
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseTab">
+        <li class="active"><a href="#"><i class="fa fa-users"></i> Списък участници</a></li>
+        <li class=""><a href="#" onclick="document.location.href='@Url.Action("ProtocolList",new{ id=Model.Id})';"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+
+        <a href="@Url.Action("PersonAdd",new{groupId = Model.Id})" class="btn btn-success" title="Добави съдия">Добави съдия </a>
+
+       
+
+        <input type="button" onclick="personFinish();return false;" value="Финализирай списък" class="btn btn-success" />
+
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListElectionPerson")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+
+                        d.electionGroupId = @(Model.Id);
+
+                    }
+                },
+                filter: false,
+
+                columns: [
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'egn',
+                        data: 'egn',
+                        title: 'ЕГН',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'courtName',
+                        data: 'courtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'stateName',
+                        data: 'stateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'declarationDate',
+                        data: 'declarationDate',
+                        title: 'Добавена декларация',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGYesNo(data != null);
+                        }
+                    }
+                    ,
+                    {
+                        name: 'dateAdded',
+                        data: 'dateAdded',
+                        title: 'Добавен на',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateAction', value);
+                        }
+                    }
+                ]
+            });
+            table.order([0, 'desc']);
+
+        });
+    </script>
+    <script id="templateAction" type="text/x-handlebars-template">
+        <a href="@Url.Action("PersonView")/{{this}}" class="btn btn-info btn-sm" title="Преглед"><i class="fa fa-eye"></i> Преглед</a>
+    </script>
+
+
+
+}
+<script>
+
+
+    function personFinish() {
+        swalConfirm('След финализиране, списъка на съдии не може да бъде променян. Потвърди финализирането на списък!', function () {
+            document.location.href = '@Url.Action("Finalize", new{id=Model.Id})';
+
+        });
+    }
+</script>

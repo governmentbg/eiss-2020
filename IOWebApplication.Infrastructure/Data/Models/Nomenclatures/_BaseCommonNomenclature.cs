@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 {
-    public class BaseCommonNomenclature : ICommonNomenclature
+    public class BaseCommonNomenclature : ICommonNomenclature, IHaveId
     {
         [Column("id")]
         [Key]

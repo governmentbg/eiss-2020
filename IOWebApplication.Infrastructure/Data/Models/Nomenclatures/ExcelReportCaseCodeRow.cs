@@ -28,6 +28,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("court_type_id")]
         public int? CourtTypeId { get; set; }
 
+        [Column("case_code_label")]
+        public string CaseCodeLabel { get; set; }
+
+        /// <summary>
+        /// колони, които не трябва да се попълват - отделени със запетая
+        /// </summary>
+        [Column("exclude_col")]
+        public string ExcludeCol { get; set; }
+
         [ForeignKey(nameof(CourtTypeId))]
         public virtual CourtType CourtType { get; set; }
     }

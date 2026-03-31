@@ -26,6 +26,7 @@
     </div>
 </div>
 
+<partial name="_CdnScript" />
 
 <script>
         $(function () {
@@ -71,7 +72,7 @@
                         data: 'dateFrom',
                         title: 'Начало',
                         sortable: true,
-                        searchable: true,
+                        searchable: false,
                         render: function (data) {
                             return moment(data).format("DD.MM.YYYY HH:mm");
                         }
@@ -85,7 +86,7 @@
                         searchable: true
                     },
                     {
-                        className: 'col-md-2',
+                        className: 'col-md-1',
                         name: 'courtHallName',
                         data: 'courtHallName',
                         title: 'Зала',
@@ -93,7 +94,7 @@
                         searchable: true
                     },
                     {
-                        className: 'col-md-2',
+                        className: 'col-md-1',
                         name: 'sessionStateLabel',
                         data: 'sessionStateLabel',
                         title: 'Статус',
@@ -117,6 +118,14 @@
                         searchable: true
                     },
                     {
+                        className: 'col-md-2',
+                        name: 'sessionActList',
+                        data: 'sessionActList',
+                        title: 'Актове',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
                         className: 'col-md-1',
                         name: 'actions',
                         data: "id",
@@ -131,6 +140,22 @@
                 ]
             }).order([[1, "desc"]]);
         });
+
+    $(function () {
+        $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+            let url = '@Url.Action("FileListView","Files")';
+            if ($(this).data('url')) {
+                url = $(this).data('url');
+            }
+            let lnk = $(this);
+            requestContent(url,
+                { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                function (html) {
+                    $(lnk).parent().html(html);
+                });
+            return false;
+        });
+    });
 </script>
 
 <script id="caseSessionTemplateEdit" type="text/x-handlebars-template">

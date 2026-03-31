@@ -1,0 +1,210 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseFilterVM
+
+@{
+    ViewData["Title"] = "Съдебни дела подлежащи на медиация";
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseYear, "DateTimeYear")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.CaseCodeSubId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        localStorage.removeItem('activeTabCase');
+
+        $(document).ready(function () {
+            
+        });
+    </script>
+
+}
+
+
+<script>
+    function LoadTable() {
+        if ($("#DateFrom").val() == '' && $("#DateTo").val() == '' && $("#CaseYear").val() == '') {
+            return messageHelper.ShowErrorMessage('Попълнете от дата до дата или година', messageContainer);
+        }
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseMediation")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            RegNumber: $("#RegNumber").val(),
+                            CaseYear: $("#CaseYear").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            CaseCodeSubId: $("#CaseCodeSubId").val(),
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'courtLabel',
+                        data: 'courtLabel',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreviewMediation", "Mediation", new { id = 666 }))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.regNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'caseTypeCode',
+                        data: 'caseTypeCode',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифри',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseCodeSubLabel',
+                        data: 'caseCodeSubLabel',
+                        title: 'Подшифър',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'departmentOtdelenieText',
+                        data: 'departmentOtdelenieText',
+                        title: 'Отделение/Състав',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'processPriorityLabel',
+                        data: 'processPriorityLabel',
+                        title: 'Вид производство',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreviewMediation")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Медиация"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+        $('#CaseTypeId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
+        $('#CaseCodeSubId').select2({ language: "bg" });
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+</script>
+
+<script>
+    $(function () {
+        // initLawUnit();
+    });
+</script>

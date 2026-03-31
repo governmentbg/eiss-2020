@@ -1,18 +1,18 @@
-﻿using IOWebApplication.Core.Services;
+﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Core.Services;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplicationApi.Contracts;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using System.Text;
-using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using IOWebApplication.Core.Helper.GlobalConstants;
-using IOWebApplication.Core.Contracts;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplicationApi.Services
 {
@@ -28,7 +28,7 @@ namespace IOWebApplicationApi.Services
             repo = _repo;
             deliveryItemService = _deliveryItemService;
         }
-        public bool SaveMobileFile(string deliveryAccountId, int courtId, string Content)
+        public async Task<bool> SaveMobileFile(string deliveryAccountId, int courtId, string Content)
         {
             var mobileFile = new DeliveryMobileFile()
             {
@@ -38,10 +38,10 @@ namespace IOWebApplicationApi.Services
             };
             repo.Add(mobileFile);
             repo.SaveChanges();
-            CheckMobileFile(mobileFile, false);
+            await CheckMobileFile(mobileFile, false);
             return true;
         }
-        public bool CheckMobileFile(DeliveryMobileFile mobileFile, bool saveNotFound)
+        public async Task<bool> CheckMobileFile(DeliveryMobileFile mobileFile, bool saveNotFound)
         {
             var stream = new MemoryStream(mobileFile.Content);
             string content = "";
@@ -75,7 +75,7 @@ namespace IOWebApplicationApi.Services
                 {
                     if (saveNotFound)
                     {
-                        bool isOK = deliveryItemService.DeliveryItemSaveOperMobile(visit);
+                        bool isOK = await deliveryItemService.DeliveryItemSaveOperMobile(visit);
                         if (!isOK)
                             error += visitID + " не е записан правилно" + Environment.NewLine;
                     }

@@ -1,4 +1,5 @@
-﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+﻿@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
 @model DocumentResolutionVM
 @{
     Layout = null;
@@ -15,12 +16,6 @@
             {
                 <td>Номер @Model.RegNumber</td>
                 <td>@Model.RegDate.Value.ToString("dd.MM.yyyy") г.</td>
-            }
-            else
-            {
-                <td colspan="2">
-                    Документът не е регистриран
-                </td>
             }
             <td>
                 Град @Model.CourtCity

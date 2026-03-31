@@ -22,6 +22,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         [Display(Name = "Съдия докладчик")]
         public int JudgeReporterId { get; set; }
 
+        [Display(Name = "Съдия по обж. акт")]
+        public int JudgeReporterFinalActId { get; set; }
+
         [Display(Name = "От дата на регистриране на жалбата")]
         public DateTime? DateFrom { get; set; }
 
@@ -51,5 +54,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         [Display(Name = "До номер на дело")]
         public int CaseRegNumTo { get; set; }
+
+        [Display(Name = "Финализиращ акт")]
+        public bool ActIsFinalDoc { get; set; }
     }
 }

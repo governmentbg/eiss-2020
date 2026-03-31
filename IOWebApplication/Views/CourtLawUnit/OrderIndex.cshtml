@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = $"Ред на старшинство на съдии";
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -35,25 +35,30 @@
                 },
                 sortable: false,
                 filter: false,
-                paging:false,
-                pageLength:0,
+                paging: false,
+                pageLength: 0,
                 columns: [
+                    {
+                        name: 'rowNo',
+                        data: 'rowNo',
+                        title: 'No по ред',
+                        width: 40,
+                        sortable: false
+                    },
                     {
                         name: 'lawUnitName',
                         data: 'lawUnitName',
                         title: 'Имена',
-                        sortable: false,
-                        searchable: true
+                        sortable: false
                     },
                     {
                         name: 'actions',
-                        data: "id",
+                        className: "text-right",
                         title: "",
                         sortable: false,
-                        searchable: false,
-                        width:70,
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
+                        width: 120,
+                        "render": function (a,b,row,c) {
+                            return TemplateToHtml('#templateEdit', row);
                         }
                     }
                 ]
@@ -64,11 +69,18 @@
                 $('#mainTable').DataTable().ajax.reload();
             });
         }
+        function showOrderCombo(currentRowNo) {
+            requestContent('@Url.Action("OrderChangeCombo")', { currentRowNo: currentRowNo }, function (html) {
+                ShowModalDialog("Изберете нова позиция", html);
+            });
+        }
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
-        <a href="#" onclick="changeOrder({{this}}, true); return false;" class="orderButton btn btn-info btn-sm" title="Премести нагоре"><i class="fa fa-angle-up"></i></a>
-        <a href="#" onclick="changeOrder({{this}}, false); return false;" class="orderButton btn btn-primary btn-sm" title="Премести надолу"><i class="fa fa-angle-down"></i></a>
+        <a href="#" onclick="changeOrder({{id}}, true); return false;" class="orderButton btn btn-info btn-sm" title="Премести нагоре"><i class="fa fa-angle-up"></i></a>
+        <a href="#" onclick="changeOrder({{id}}, false); return false;" class="orderButton btn btn-primary btn-sm" title="Премести надолу"><i class="fa fa-angle-down"></i></a>
+        &nbsp;&nbsp;&nbsp;
+        <a href="#" onclick="showOrderCombo({{rowNo}}, false); return false;" class="orderButton btn btn-warning btn-sm" title="Избери нова позиция"><i class="fa fa-angle-left"></i></a>
     </script>
 
 }

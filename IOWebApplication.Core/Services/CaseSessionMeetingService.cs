@@ -1,22 +1,22 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
-using IOWebApplication.Infrastructure.Models.ViewModels.Case;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using IOWebApplication.Infrastructure.Constants;
-using NPOI.SS.Formula.Functions;
-using IOWebApplication.Infrastructure.Extensions;
-using Remotion.Linq.Clauses;
+using System.Threading.Tasks;
 using System.Transactions;
-using IOWebApplication.Core.Helper;
 
 namespace IOWebApplication.Core.Services
 {
@@ -78,13 +78,13 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseSessionMeeting_SaveData(CaseSessionMeetingEditVM model)
+        public async Task<bool> CaseSessionMeeting_SaveData(CaseSessionMeetingEditVM model)
         {
             try
             {
                 model.CourtHallId = model.CourtHallId.EmptyToNull();
                 var modelSave = FillCaseSessionMeeting(model);
-                using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                using (var ts = repo.BeginTransaction())
                 {
                     if (model.Id > 0)
                     {
@@ -103,6 +103,23 @@ namespace IOWebApplication.Core.Services
                                                           .Where(x => x.CaseSessionMeetingId == modelSave.Id)
                                                           .ToList();
                         repo.DeleteRange<CaseSessionMeetingUser>(caseSessionMeetingUsers);
+                        if (model.CaseSessionMeetingUser != null)
+                        {
+                            foreach (var checkedItem in model.CaseSessionMeetingUser.Where(x => x.Checked))
+                            {
+                                var userSave = new CaseSessionMeetingUser()
+                                {
+                                    CourtId = modelSave.CourtId,
+                                    CaseId = modelSave.CaseId,
+                                    CaseSessionMeetingId = modelSave.Id,
+                                    SecretaryUserId = checkedItem.Value,
+                                    DateWrt = DateTime.Now,
+                                    UserId = userContext.UserId
+                                };
+
+                                repo.Add(userSave);
+                            }
+                        }
                     }
                     else
                     {
@@ -110,23 +127,24 @@ namespace IOWebApplication.Core.Services
                         modelSave.DateWrt = DateTime.Now;
                         modelSave.UserId = userContext.UserId;
                         repo.Add<CaseSessionMeeting>(modelSave);
-                    }
 
-                    if (model.CaseSessionMeetingUser != null)
-                    {
-                        foreach (var checkedItem in model.CaseSessionMeetingUser.Where(x => x.Checked))
+
+                        if (model.CaseSessionMeetingUser != null)
                         {
-                            var userSave = new CaseSessionMeetingUser()
+                            foreach (var checkedItem in model.CaseSessionMeetingUser.Where(x => x.Checked))
                             {
-                                CourtId = modelSave.CourtId,
-                                CaseId = modelSave.CaseId,
-                                CaseSessionMeetingId = modelSave.Id,
-                                SecretaryUserId = checkedItem.Value,
-                                DateWrt = DateTime.Now,
-                                UserId = userContext.UserId
-                            };
+                                var userSave = new CaseSessionMeetingUser()
+                                {
+                                    CourtId = modelSave.CourtId,
+                                    CaseId = modelSave.CaseId,
+                                    CaseSessionMeetingId = modelSave.Id,
+                                    SecretaryUserId = checkedItem.Value,
+                                    DateWrt = DateTime.Now,
+                                    UserId = userContext.UserId
+                                };
 
-                            repo.Add(userSave);
+                                modelSave.CaseSessionMeetingUsers.Add(userSave);
+                            }
                         }
                     }
 
@@ -136,19 +154,22 @@ namespace IOWebApplication.Core.Services
                         {
                             var caseSessionUpdate = repo.GetById<CaseSession>(model.CaseSessionId);
                             var savedSessionState = caseSessionUpdate.SessionStateId;
-                            caseSessionUpdate.SessionStateId = model.SessionStateId ?? 0;
-                            caseSessionUpdate.DateWrt = DateTime.Now;
-                            caseSessionUpdate.UserId = userContext.UserId;
-                            repo.Update(caseSessionUpdate);
-                            mqService.AppendCaseSession(caseSessionUpdate, EpepConstants.ServiceMethod.Update);
-
-                            //CBorisoff,29.07.2021
-                            //когато заседанието е насрочено и се промени на проведено 
-                            //се изпращат всички постановени актове в него към външните системи
-                            if (savedSessionState == NomenclatureConstants.SessionState.Nasrocheno
-                                && model.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+                            if (model.SessionStateId != savedSessionState)
                             {
-                                mqService.AppendActsFromSession(model.CaseSessionId);
+                                caseSessionUpdate.SessionStateId = model.SessionStateId ?? 0;
+                                caseSessionUpdate.DateWrt = DateTime.Now;
+                                caseSessionUpdate.UserId = userContext.UserId;
+                                repo.SaveChanges();
+                                mqService.AppendCaseSession(caseSessionUpdate, EpepConstants.ServiceMethod.Update);
+
+                                //CBorisoff,29.07.2021
+                                //когато заседанието е насрочено и се промени на проведено 
+                                //се изпращат всички постановени актове в него към външните системи
+                                if (savedSessionState == NomenclatureConstants.SessionState.Nasrocheno
+                                    && model.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+                                {
+                                    await mqService.AppendActsFromSession(model.CaseSessionId);
+                                }
                             }
                         }
                     }
@@ -168,14 +189,14 @@ namespace IOWebApplication.Core.Services
                     if (model.Id < 1)
                         model.Id = modelSave.Id;
 
-                    ts.Complete();
+                    ts.Commit();
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на тайно съвещание Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на тайно съвещание Id={model.Id}");
                 return false;
             }
         }
@@ -233,7 +254,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на секретари към сесии на заседание Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на секретари към сесии на заседание Id={model.Id}");
                 return false;
             }
         }
@@ -336,8 +357,8 @@ namespace IOWebApplication.Core.Services
                 IsActive = model.IsActive,
                 IsAutoCreate = model.IsAutoCreate,
                 CourtHallId = model.CourtHallId,
-                IsSessionProvedeno = (model.CaseSession == null) ? false : (model.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno),
-                SessionStateId = (model.CaseSession == null) ? (int?)null : model.CaseSession.SessionStateId
+                IsSessionProvedeno = model.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno,
+                SessionStateId = model.CaseSession.SessionStateId
             };
         }
 
@@ -369,9 +390,12 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public CaseSessionMeetingEditVM CaseSessionMeetingEdit_ById(int Id)
+        public async Task<CaseSessionMeetingEditVM> CaseSessionMeetingEdit_ById(int Id)
         {
-            return FillCaseSessionMeetingEditVM(repo.AllReadonly<CaseSessionMeeting>().Include(x => x.CaseSession).Where(x => x.Id == Id).FirstOrDefault());
+            return FillCaseSessionMeetingEditVM(await repo.AllReadonly<CaseSessionMeeting>()
+                                                          .Include(x => x.CaseSession)
+                                                          .Where(x => x.Id == Id)
+                                                          .FirstOrDefaultAsync());
         }
 
         /// <summary>
@@ -380,27 +404,32 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseSessionId"></param>
         /// <param name="CaseSessionMeetingId"></param>
         /// <returns></returns>
-        public List<CheckListVM> GetCheckListCaseSessionMeetingUser(int caseSessionId, int CaseSessionMeetingId = 0)
+        public async Task<List<CheckListVM>> GetCheckListCaseSessionMeetingUser(int caseSessionId, int CaseSessionMeetingId = 0)
         {
-            var caseSession = repo.GetById<CaseSession>(caseSessionId);
+            var caseSession = await repo.GetByIdAsync<CaseSession>(caseSessionId);
 
-            var CaseSessionMeetingUsers = repo.AllReadonly<CaseSessionMeetingUser>()
-                                              .Include(x => x.SecretaryUser)
-                                              .ThenInclude(x => x.LawUnit)
-                                              .Where(x => x.CaseSessionMeetingId == CaseSessionMeetingId)
-                                              .ToList();
+            var CaseSessionMeetingUsers = await repo.AllReadonly<CaseSessionMeetingUser>()
+                                                    .Where(x => x.CaseSessionMeetingId == CaseSessionMeetingId)
+                                                    .ToListAsync();
 
-            var CaselawUnits = repo.AllReadonly<CaseLawUnit>()
-                                   .Include(x => x.LawUnit)
-                                   .Where(x => x.CaseSessionId == caseSessionId &&
-                                               x.JudgeRoleId == NomenclatureConstants.JudgeRole.Secretary &&
-                                               ((x.DateTo ?? caseSession.DateFrom.AddYears(100)) >= caseSession.DateFrom))
-                                   .ToList();
+            var CaselawUnits = await repo.AllReadonly<CaseLawUnit>()
+                                         .Include(x => x.LawUnit)
+                                         .Where(x => x.CaseSessionId == caseSessionId &&
+                                                     x.JudgeRoleId == NomenclatureConstants.JudgeRole.Secretary &&
+                                                     ((x.DateTo ?? caseSession.DateFrom.AddYears(100)) >= caseSession.DateFrom))
+                                         .ToListAsync();
 
             var result = new List<CheckListVM>();
 
             foreach (var caseLaw in CaselawUnits)
             {
+                if (caseLaw.LawUnitUserId == null)
+                {
+                    caseLaw.LawUnitUserId = await repo.AllReadonly<ApplicationUser>()
+                                                        .Where(x => x.LawUnitId == caseLaw.LawUnitId && x.IsActive == true)
+                                                        .Select(x => x.Id)
+                                                        .FirstOrDefaultAsync();
+                }
                 var checkElement = new CheckListVM()
                 {
                     Checked = CaseSessionMeetingUsers.Any(x => x.SecretaryUserId == caseLaw.LawUnitUserId),
@@ -452,16 +481,15 @@ namespace IOWebApplication.Core.Services
         /// <param name="DateTo"></param>
         /// <param name="CaseSessionId"></param>
         /// <returns></returns>
-        public bool CourtHallBusy(int CourtHallId, DateTime DateFrom, DateTime DateTo, int CaseSessionId)
+        public async Task<bool> CourtHallBusy(int CourtHallId, DateTime DateFrom, DateTime DateTo, int CaseSessionId)
         {
-            return repo.AllReadonly<CaseSessionMeeting>()
-                       .Include(x => x.CaseSession)
-                       .Any(x => ((CaseSessionId > 0) ? (x.CaseSessionId != CaseSessionId) : true) &&
-                                 (x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
-                                 (x.CaseSession.DateExpired == null) &&
-                                 (x.CourtHallId == CourtHallId) &&
-                                 (x.DateExpired == null) &&
-                                 ((DateTo >= x.DateFrom) && (DateFrom <= x.DateTo)));
+            return await repo.AllReadonly<CaseSessionMeeting>()
+                             .AnyAsync(x => ((CaseSessionId > 0) ? (x.CaseSessionId != CaseSessionId) : true) &&
+                                            (x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
+                                            (x.CaseSession.DateExpired == null) &&
+                                            (x.CourtHallId == CourtHallId) &&
+                                            (x.DateExpired == null) &&
+                                            ((DateTo >= x.DateFrom) && (DateFrom <= x.DateTo)));
         }
 
         /// <summary>
@@ -472,10 +500,10 @@ namespace IOWebApplication.Core.Services
         /// <param name="DateTo_Minutes"></param>
         /// <param name="CaseSessionId"></param>
         /// <returns></returns>
-        public bool CourtHallBusyFromSession(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int CaseSessionId)
+        public async Task<bool> CourtHallBusyFromSession(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int CaseSessionId)
         {
             DateTime DateTo = DateFrom.AddMinutes(DateTo_Minutes);
-            return CourtHallBusy(CourtHallId, DateFrom, DateTo, CaseSessionId);
+            return await CourtHallBusy(CourtHallId, DateFrom, DateTo, CaseSessionId);
         }
 
         /// <summary>
@@ -486,25 +514,25 @@ namespace IOWebApplication.Core.Services
         /// <param name="dateTimeFrom"></param>
         /// <param name="dateTimeTo"></param>
         /// <returns></returns>
-        public string IsCaseLawUnitFromCaseBusy(int caseId, int caseSessionId, DateTime dateTimeFrom, DateTime dateTimeTo)
+        public async Task<string> IsCaseLawUnitFromCaseBusy(int caseId, int caseSessionId, DateTime dateTimeFrom, DateTime dateTimeTo)
         {
-            var caseLawUnits = repo.AllReadonly<CaseLawUnit>()
-                                   .Include(x => x.LawUnit)
-                                   .Include(x => x.JudgeRole)
-                                   .Where(x => ((caseSessionId > 0) ? (x.CaseSessionId == caseSessionId) : (x.CaseId == caseId && x.CaseSessionId == null)) &&
-                                               ((x.DateFrom <= dateTimeFrom) && ((x.DateTo ?? dateTimeFrom.AddYears(1)) >= dateTimeFrom)))
-                                      .ToList();
+            var caseLawUnits = await repo.AllReadonly<CaseLawUnit>()
+                                         .Include(x => x.LawUnit)
+                                         .Include(x => x.JudgeRole)
+                                         .Where(x => ((caseSessionId > 0) ? (x.CaseSessionId == caseSessionId) : (x.CaseId == caseId && x.CaseSessionId == null)) &&
+                                                     ((x.DateFrom <= dateTimeFrom) && ((x.DateTo ?? dateTimeFrom.AddYears(1)) >= dateTimeFrom)))
+                                         .ToListAsync();
 
-            var caseSessionMeetings = repo.AllReadonly<CaseSessionMeeting>()
-                                          .Include(x => x.Case)
-                                          .Include(x => x.CaseSession)
-                                          .ThenInclude(x => x.CaseLawUnits)
-                                          .Where(x => (x.CaseSessionId != caseSessionId) &&
-                                                      (x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
-                                                      (x.CaseSession.DateExpired == null) &&
-                                                      (x.DateExpired == null) &&
-                                                      ((dateTimeTo >= x.DateFrom) && (dateTimeFrom <= x.DateTo)))
-                                          .ToList();
+            var caseSessionMeetings = await repo.AllReadonly<CaseSessionMeeting>()
+                                                .Include(x => x.Case)
+                                                .Include(x => x.CaseSession)
+                                                .ThenInclude(x => x.CaseLawUnits)
+                                                .Where(x => (x.CaseSessionId != caseSessionId) &&
+                                                            (x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
+                                                            (x.CaseSession.DateExpired == null) &&
+                                                            (x.DateExpired == null) &&
+                                                            ((dateTimeTo >= x.DateFrom) && (dateTimeFrom <= x.DateTo)))
+                                                .ToListAsync();
 
             var result = string.Empty;
 
@@ -540,18 +568,56 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public bool CheckExistSecretaryOfAllMeeting(int caseSessionId)
+        public async Task<bool> CheckExistSecretaryOfAllMeeting(int caseSessionId)
         {
-            var caseSession = repo.GetById<CaseSession>(caseSessionId);
+            var sessionStateId = await repo.GetPropByIdAsync<CaseSession, int>(x => x.Id == caseSessionId, x => x.SessionStateId);
 
-            if (caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+            if (sessionStateId == NomenclatureConstants.SessionState.Provedeno)
                 return true;
 
-            return !repo.AllReadonly<CaseSessionMeeting>()
-                        .Include(x => x.CaseSessionMeetingUsers)
-                        .Any(x => x.CaseSessionId == caseSessionId &&
-                                  x.DateExpired == null &&
-                                  x.CaseSessionMeetingUsers.Count < 1);
+            return !await repo.AllReadonly<CaseSessionMeeting>()
+                              .AnyAsync(x => x.CaseSessionId == caseSessionId &&
+                                             x.DateExpired == null &&
+                                             x.CaseSessionMeetingUsers.Count < 1);
+        }
+
+        /// <summary>
+        /// Премахване на сесия
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public bool CaseSessionMeeting_ExpiredInfo(ExpiredInfoVM model)
+        {
+            try
+            {
+                using (var ts = repo.BeginTransaction())
+                {
+                    if (!SaveExpireInfo<CaseSessionMeeting>(model))
+                        return false;
+
+                    var sessionMeeting = repo.AllReadonly<CaseSessionMeeting>()
+                                            .Include(x => x.CaseSession)
+                                            .Where(x => x.Id == model.Id)
+                                            .FirstOrDefault();
+                    if (sessionMeeting != null)
+                    {
+                        (bool result, string errorMessage) = moneyService.CalcEarningsJury(sessionMeeting.CaseSession, userContext.CourtId);
+                        if (result == false)
+                        {
+                            return false;
+                        }
+
+                        ts.Commit();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при премахване на Заседание Id={model.Id}");
+                return false;
+            }
+
+            return true;
         }
     }
 }

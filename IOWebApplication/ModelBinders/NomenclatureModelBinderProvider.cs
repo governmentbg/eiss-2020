@@ -13,6 +13,7 @@ namespace IOWebApplication.ModelBinders
         {
             loggerFactory = logFactory;
         }
+
         public IModelBinder GetBinder(ModelBinderProviderContext context)
         {
             if (context == null) { throw new ArgumentNullException(nameof(context)); }

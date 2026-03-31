@@ -17,9 +17,13 @@
                     <i class="fa fa-plus"></i>
                     Добави основна дейност
                 </a>*@
-            <a asp-controller="CaseLoadIndex" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isMainActivity="@false" asp-route-isFromCase="@Model.IsND" class="btn btn-success btn-sm">
+            @*<a asp-controller="CaseLoadIndex" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isMainActivity="@false" asp-route-isFromCase="@Model.IsND" class="btn btn-success btn-sm">
+                    <i class="fa fa-plus"></i>
+                    Добави допълнителна дейност
+                </a>*@
+            <a asp-controller="CaseLoadCorrection" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-isMainActivity="@true" class="btn btn-success btn-sm">
                 <i class="fa fa-plus"></i>
-                Добави допълнителна дейност
+                Добави коригиращ коефициент
             </a>
             @if (Model.IsND)
             {
@@ -65,6 +69,13 @@
                         searchable: true
                     },
                     {
+                        name: 'isMainActivityText',
+                        data: 'isMainActivityText',
+                        title: 'Вид дейност',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'nameActivity',
                         data: 'nameActivity',
                         title: 'Дейност',
@@ -72,9 +83,26 @@
                         searchable: true
                     },
                     {
+                        name: 'caseLoadCorrectionIdex',
+                        data: 'caseLoadCorrectionIdex',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Увеличаващ индекс',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseLoadIndex',
+                        data: 'caseLoadIndex',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Базов индекс',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'baseIndex',
                         data: 'baseIndex',
-                        title: 'Базов индекс',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Общ индекс',
                         sortable: true,
                         searchable: true
                     },
@@ -88,7 +116,16 @@
                     {
                         name: 'calcValue',
                         data: 'calcValue',
+                        render: $.fn.dataTable.render.number('', '.', 2),
                         title: 'Изчислено',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCalcValue',
+                        data: 'caseCalcValue',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Общо по делото',
                         sortable: true,
                         searchable: true
                     },
@@ -109,17 +146,17 @@
 </script>
 
 <script id="caseLoadIndexTemplateEdit" type="text/x-handlebars-template">
-    {{#if isMainActivity}}
-    {{else}}
-    @if (access.CanChange)
-    {
-        <a href="@Url.Action("Edit", "CaseLoadIndex")?id={{id}}&&isFromCase=@Model.IsND" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-    }
-    else
-    {
-        <a href="@Url.Action("Edit", "CaseLoadIndex")?id={{id}}&&isFromCase=@Model.IsND" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
-    }
-    {{/if}}
+    @*{{#if isMainActivity}}
+        {{else}}
+        @if (access.CanChange)
+        {
+            <a href="@Url.Action("Edit", "CaseLoadIndex")?id={{id}}&&isFromCase=@Model.IsND" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        else
+        {
+            <a href="@Url.Action("Edit", "CaseLoadIndex")?id={{id}}&&isFromCase=@Model.IsND" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        {{/if}}*@
 </script>
 
 <script>

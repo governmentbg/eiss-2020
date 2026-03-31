@@ -39,7 +39,7 @@ namespace IOWebApplication.Core.Services
                     saved.IsActive = model.IsActive;
                     saved.DateStart = model.DateStart;
                     saved.DateEnd = model.DateEnd;
-                    repo.Update(saved);
+                    //repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -47,7 +47,6 @@ namespace IOWebApplication.Core.Services
                     //Insert
                     int maxOrderNumber = repo.AllReadonly<LoadGroup>()
                         .Select(x => x.OrderNumber)
-                        .DefaultIfEmpty(0)
                         .Max();
 
                     model.OrderNumber = maxOrderNumber + 1;
@@ -60,7 +59,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на LoadGroup Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на LoadGroup Id={model.Id}");
                 return false;
             }
         }
@@ -109,28 +108,39 @@ namespace IOWebApplication.Core.Services
                     {
                         repo.Delete<LoadGroupLinkCode>(item);
                     }
+
+                    //записва листа със кодовете за loadgrouplinkid
+                    foreach (var code in caseCodes)
+                    {
+                        LoadGroupLinkCode newLoadLinkCode = new LoadGroupLinkCode();
+                        newLoadLinkCode.LoadGroupLinkId = model.Id;
+                        newLoadLinkCode.CaseCodeId = code;
+                        repo.Add<LoadGroupLinkCode>(newLoadLinkCode);
+                    }
                 }
                 else
                 {
+                    //записва листа със кодовете за loadgrouplinkid
+                    model.GroupCodes = new HashSet<LoadGroupLinkCode>();
+                    foreach (var code in caseCodes)
+                    {
+                        LoadGroupLinkCode newLoadLinkCode = new LoadGroupLinkCode();
+                        newLoadLinkCode.CaseCodeId = code;
+                        model.GroupCodes.Add(newLoadLinkCode);
+                    }
+
                     //Insert
                     repo.Add<LoadGroupLink>(model);
                 }
 
-                //записва листа със кодовете за loadgrouplinkid
-                foreach (var code in caseCodes)
-                {
-                    LoadGroupLinkCode newLoadLinkCode = new LoadGroupLinkCode();
-                    newLoadLinkCode.LoadGroupLinkId = model.Id;
-                    newLoadLinkCode.CaseCodeId = code;
-                    repo.Add<LoadGroupLinkCode>(newLoadLinkCode);
-                }
+
 
                 repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на LoadGroupLink Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на LoadGroupLink Id={model.Id}");
                 return false;
             }
         }
@@ -143,7 +153,7 @@ namespace IOWebApplication.Core.Services
             .Select(x => new MultiSelectTransferVM()
             {
                 Id = x.CaseCode.Id,
-                Order = x.CaseCode.OrderNumber,
+                OrderInt = x.CaseCode.OrderNumber,
                 Text = $"{x.CaseCode.Code} {x.CaseCode.Label}"
             })
             .GroupBy(x => x.Id)

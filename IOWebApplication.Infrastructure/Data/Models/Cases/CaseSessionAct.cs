@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Съдебни актове
     /// </summary>
     [Table("case_session_act")]
-    public class CaseSessionAct : BaseInfo_CaseSessionAct, IHaveHistory<CaseSessionActH>, IExpiredInfo
+    public class CaseSessionAct : BaseInfo_CaseSessionAct, IHaveHistory<CaseSessionActH>, IExpiredInfo, IHaveId
     {
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -38,7 +38,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual ActState ActState { get; set; }
 
         [ForeignKey(nameof(SecretaryUserId))]
-        public virtual ApplicationUser SecretaryUser { get; set; }
+        public virtual ApplicationUser? SecretaryUser { get; set; }
 
         [ForeignKey(nameof(ActComplainResultId))]
         public virtual ActComplainResult ActComplainResult { get; set; }
@@ -56,17 +56,26 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual CaseSessionAct RelatedAct { get; set; }
 
         [ForeignKey(nameof(ActCreatorUserId))]
-        public virtual ApplicationUser ActCreatorUser { get; set; }
+        public virtual ApplicationUser? ActCreatorUser { get; set; }
 
         [ForeignKey(nameof(MotiveCreatorUserId))]
-        public virtual ApplicationUser MotiveCreatorUser { get; set; }
+        public virtual ApplicationUser? MotiveCreatorUser { get; set; }
 
-        public virtual ICollection<CaseSessionActH> History { get; set; }
+        public virtual ICollection<CaseSessionActH>? History { get; set; }
         public virtual ICollection<CaseSessionActCoordination> ActCoordination { get; set; }
         public virtual ICollection<CasePersonInheritance> CasePersonInheritances { get; set; }
         public virtual ICollection<CaseSessionActComplain> CaseSessionActComplains { get; set; }
+        public virtual ICollection<CaseSessionActComplainResult> CaseSessionActComplainResults { get; set; }
 
         public virtual ICollection<CaseSessionActLawBase> CaseSessionActLawBases { get; set; }
+
+
+        [InverseProperty(nameof(CaseSessionActCorrection.CaseSessionAct))]
+        public virtual ICollection<CaseSessionActCorrection> ActsToCorrect { get; set; }
+
+
+        [InverseProperty(nameof(CaseSessionActCorrection.CorrectedAct))]
+        public virtual ICollection<CaseSessionActCorrection> CorrectedActs { get; set; }
 
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
@@ -85,8 +94,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(DepersonalizeUserId))]
         public virtual ApplicationUser DepersonalizeUser { get; set; }
 
+        [ForeignKey(nameof(DepersonalizeMotiveUserId))]
+        public virtual ApplicationUser DepersonalizeMotiveUser { get; set; }
+
         [ForeignKey(nameof(SignJudgeLawUnitId))]
         public virtual LawUnit SignJudgeLawUnit { get; set; }
+
+        public virtual ICollection<CaseSessionActLawunit> CaseSessionActLawunits { get; set; }
+
+        public virtual ICollection<CaseSessionActPeriodNotification> PeriodNotifications { get; set; }
 
         public CaseSessionAct()
         {
@@ -94,6 +110,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
             CasePersonInheritances = new HashSet<CasePersonInheritance>();
             CaseSessionActComplains = new HashSet<CaseSessionActComplain>();
             CaseSessionActLawBases = new HashSet<CaseSessionActLawBase>();
+            CaseSessionActComplainResults = new HashSet<CaseSessionActComplainResult>();
+            CaseSessionActLawunits = new HashSet<CaseSessionActLawunit>();
+            PeriodNotifications = new HashSet<CaseSessionActPeriodNotification>();
         }
     }
 
@@ -101,7 +120,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Съдебни актове - история
     /// </summary>
     [Table("case_session_act_h")]
-    public class CaseSessionActH : BaseInfo_CaseSessionAct, IHistory
+    public class CaseSessionActH : BaseInfo_CaseSessionAct, IHistory, IHaveHistoryType
     {
         [Column("history_id")]
         public int HistoryId { get; set; }
@@ -110,10 +129,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public DateTime? HistoryDateExpire { get; set; }
 
 
+        [Column("history_type")]
+        public string HistoryType { get; set; }
+
+
         [ForeignKey(nameof(Id))]
         public virtual CaseSessionAct CaseSessionAct { get; set; }
 
-
+        public void ClearForeignKeys()
+        {
+            CaseSessionAct = null;
+        }
     }
     public class BaseInfo_CaseSessionAct : UserDateWRT
     {
@@ -195,6 +221,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public DateTime? ActDeclaredDate { get; set; }
 
         /// <summary>
+        /// Срок в който е постановен акта
+        /// </summary>
+        [Display(Name = "Срок в който е постановен акта")]
+        [Column("declared_month_count")]
+        public int? DeclaredMonthCount { get; set; }
+
+        /// <summary>
         /// Дата на обявяване на мотивите: подписване от последния съдия
         /// </summary>
         [Display(Name = "Дата на обявяване на мотивите")]
@@ -249,6 +282,62 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Подлежи на обжалване")]
         public bool? CanAppeal { get; set; }
 
+        /// <summary>
+        /// Срок за обжалване
+        /// </summary>
+        [Display(Name = "Срок за обжалване")]
+        [Column("appeal_notification_start_fast_process")]
+        public DateTime? AppealNotificationStartFastProcess { get; set; }
+
+        /// <summary>
+        /// Нотификация след дни - обжалване
+        /// </summary>
+        [Display(Name = "Нотификация след дни - обжалване")]
+        [Column("appeal_notification_days_fast_process")]
+        public int? AppealNotificationDaysFastProcess { get; set; }
+
+        /// <summary>
+        /// Нотификация след седмици - обжалване
+        /// </summary>
+        [Display(Name = "Нотификация след седмици - обжалване")]
+        [Column("appeal_notification_weeks_fast_process")]
+        public int? AppealNotificationWeeksFastProcess { get; set; }
+
+        /// <summary>
+        /// Нотификация след месеци
+        /// </summary>
+        [Display(Name = "Нотификация след месеци - обжалване")]
+        [Column("appeal_notification_days_months_process")]
+        public int? AppealNotificationMontsFastProcess { get; set; }
+
+        /// <summary>
+        /// Да се създаде нотификация
+        /// </summary>
+        [Display(Name = "Да се създаде нотификация")]
+        [Column("notification_on")]
+        public bool? NotificationOn { get; set; }
+
+        /// <summary>
+        /// Нотификация след дни
+        /// </summary>
+        [Display(Name = "Нотификация след дни")]
+        [Column("notification_days")]
+        public int? NotificationDays { get; set; }
+
+        /// <summary>
+        /// Нотификация след седмици - обжалване
+        /// </summary>
+        [Display(Name = "Нотификация след седмици")]
+        [Column("notification_weeks")]
+        public int? NotificationWeeks { get; set; }
+
+        /// <summary>
+        /// Нотификация след месеци
+        /// </summary>
+        [Display(Name = "Нотификация след месеци")]
+        [Column("notification_months")]
+        public int? NotificationMonts { get; set; }
+
         [Column("act_complain_result_id")]
         [Display(Name = "Резултат/степен на уважаване на иска")]
         public int? ActComplainResultId { get; set; }
@@ -293,10 +382,48 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public DateTime? DepersonalizeEndDate { get; set; }
 
         /// <summary>
+        /// Дата на финализиране на обезличаването на мотивите
+        /// </summary>
+        [Column("depersonalize_motive_end_date")]
+        public DateTime? DepersonalizeMotiveEndDate { get; set; }
+
+        /// <summary>
+        /// Потребител обезличил мотивите
+        /// </summary>
+        [Column("depersonalize_motive_user_id")]
+        public string DepersonalizeMotiveUserId { get; set; }
+
+
+        /// <summary>
         /// Съдия, подписващ изпълнителен лист
         /// </summary>
         [Display(Name = "Съдия")]
         [Column("sign_judge_lawunit_id")]
         public int? SignJudgeLawUnitId { get; set; }
+
+        /// <summary>
+        /// Страни в бланката
+        /// </summary>
+        [Column("act_direction_id")]
+        [Display(Name = "Страни в бланката")]
+        public int? ActDirectionId { get; set; }
+
+        /// <summary>
+        /// Вписване/обявяване в АИСТН
+        /// </summary>
+        [Column("td_act_for_registration")]
+        [Display(Name = "Вписване/обявяване в АИСТН")]
+        public bool? TDActForRegistration { get; set; }
+
+        [Column("generate_exec_process")]
+        public bool? GenerateExecProcess { get; set; }
+
+        [Column("corrected_act_id")]
+        [Display(Name = "Коригиран съдебен акт")]
+        public int? CorrectedActId { get; set; }
+
+        [Column("rnfl_effective_immediately")]
+        [Display(Name = "Незабавно изпълнение на акта")]
+        public bool? RnflEffectiveImmediately { get; set; }
     }
 }

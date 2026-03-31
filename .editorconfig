@@ -33,6 +33,15 @@ dotnet_diagnostic.CS1591.severity = none
 # CA1822: Static classes
 dotnet_diagnostic.CA1822.severity = none
 
+# CS1573: xml param
+dotnet_diagnostic.CS1573.severity = none
+
+# CS0168: xml param
+dotnet_diagnostic.CS0168.severity = none
+
+# CS8632: xml param
+dotnet_diagnostic.CS8632.severity = none
+
 #pragma warning disable CA1707  
 
 file_header_template = Copyright (C) Information Services. All Rights Reserved.\nLicensed under the Apache License, Version 2.0

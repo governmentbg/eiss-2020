@@ -89,28 +89,28 @@
                     data: 'judgeDepartmentRoleLabel',
                     title: 'Роля в делото',
                     sortable: false,
-                    searchable: true
+                    searchable: false
                 },
                 {
                     name: 'departmentLabel',
                     data: 'departmentLabel',
                     title: 'Състав',
                     sortable: false,
-                    searchable: true
+                    searchable: false
                 },
                 {
                     name: 'dismisalLabel',
                     data: 'dismisalLabel',
                     title: 'Отвод',
                     sortable: false,
-                    searchable: true
+                    searchable: false
                 },
                 {
                     name: 'dateFrom',
                     data: 'dateFrom',
                     title: 'От дата',
                     sortable: true,
-                    searchable: true,
+                    searchable: false,
                     render: function (data) {
                         return moment(data).format("DD.MM.YYYY HH:mm:ss");
                     }

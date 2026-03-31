@@ -15,6 +15,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public int CaseSessionId { get; set; }
         public string PaperEdition { get; set; }
         public bool CheckRow { get; set; }
+
+        public int CaseSessionTypeId { get; set; }
         [Display(Name = "Вид")]
         public List<VksNotificationItemVM> VksNotificationItems { get; set; }
     }

@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -50,8 +52,9 @@ namespace IOWebApplication.Core.Services
                 }
             }
         }
-        public bool SaveData<T>(int parentId, List<int> codes,
+        public async Task<bool> SaveData<T>(int parentId, List<int> codes,
                                 Expression<Func<T, int>> parentProp,
+                                Expression<Func<T, bool>> savedDataFilter,
                                 Expression<Func<T, int>> itemProp,
                                 Expression<Func<T, DateTime?>> dateFromProp,
                                 Expression<Func<T, DateTime?>> dateToProp,
@@ -66,12 +69,13 @@ namespace IOWebApplication.Core.Services
 
             try
             {
-                var forSaveList = repo.All<T>()
-                    .Where(x => parentProp2(x) == parentId)
-                    .ToList();
+                var forSaveList = await repo.All<T>()
+                    .Where(savedDataFilter)
+                    //.Where(x => parentProp2(x) == parentId)
+                    .ToListAsync();
                 foreach (var item in forSaveList)
                 {
-                    if (codes.Count(x => x == itemProp2(item)) == 0)
+                    if (!codes.Any(x => x == itemProp2(item)))
                         SetPropertyValue<T, DateTime?>(item, dateToProp, DateTime.Now.Date);
                     else
                     {
@@ -81,7 +85,7 @@ namespace IOWebApplication.Core.Services
                 }
                 foreach (var code in codes)
                 {
-                    if (forSaveList.Count(x => itemProp2(x) == code) == 0)
+                    if (!forSaveList.Any(x => itemProp2(x) == code))
                     {
                         T newCode = new T();
                         setNew?.Invoke(newCode);
@@ -91,7 +95,7 @@ namespace IOWebApplication.Core.Services
                         repo.Add<T>(newCode);
                     }
                 }
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -100,9 +104,10 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
-        public bool SaveDataPercent<T>(int parentId, List<MultiSelectTransferPercentVM> codes,
+        public async Task<bool> SaveDataPercent<T>(int parentId, List<MultiSelectTransferPercentVM> codes,
                                 Expression<Func<T, bool>> courtIdWhere,
                                 Expression<Func<T, int>> parentProp,
+                                Expression<Func<T, bool>> savedDataFilter,
                                 Expression<Func<T, int>> itemProp,
                                 Expression<Func<T, DateTime?>> dateFromProp,
                                 Expression<Func<T, DateTime?>> dateToProp,
@@ -126,11 +131,12 @@ namespace IOWebApplication.Core.Services
 
             try
             {
-                var forSaveList = repo.All<T>()
-                    .Where(x => parentProp2(x) == parentId && dateToProp2(x) == null)
+                var forSaveList = await repo.All<T>()
+                    //.Where(x => parentProp2(x) == parentId && dateToProp2(x) == null)
+                    .Where(savedDataFilter)
                     .Where(courtIdWhere)
-                    // .Where(setNew ?? (x => true))
-                    .ToList();
+                        // .Where(setNew ?? (x => true))
+                        .ToListAsync();
                 foreach (var item in forSaveList)
                 {
                     if (!codes.Any(x => x.IsDelete != true && x.Id == itemProp2(item) && x.Percent == percentProp2(item)))
@@ -168,7 +174,7 @@ namespace IOWebApplication.Core.Services
 
                     }
                 }
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)

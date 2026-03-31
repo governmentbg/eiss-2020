@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -9,13 +7,6 @@ namespace IOWebApplication.ModelBinders
 {
     public class DoubleModelBinder : IModelBinder
     {
-        private readonly SimpleTypeModelBinder _baseBinder;
-
-        public DoubleModelBinder(ILoggerFactory loggerFactory)
-        {
-            this._baseBinder = new SimpleTypeModelBinder(typeof(Double), loggerFactory);
-        }
-
         public Task BindModelAsync(ModelBindingContext bindingContext)
         {
             ValueProviderResult valueResult = bindingContext.ValueProvider
@@ -47,7 +38,7 @@ namespace IOWebApplication.ModelBinders
                 }
             }
 
-            return _baseBinder.BindModelAsync(bindingContext);
+            return Task.CompletedTask;
         }
     }
 }

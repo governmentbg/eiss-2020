@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,7 +11,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int CaseSessionId { get; set; }
         public long DocumentId { get; set; }
         public string DocumentLabel { get; set; }
+        public string DocumentNumber { get; set; }
         public string SessionDocStateLabel { get; set; }
         public DateTime DateFrom { get; set; }
+        public virtual ICollection<WorkTaskReportVM> WorkTask { get; set; }
     }
 }

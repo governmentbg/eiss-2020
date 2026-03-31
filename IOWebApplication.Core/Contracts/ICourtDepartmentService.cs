@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -19,7 +20,28 @@ namespace IOWebApplication.Core.Contracts
         CheckListViewVM CheckListViewVM_Fill(int courtId, int departmentId);
         bool CourtDepartmentLawUnit_SaveData(CheckListViewVM model);
         bool StornoCourtDepartment(int CourtDepartmentId);
-        List<SelectListItem> Department_SelectDDL(int courtId, int departmentTypeId);
+        List<SelectListItem> Department_SelectDDL(int courtId, int departmentTypeId, int[] instanceId = null);
+
+        /// <summary>
+        /// Извличане на данни за съдебна структура за падащ списък
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="departmentTypeId">Тип елемент</param>
+        /// <param name="instanceId">Списък с идентификатори за инстанция</param>
+        /// <param name="caseGroupId">Група на дело</param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> Department_SelectDDLAsync(int courtId, int departmentTypeId, int[] instanceId = null, int? caseGroupId = null);
+
+        /// <summary>
+        /// Извличане на данни за съдебна структура за падащ списък
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Идентификатор на лице</param>
+        /// <param name="departmentTypeId">Тип елемент</param>
+        /// <param name="caseGroupId">Група на дело</param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> GetDDL_DepartmentByLawUnit(int courtId, int lawUnitId, int? departmentTypeId = null, int? caseGroupId = null);
+
         IQueryable<CourtDepartmentVM> CourtDepartmentByLawUnit_Select(int LawUnitId, int CourtId);
     }
 }

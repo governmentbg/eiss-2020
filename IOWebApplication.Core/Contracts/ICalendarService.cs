@@ -6,8 +6,8 @@ namespace IOWebApplication.Core.Contracts
 {
     public interface ICalendarService : IBaseService
     {
-        IEnumerable<CalendarVM> SelectByPerson(DateTime start,DateTime end);
-        IEnumerable<CalendarVM> SelectSessionHallUse(int CourtHallId, DateTime start, DateTime end);
+        IEnumerable<CalendarVM> SelectByPerson(DateTime start, DateTime end, int caseMode = 0);
+        //IEnumerable<CalendarVM> SelectSessionHallUse(int CourtHallId, DateTime start, DateTime end);
 
     }
 }

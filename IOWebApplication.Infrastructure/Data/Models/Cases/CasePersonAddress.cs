@@ -26,7 +26,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(AddressId))]
         public virtual Address Address { get; set; }
-        public virtual ICollection<CasePersonAddressH> History { get; set; }
+        public virtual ICollection<CasePersonAddressH>? History { get; set; }
 
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
@@ -41,6 +41,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
+
+
     }
     /// <summary>
     /// Адреси към страна по делото - история
@@ -59,6 +61,16 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(Id))]
         public virtual CasePersonAddress CasePersonAddress { get; set; }
+
+        public CasePersonAddressH()
+        {
+            HistoryDate = new DateTime(1800, 1, 1);
+        }
+
+        public void ClearForeignKeys()
+        {
+            CasePersonAddress = null;
+        }
     }
 
     public class BaseInfo_CasePersonAddress : UserDateWRT

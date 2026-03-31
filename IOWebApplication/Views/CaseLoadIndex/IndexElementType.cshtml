@@ -52,6 +52,33 @@
                         searchable: true
                     },
                     {
+                        name: 'isActiveText',
+                        data: 'isActiveText',
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'dateStart',
+                        data: 'dateStart',
+                        title: 'Начало',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'dateEnd',
+                        data: 'dateEnd',
+                        title: 'Край',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY") : data;
+                        }
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",

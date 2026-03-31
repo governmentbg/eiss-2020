@@ -35,22 +35,20 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseSessionDocVM> CaseSessionDoc_Select(int CaseSessionId)
         {
             return repo.AllReadonly<CaseSessionDoc>()
-                       .Include(x => x.CaseSession)
-                       .Include(x => x.Document)
-                       .ThenInclude(x => x.DocumentType)
-                       .Include(x => x.SessionDocState)
-                       .Where(x => x.CaseSessionId == CaseSessionId &&
-                                   x.DateExpired == null)
-                       .Select(x => new CaseSessionDocVM()
-                       {
-                           Id = x.Id,
-                           CaseSessionId = x.CaseSessionId,
-                           DocumentId = x.DocumentId,
-                           DocumentLabel = (x.Document != null) ? x.Document.DocumentNumber + " / " + x.Document.DocumentDate.ToString("dd.MM.yyyy") + " / " + x.Document.DocumentType.Label : string.Empty,
-                           SessionDocStateLabel = (x.SessionDocState != null) ? x.SessionDocState.Label : string.Empty,
-                           DateFrom = x.DateFrom
-                       })
-                       .AsQueryable();
+                   .Where(x => x.CaseSessionId == CaseSessionId &&
+                               x.DateExpired == null &&
+                               x.Document.DateExpired == null)
+                   .Select(x => new CaseSessionDocVM()
+                   {
+                       Id = x.Id,
+                       CaseSessionId = x.CaseSessionId,
+                       DocumentId = x.DocumentId,
+                       DocumentNumber = x.Document.DocumentNumber,
+                       DocumentLabel = $"{x.Document.DocumentNumber} / {x.Document.DocumentDate.ToString("dd.MM.yyyy")} / {x.Document.DocumentType.Label}", /*x.Document.DocumentNumber + " / " + x.Document.DocumentDate.ToString("dd.MM.yyyy") + " / " + x.Document.DocumentType.Label,*/
+                       SessionDocStateLabel = x.SessionDocState.Label,
+                       DateFrom = x.DateFrom
+                   })
+                   .AsQueryable();
         }
 
         /// <summary>
@@ -71,7 +69,6 @@ namespace IOWebApplication.Core.Services
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
 
-                    repo.Update(saved);
                     repo.SaveChanges();
                 }
                 else
@@ -84,7 +81,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в CaseSessionDocService.CaseSessionDoc");
                 return false;
             }
         }
@@ -131,13 +128,13 @@ namespace IOWebApplication.Core.Services
                                                   x.DateExpired == null)
                                       .ToList();
 
-            foreach (var doc in documents)
+            foreach (var doc in documents.OrderByDescending(x => x.Document.DocumentDate))
             {
                 if (!casesessiondocs.Any(x => x.DocumentId == doc.DocumentId))
                     checkListVMs.Add(FillCheckListVM(doc.Document));
             }
 
-            return checkListVMs.OrderBy(x => x.Label).ToList();
+            return checkListVMs;
         }
 
         /// <summary>
@@ -216,7 +213,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в CaseSessionDocService.SaveCaseSessionDoc");
                 return false;
             }
         }
@@ -244,7 +241,8 @@ namespace IOWebApplication.Core.Services
                        .ThenInclude(x => x.DocumentType)
                        .Include(x => x.SessionDocState)
                        .Where(x => x.CaseSession.CaseId == CaseId &&
-                                   x.DateExpired == null)
+                                   x.DateExpired == null &&
+                                   x.Document.DateExpired == null)
                        .Select(x => new CaseSessionDocVM()
                        {
                            Id = x.Id,

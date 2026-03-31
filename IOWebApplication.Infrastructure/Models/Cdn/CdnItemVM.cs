@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using System;
 using System.IO;
 
 namespace IOWebApplication.Infrastructure.Models.Cdn
 {
     public class CdnItemVM : CdnUploadRequest
     {
-        public int MongoFileId { get; set; }
         public DateTime DateUploaded { get; set; }
         public DateTime? DateExpired { get; set; }
         public string SafeFileName
@@ -60,6 +58,26 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
                         return true;
                 }
                 return false;
+            }
+        }
+
+        public bool HasSignerInfo
+        {
+
+            get
+            {
+                return SourceType == SourceTypeSelectVM.DocumentFromElectronicDocument &&
+                    Path.GetExtension(this.FileName).ToLower() == ".pdf";
+            }
+        }
+
+        public string MongoFileTypeCode { get; set; }
+        public string MongoFileTypeName { get; set; }
+        public string DisplayName
+        {
+            get
+            {
+                return MongoFileTypeName ?? Title;
             }
         }
 

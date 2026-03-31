@@ -11,6 +11,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
         public string SessionResultLabel { get; set; }
         public string ActTypeLabel { get; set; }
         public string IsCreateMotiveText { get; set; }
+        public string IsSpecialOpinionText { get; set; }
         public string IsCreateCaseText { get; set; }
+        public DateTime DateStart { get; set; }
+        public DateTime? DateEnd { get; set; }
     }
 }

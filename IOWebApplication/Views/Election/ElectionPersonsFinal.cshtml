@@ -1,0 +1,144 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Data.Models.Election
+@model ElectionGroup;
+
+@{
+
+
+    ViewData["Title"] = @ViewBag.Title;
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+
+
+
+
+
+        <li><a href="@Url.Action("Index","Election")">Списък избори</a></li>
+
+
+</ol>
+}
+
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseTab">
+        @*<li class=""><a href="#"><i class="fa fa-users"></i> Списък участници</a></li>*@
+        <li class="active"><a href="#" onclick="document.location.href='@Url.Action("ElectionPersonsFinal",new{ id=ViewBag.ElectionProtocolID})';"><i class="fa fa-newspaper-o"></i> Финализиран списък</a></li>
+
+
+        <li class=""><a href="#" onclick="document.location.href='@Url.Action("ProtocolList",new{ id=Model.Id})';"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+
+        @if (ViewBag.HasUnsignedProtocol == 0)
+        {
+            <a href="@Url.Action("CreateProtocol", "Election")/@(ViewBag.ElectionProtocolID)" class="btn btn-success" title="Случаен избор"><span class="hidden-sm hidden-xs"> Случаен избор</span></a>
+        }
+
+
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListElectionPersonFinished")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+
+                        d.protocolId= @(ViewBag.ElectionProtocolID);
+
+                    }
+                },
+                filter: false,
+
+                columns: [
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'egn',
+                        data: 'egn',
+                        title: 'ЕГН',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'courtName',
+                        data: 'courtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'stateName',
+                        data: 'stateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'descriptionRemoved',
+                        data: 'descriptionRemoved',
+                        title: 'Причини за Неучастие',
+                        sortable: true,
+                        searchable: false
+                    }
+                
+
+
+                ]
+            });
+            table.order([0, 'desc']);
+
+        });
+
+
+    </script>
+    @*<a asp-action="Index" class="btn btn-danger">Назад</a>*@
+    <script id="templateRole" type="text/x-handlebars-template">
+
+        {{label}}
+
+    </script>
+    <script id="templateRemove" type="text/x-handlebars-template">
+
+
+        <a href="@Url.Action("DeleteLawunit")/{{this}}" class="btn btn-danger btn-sm" title="Премахни"><i class="fa fa-remove"></i></a>
+
+</script>
+<script id="templateReplace" type="text/x-handlebars-template">
+
+
+
+    <a href="@Url.Action("LawunitReplace")/{{this}}" class="btn btn btn-sm" title="Замени"><i class="fa fa-random"></i></a>
+
+
+
+</script>
+}

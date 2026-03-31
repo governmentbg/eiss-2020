@@ -18,5 +18,14 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
         [Column("eispp_code")]
         public string EISPPCode { get; set; }
+
+        [Column("code_3")]
+        public string Code3 { get; set; }
+
+        [Column("code_number")]
+        public string CodeNumber { get; set; }
+
+        [Column("is_active")]
+        public bool IsActive { get; set; }
     }
 }

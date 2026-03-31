@@ -13,7 +13,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         public int CourtId { get; set; }
 
-    [Display(Name = "Тип разпределение")]
+         [Display(Name = "Тип разпределение")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете")]
         public int JudgeRoleId { get; set; }
 
@@ -29,7 +29,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = " ")]
         public int CaseGroupId { get; set; }
-
+        [Display(Name = "Група")]
         public int? CourtGroupId { get; set; }
 
         public int CaseCodeId { get; set; }
@@ -42,12 +42,33 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         public string SelectedTab { get; set; }
 
-        [Display(Name = "По отвод")]
+        [Display(Name = "Предходен съдия")]
         public int? CaseLawUnitDismisalId { get; set; }
 
         public string IdStr { get; set; }
 
-    public bool IsProtokolNoSelection { get; set; }
+
+        /// <summary>
+        /// За заместване всички Nulable  Start
+        /// </summary>
+        /// 
+        [Display(Name = "От дата")]
+        public DateTime? DateFrom { get; set; }
+
+        [Display(Name = "До дата")]
+        public DateTime? DateTo { get; set; }
+
+
+        [Display(Name = "Заместван съдия")]
+        public int? SubstitudedJudgeId { get; set; }
+        /// <summary>
+        /// За заместване всички Nulable  End
+        /// </summary>
+        /// 
+        [Display(Name = "Причина за заместване")]
+        public string DescriptionSubstitution { get; set; }
+
+        public bool IsProtokolNoSelection { get; set; }
 
     public IList<CaseSelectionProtokolLawUnitVM> LawUnits { get; set; }
 

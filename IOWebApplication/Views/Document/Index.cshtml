@@ -1,108 +1,122 @@
-﻿@using IOWebApplication.Infrastructure.Models.Documents
+﻿@using IOWebApplication.Infrastructure.Constants;
+@using IOWebApplication.Infrastructure.Models.Documents
 @using IOWebApplication.Infrastructure.Contracts
 @inject IUserContext userContext
 @model DocumentFilterVM
 @{
+    string title = "Регистрирани документи";
+    if (Model.GlobalAssignmentRegister)
+    {
+        title = "Регистратура Централизирано разпределение";
+    }
     bool hasRegNumberOtherSystem = (bool)(ViewBag.HasRegNumberOtherSystem ?? false);
-    ViewData["Title"] = "Регистрирани документи";
+    ViewData["Title"] = title;
+    ViewData["ShowWaitingElectronicDocs"] = true;
 }
 
-@section breadcrumb{
+@section breadcrumb {
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
-        <li class="active">Съдебна регистратура</li>
+        <li class="active">@title</li>
     </ol>
 }
+
+<input type="hidden" asp-for="@Model.GlobalAssignmentRegister" />
+
 <div class="filter-form">
     <div class="row">
-        <div class="col-lg-2 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.CourtOrganizationId, "GenericDropDown")
-        </div>
-        <div class="col-lg-2 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DateFrom, "DateTime")
-        </div>
-        <div class="col-lg-2 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DateTo, "DateTime")
-        </div>
+        <div class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.CourtOrganizationId, "GenericDropDown")</div>
+        <div class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.DocumentNumber, "String")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.DocumentYear, "DateTimeYear")</div>
+    </div>
 
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DocumentNumber, "String")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DocumentYear, "DateTimeYear")
-        </div>
-    </div>
     <div class="row">
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DocumentDirectionId, "GenericDropDown")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DocumentKindId, "GenericDropDown")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")
-        </div>
+        <div class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.DocumentDirectionId, "GenericDropDown")</div>
+        <div class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.DocumentKindId, "GenericDropDown")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")</div>
+        <div id="divInput" class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.DeliveryGroupInputId, "GenericDropDown")</div>
+        <div id="divOutput" class="col-lg-2 col-md-6 col-sm-12">@Html.EditorFor(m => m.DeliveryGroupOutputId, "GenericDropDown")</div>
     </div>
+
     <div class="row">
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.Description, "String")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.PersonName, "String")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.PersonUIC, "String")
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12">
-            @Html.EditorFor(m => m.PersonRoleId, "GenericDropDown")
-        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.Description, "String")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.PersonName, "String")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.PersonUIC, "String")</div>
+        <div class="col-lg-3 col-md-6 col-sm-12">@Html.EditorFor(m => m.PersonRoleId, "GenericDropDown")</div>
     </div>
 
     <fieldset class="is-fieldset">
         <legend class="casereport-legend">Разширено търсене</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.CaseEisppNumber)</div>
+        @if (Model.GlobalAssignmentRegister)
+        {
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.EpepNumber)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CreatedCourtId, "SelectCourt")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.AssignedInCourtId, "SelectCourt")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.AssignedCaseNumber)</div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.DocumentRequestTypeId, "GenericDropDown")</div>
+                    
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CaseEisppNumber)</div>
+                    @if (hasRegNumberOtherSystem)
+                    {
+                        <div class="col-lg-3">@Html.EditorFor(x => x.VisibleOtherSystem)</div>
+                    }
+                    <div class="col-lg-3">@Html.EditorFor(x => x.EpepNumber)</div>
+                </div>
+
+                <div class="row" id="linkCaseInfo">
+                    <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_Description)</div>
+                </div>
+
                 @if (hasRegNumberOtherSystem)
                 {
-                    <div class="col-lg-3">@Html.EditorFor(x => x.VisibleOtherSystem)</div>
+                    <div class="row" id="otherSystemDelo">
+                        <div class="col-lg-3"> @Html.EditorFor(x => x.CourtOtherSystem, "SelectCourt")</div>
+                        <div class="col-lg-3">@Html.EditorFor(m => m.YearOtherSystem, "DateTimeYear")</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                    </div>
                 }
-            </div>
 
-            <div class="row" id="linkCaseInfo">
-                <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_Description)</div>
-            </div>
-
-            @if (hasRegNumberOtherSystem)
-            {
-                <div class="row" id="otherSystemDelo">
-                    <div class="col-lg-3"> @Html.EditorFor(x => x.CourtOtherSystem, "SelectCourt")</div>
-                    <div class="col-lg-3">@Html.EditorFor(m => m.YearOtherSystem, "DateTimeYear")</div>
-                    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionId, "SelectInstitution", null, new { institutionTypeContainer = "#InstitutionTypeId" })</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseNumber)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseYear, "DateTimeYear")</div>
                 </div>
-            }
-
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionTypeId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionId, "SelectInstitution", null, new { institutionTypeContainer = "#InstitutionTypeId" })</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseNumber)</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseYear, "DateTimeYear")</div>
             </div>
-        </div>
+        }
     </fieldset>
 
     <div class="row">
-        <div class="col-md-6 text-left pb-15">
+        <div class="col-md-3 text-left pb-15">
             <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
                 Филтриране
                 <i class="fa fa-search" title="Търсене"></i>
             </button>
+        </div>
+        <div class="col-lg-9 text-right">
+            @if (Model.GlobalAssignmentRegister)
+            {
+                <a asp-action="AddForAssignment" asp-route-requestType="@DocumentConstants.ElectronicDocumentRequestTypes.IDs.FastProcess410" class="btn btn-success">Заявление по чл.410</a>
+                <a asp-action="AddForAssignment" asp-route-requestType="@DocumentConstants.ElectronicDocumentRequestTypes.IDs.FastProcess417" class="btn btn-success">Заявление по чл.417</a>
+                <a asp-action="AddForAssignment" asp-route-requestType="@DocumentConstants.ElectronicDocumentRequestTypes.IDs.FastProcess417a1t3610" class="btn btn-success" title="Заявление по чл. 417, ал. 1, т 3, 6 и 10">Заявление по чл.417 т.3, 6 и 10</a>
+            }
         </div>
     </div>
 </div>
@@ -129,7 +143,7 @@
                     "type": "POST",
                     "datatype": "json",
                     data: function (d) {
-                        d.model = {
+                        d.filter = {
                             courtOrganizationId: $('#CourtOrganizationId').val(),
                             documentDirectionId: $('#DocumentDirectionId').val(),
                             documentKindId: $('#DocumentKindId').val(),
@@ -155,19 +169,27 @@
                             InstitutionTypeId: $('#InstitutionTypeId').val(),
                             InstitutionId: $('#InstitutionId').val(),
                             InstitutionCaseNumber: $('#InstitutionCaseNumber').val(),
-                            InstitutionCaseYear: $('#InstitutionCaseYear').val()
+                            InstitutionCaseYear: $('#InstitutionCaseYear').val(),
+                            DeliveryGroupInputId: $('#DeliveryGroupInputId').val(),
+                            DeliveryGroupOutputId: $('#DeliveryGroupOutputId').val(),
+                            GlobalAssignmentRegister:$('#GlobalAssignmentRegister').val(),
+                            EpepNumber: $('#EpepNumber').val(),
+                            CreatedCourtId: $('#CreatedCourtId').val(),
+                            AssignedInCourtId: $('#AssignedInCourtId').val(),
+                            AssignedCaseNumber: $('#AssignedCaseNumber').val(),
+                            DocumentRequestTypeId : $('#DocumentRequestTypeId').val()
                         };
                     }
                 },
                 filter: false,
                 columnDefs: [{
                     targets: [0],
-                    orderData: [7]
+                    orderData: [0]
                 }],
                 columns: [
                     {
-                        name: 'documentNumber',
-                        data: 'documentNumber',
+                        name: 'documentNumberValue',
+                        data: 'documentNumberValue',
                         title: 'Номер на документ',
                         sortable: true,
                         searchable: false,
@@ -185,26 +207,49 @@
                             return JsonBGdateTime(value);
                         }
                     },
-                    {
-                        name: 'documentDirectionName',
-                        data: 'documentDirectionName',
-                        title: 'Вх/Изх/Втр',
-                        sortable: true,
-                        searchable: true
-                    },
+    @if (!Model.GlobalAssignmentRegister)
+    {
+        <text>
+                                    {
+                                        name: 'documentDirectionName',
+                                        data: 'documentDirectionName',
+                                        title: 'Вх/Изх/Втр',
+                                        sortable: true,
+                                        searchable: true
+                                    },
+
+        </text>
+    }
+
                     {
                         name: 'documentTypeName',
                         data: 'documentTypeName',
                         title: 'Вид документ',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (a, b, item, d) {
+                           let result = item.documentTypeName;
+                           // if(item.documentRequestName){
+                           //     result += "<br/>" + item.documentRequestName;
+                           // }
+                           if(item.caseCodeName){
+                               result += `<br/><span class="text-muted">${item.caseCodeName}</span>`;
+                           }
+                           return result;
+                        }
                     },
                     {
                         name: 'userName',
-                        data: 'userName',
                         title: 'Регистрирал',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (a, b, item, d) {
+                            if(item.createdCourtName){
+                                return `${item.userName} <br/> <span class="text-muted">${item.createdCourtName}</span>`;
+                            }else{
+                                return item.userName
+                            }
+                        }
                     },
                     {
                         name: 'persons',
@@ -215,15 +260,41 @@
                             return TemplateToHtml('#templatePerson', item);
                         }
                     },
-                    {
-                        name: 'case',
-                        title: "Номер на дело",
-                        sortable: false,
-                        searchable: false,
-                        "render": function (a, b, item, d) {
-                            return TemplateToHtml('#templateCase', item);
-                        }
-                    },
+
+    @if (Model.GlobalAssignmentRegister)
+    {
+        <text>
+                                                {
+                                            name: 'regCases',
+                                            title: "Образувани дела",
+                                            sortable: false,
+                                            searchable: false,
+                                            "render": function (a, b, item, d) {
+                                                return TemplateToHtml('#templateRegCases', item);
+                                            }
+                                        },
+
+        </text>
+    }
+    else
+    {
+        <text>
+                                        {
+                                            name: 'case',
+                                            title: "Номер на дело",
+                                            sortable: false,
+                                            searchable: false,
+                                            "render": function (a, b, item, d) {
+                                                return TemplateToHtml('#templateCase', item);
+                                            }
+                                        },
+        </text>
+    }
+
+
+
+
+
                     {
                         name: 'documentNumberValue',
                         data: 'documentNumberValue',
@@ -238,7 +309,7 @@
                         title: 'Описание',
                         sortable: true,
                         searchable: true,
-                        visible:false
+                        visible: false
                     },
                     {
                         name: 'actions',
@@ -256,6 +327,27 @@
             table.order([1, 'desc']);
         }
     }
+</script>
+
+<script>
+    $(function () {
+        $('#DocumentDirectionId').change(function () {
+            SH_InputOutput();
+            requestCombo('@Url.Action("GetDDL_DocumentKind", "Ajax")', { documentDirectionId: $(this).val(), addDefaultElement: true }, '#DocumentKindId', '@(Model.DocumentKindId)', function (e) {
+                $(e).trigger('change');
+            });
+        }).trigger('change');
+        $('#DocumentKindId').change(function () {
+            requestCombo('@Url.Action("GetDDL_DocumentGroup", "Ajax")', { documentKindId: $(this).val(), addDefaultElement: true }, '#DocumentGroupId', '@(Model.DocumentGroupId)', function (e) {
+                $(e).trigger('change');
+            });
+        }).trigger('change');
+        $('#DocumentGroupId').change(function () {
+            requestCombo('@Url.Action("GetDDL_DocumentType", "Ajax")', { documentGroupId: $(this).val(), addDefaultElement: true }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function (e) {
+                $(e).trigger('change');
+            });
+        }).trigger('change');
+    });
 
     $(document).on('click', 'legend.casereport-legend', function () {
         $(this).parent().find('.legendbody').toggle();
@@ -269,6 +361,7 @@
             loadInstitution(instControl, '0');
         });
         SH_OtherSystem();
+        SH_InputOutput();
     });
 
     function courtSelect() {
@@ -282,7 +375,6 @@
     });
 
     function SH_OtherSystem() {
-        debugger;
         var visibleOS = $("#VisibleOtherSystem").is(":checked");
         if (visibleOS) {
             $("#linkCaseInfo").hide();
@@ -293,44 +385,54 @@
             $("#otherSystemDelo").hide();
         }
     }
+
+    function SH_InputOutput()
+    {
+        var documentDirectionId = $("#DocumentDirectionId").val();
+
+        $("#divInput").hide();
+        $("#divOutput").hide();
+
+        if (documentDirectionId == @DocumentConstants.DocumentDirection.Incoming)
+        {
+            $("#divInput").show();
+        }
+
+        if (documentDirectionId == @DocumentConstants.DocumentDirection.OutGoing)
+        {
+            $("#divOutput").show();
+        }
+    }
 </script>
 
-<script>
-        $(function () {
-            $('#DocumentDirectionId').change(function () {
-                    requestCombo('@Url.Action("GetDDL_DocumentKind", "Ajax")', { documentDirectionId: $(this).val(),addDefaultElement:true }, '#DocumentKindId', '@(Model.DocumentKindId)', function (e) {
-                        $(e).trigger('change');
-                    });
-            }).trigger('change');
-            $('#DocumentKindId').change(function () {
-                    requestCombo('@Url.Action("GetDDL_DocumentGroup", "Ajax")', { documentKindId: $(this).val() ,addDefaultElement:true}, '#DocumentGroupId', '@(Model.DocumentGroupId)', function (e) {
-                        $(e).trigger('change');
-                    });
-            }).trigger('change');
-            $('#DocumentGroupId').change(function () {
-                    requestCombo('@Url.Action("GetDDL_DocumentType", "Ajax")', { documentGroupId: $(this).val(),addDefaultElement:true }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function (e) {
-                        $(e).trigger('change');
-                    });
-            }).trigger('change');
-        });
-</script>
 <script id="templatePerson" type="text/x-handlebars-template">
     {{#each persons}}
     <div>{{name}} ({{roleName}})</div>
     {{/each}}
 </script>
+
 <script id="templateNumber" type="text/x-handlebars-template">
     <a href="@Url.Action("View")/{{id}}" title="Преглед">{{documentNumber}}</a>
 </script>
+
 <script id="templateCase" type="text/x-handlebars-template">
     {{#if caseId}}
     {{#if isCaseRejected}}
     <a href="@Url.Action("Edit", "Case")?id={{caseId}}" target="_blank" title="Данни за делото">{{rejectedStateName}}</a>
     {{else}}
-    <a href="@Url.Action("CasePreview","Case")/{{caseId}}" target="_blank" title="Преглед дело">{{caseNumber}}</a>
+    <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" target="_blank" title="Преглед дело">{{caseNumber}}</a>
     {{/if}}
     {{/if}}
 </script>
+
+<script id="templateRegCases" type="text/x-handlebars-template">
+    {{#each regCases}}
+    <div>
+    <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" target="_blank" title="Преглед дело - {{caseCourt}}">{{caseNumber}}</a>
+    </div>
+    {{/each}}
+</script>
+
 <script id="templateEdit" type="text/x-handlebars-template">
     <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i></a>
     <a href="@Url.Action("View")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i></a>

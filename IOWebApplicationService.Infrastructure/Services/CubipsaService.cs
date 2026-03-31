@@ -10,7 +10,6 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplicationService.Infrastructure.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Crypto.Operators;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -62,16 +61,34 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         private async Task SendAct(MQEpep mq)
         {
-
+            string stepInfo = "";
             try
             {
+
+                var intKey = getKeyGuid(SourceTypeSelectVM.CaseSessionAct, mq.SourceId);
+                if (intKey != Guid.Empty)
+                {
+                    stepInfo = $"intKey: {intKey}";
+                    if (mq.MethodName == EpepConstants.Methods.Add)
+                    {
+                        mq.MethodName = EpepConstants.Methods.Update;
+                    }
+                }
 
                 switch (mq.MethodName)
                 {
                     case EpepConstants.Methods.Add:
+                        {
+                            var actModel = await initModel((int)mq.SourceId);
+                            await serviceClient.SendActAsync(actModel);
+                        }
+                        break;
                     case EpepConstants.Methods.Update:
                         {
                             var actModel = await initModel((int)mq.SourceId);
+                            stepInfo = "delete";
+                            await serviceClient.DeleteActAsync(actModel);
+                            stepInfo = "send";
                             await serviceClient.SendActAsync(actModel);
                         }
                         break;
@@ -95,6 +112,8 @@ namespace IOWebApplicationService.Infrastructure.Services
 
 
                 UpdateMQ(mq, true);
+
+                
             }
             catch (Exception ex)
             {
@@ -104,7 +123,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         private async Task<Act> initModel(int id, bool correctMode = false)
         {
-            var actInfo = repo.AllReadonly<CaseSessionAct>()
+            var actInfo = await repo.AllReadonly<CaseSessionAct>()
                                 .Include(x => x.CaseSession)
                                 .Where(x => x.Id == id)
                                 .Select(x => new
@@ -125,10 +144,10 @@ namespace IOWebApplicationService.Infrastructure.Services
                                     ActNumber = x.RegNumber,
                                     EcliCode = x.EcliCode,
                                     ActYear = x.RegDate.Value.Year
-                                }).FirstOrDefault();
+                                }).FirstOrDefaultAsync();
 
             var docTemplates = repo.AllReadonly<DocumentTemplate>();
-            var migrationInfo = repo.AllReadonly<CaseMigration>()
+            var migrationInfo = await repo.AllReadonly<CaseMigration>()
                                         .Where(x => x.CaseSessionActId == id && x.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel)
                                         .Where(x => x.SendToCourtId > 0)
                                         .OrderByDescending(x => x.Id)
@@ -140,14 +159,14 @@ namespace IOWebApplicationService.Infrastructure.Services
                                                                     .Where(d => d.DocumentId > 0)
                                                                     .Select(d => d.DocumentId)
                                                                     .FirstOrDefault()
-                                        }).FirstOrDefault();
+                                        }).FirstOrDefaultAsync();
 
 
 
 
             var model = new Act()
             {
-                UID = AppendUpdateIntegrationKey(SourceTypeSelectVM.CaseSessionAct, id),
+                UID = AppendUpdateIntegrationKeyGuid(SourceTypeSelectVM.CaseSessionAct, id),
                 ActKind = GetNomValueInt(EpepConstants.Nomenclatures.ActTypes, actInfo.ActTypeId),
                 CaseKind = GetNomValueInt(EpepConstants.Nomenclatures.CaseTypes, actInfo.CaseTypeId),
                 CaseNumber = actInfo.CaseNumber,

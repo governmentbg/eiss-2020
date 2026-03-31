@@ -9,5 +9,7 @@ namespace IOWebApplication.Infrastructure.Contracts
     public interface IEpepConnectionService
     {
         Task<IeCaseServiceClient> Connect();
+
+        Task Reconnect(IeCaseServiceClient serviceClient);
     }
 }

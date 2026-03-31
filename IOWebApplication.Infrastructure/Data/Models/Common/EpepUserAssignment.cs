@@ -11,7 +11,7 @@ using System.Text;
 namespace IOWebApplication.Infrastructure.Data.Models.Common
 {
     [Table("epep_user_assignment")]
-    public class EpepUserAssignment : UserDateWRT, IExpiredInfo
+    public class EpepUserAssignment : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -41,6 +41,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Разрешено призоваване чрез ЕПЕП")]
         public bool? CanSummon { get; set; }
 
+        [Display(Name = "Качество на страната")]
+        [Column("assignment_role")]
+        public int? AssignmentRole { get; set; }
+
         //===============================================================
 
         [Column("date_expired")]
@@ -57,7 +61,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
 
-       
+
 
         [ForeignKey(nameof(EpepUserId))]
         public virtual EpepUser EpepUser { get; set; }

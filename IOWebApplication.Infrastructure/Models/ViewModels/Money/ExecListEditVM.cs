@@ -9,6 +9,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
     {
         public int Id { get; set; }
 
+        public int? CaseId { get; set; }
+
         public int ExecListTypeId { get; set; }
 
         [Display(Name ="Изпълнително дело")]
@@ -38,5 +40,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         [Display(Name = "Статус")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете статус")]
         public int? ExecListStateId { get; set; }
+
+        public bool IsActive { get; set; }
+
+        [Display(Name = "Генериране на партида")]
+        public bool GenerateExecProcess { get; set; }
+
+        public DateTime? DateSigned { get; set; }
     }
 }

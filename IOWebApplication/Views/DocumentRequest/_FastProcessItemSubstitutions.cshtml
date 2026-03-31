@@ -1,0 +1,36 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+@{
+    var containerId = Guid.NewGuid().ToString();
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+<div class="itemSubstitutionList">
+    <h3 class="section-title section-title--xxs mb-3">Вземане за предаване на заместими вещи</h3>
+    <div class="dynamic-form" data-reindex="true" data-container="@containerId" data-addcallback="callbackAddSubstItemClaim" data-removecallback="callbackRemoveSubstItem">
+        <table class="fast-process-tbl" id="@containerId">
+            <tr>
+                <th>No</th>
+                <th>Вид/Качество</th>
+                <th>Количество</th>
+                @if (isInEuro)
+                {
+                    <th width="100px">Сума, евро</th>
+                }
+                else
+                {
+                    <th width="100px">Сума, лв</th>
+                }
+                <th width="30px"></th>
+            </tr>
+            @for (int i = 0; i < Model.ItemSubstitutionClaims.Count(); i++)
+            {
+                Model.ItemSubstitutionClaims[i].Index = i;
+                ViewData.TemplateInfo.HtmlFieldPrefix = Model.ItemSubstitutionClaims[i].GetPath;
+
+                <partial name="_FastProcessItemSubstitutionItem" model="@Model.ItemSubstitutionClaims[i]" />
+                ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+            }
+        </table>
+        <button class="btn u-btn-border cta-add-dark add-item" data-container="@containerId" data-url="@Url.Action("New_ItemSubstitutionClaim")" data-index="@Model.ItemSubstitutionClaims.Count()">Добави ново вземане</button>
+    </div>
+</div>

@@ -43,10 +43,16 @@
 <div id="modalMessageContainer">
 </div>
 <script>
-    let selfTasks = JSON.parse('@ViewBag.SelfTasks');
-    var taskInfos = JSON.parse('@Html.Raw(ViewBag.TaskInfo)');
-    $(function () {
-        attachAjaxForm('#wtModalForm', function (data) {
+    //let selfTasks = JSON.parse('@ViewBag.SelfTasks');
+    //var taskInfos = JSON.parse('@Html.Raw(ViewBag.TaskInfo)');
+    if (typeof selfTasks === 'undefined') {
+        var selfTasks = JSON.parse('@ViewBag.SelfTasks');
+    }
+    if (typeof taskInfos === 'undefined') {
+        var taskInfos = JSON.parse('@Html.Raw(ViewBag.TaskInfo)');
+    }
+    $(function() {
+        attachAjaxForm('#wtModalForm', function(data) {
             if (data.responseJSON.result == true) {
                 wtLoadData();
                 HideModal();
@@ -59,25 +65,25 @@
         initOrganizations();
         initDatePicker();
 
-        $('#TaskTypeId').change(function () {
+        $('#TaskTypeId').change(function() {
             if (selfTasks.includes(parseInt($(this).val()))) {
                 $('#wtEditTaskUserContainer').hide();
             } else {
                 $('#wtEditTaskUserContainer').show();
             }
             let taskTypeId = $(this).val();
-            var taskInfo = taskInfos.filter(function (x) {
+            var taskInfo = taskInfos.filter(function(x) {
                 return x.id == taskTypeId;
             });
             //console.log(taskInfo);
             if (taskInfo.length > 0 && taskInfo[0].description) {
-                $('#taskInfo').html('<i class="fa fa-info-circle"></i>&nbsp;'+taskInfo[0].description);
+                $('#taskInfo').html('<i class="fa fa-info-circle"></i>&nbsp;' + taskInfo[0].description);
             } else {
                 $('#taskInfo').text('');
             }
         }).trigger('change');
 
-        $('input[name="TaskExecutionId"]').click(function () {
+        $('input[name="TaskExecutionId"]').click(function() {
             if ($(this).is(':checked')) {
                 switch ($(this).val()) {
                     case '@WorkTaskConstants.TaskExecution.ByUser':

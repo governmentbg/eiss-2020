@@ -15,7 +15,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string Description { get; set; }
         public DateTime DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
-        public int DateTo_Minutes { get; set; }
+        
+        public int DateTo_Minutes 
+        { 
+            get
+            {
+                return Convert.ToInt32(((TimeSpan)(DateTo ?? DateFrom).Subtract(DateFrom)).TotalMinutes);
+            }
+        }
+
         public string SessionStateString { get; set; }
         public string JudgeRapporteur { get; set; }
         public string Prokuror { get; set; }

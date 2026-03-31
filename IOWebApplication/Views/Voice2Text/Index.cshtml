@@ -1,0 +1,92 @@
+﻿<fieldset class="is-fieldset v2t-search-container">
+    <legend class="legend_1">Търсене на файл</legend>
+    <form>
+        <div class="v2t-loader">Моля, изчакайте зареждането на данните за вашия потребител...</div>
+        <div class="row v2t-search-term" style="display:none;">
+            <div class="col-lg-9">
+                <div class="form-group ">
+                    <label class="control-label">Въведете име или част от име на файл</label>
+                    <input id="txtV2Tname" class="form-control" />
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <a href="#" class="btn btn-info" onclick="V2TlistFiles();return false;" style="margin-top:20%;">Търсене</a>
+            </div>
+        </div>
+        <div class="row v2t-file-content" style="display:none;">
+            <div class="col-lg-9">
+                <div class="form-group ">
+                    <label class="control-label">Изберете файл за изтегляне на съдържанието</label>
+                    <select id="selV2Tfile" class="form-control"></select>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <label class="control-label">&nbsp;</label>
+                <a href="#" class="btn btn-success" onclick="V2TloadContent();return false;" style="margin-top:20%;">Зареди</a>
+            </div>
+        </div>
+    </form>
+</fieldset>
+<div class="v2t-not-authorized" style="display:none;">
+    <h4>Нямате създаден профил в системата Voice to text, моля обърнете се към администратор.</h4>
+</div>
+<div class="v2t-general-error" style="display:none;">
+    <h4 class="text-danger"> В момента услугата на Voice to text не е налична.</h4>
+</div>
+<script src="~/js/prod/cert-info.min.js"></script>
+<script src="~/js/scs/signerInfo.js"></script>
+<script>
+    $(function () {
+        checkAuthorized();
+    });
+    //function loadClientCertificate() {
+    //    GetSignInfo().then(d => {
+    //        clientCertificate = d.signerCert
+    //        checkAuthorized();
+    //        console.log(clientCertificate);
+    //    });
+    //}
+    function checkAuthorized() {
+        postContent('@Url.Action("IsAuthenticated", "Voice2Text")', null, function (data) {
+            $('.v2t-loader').hide();
+            if (!data) {
+                swalError('В момента няма връзка със системата Voice to Text!');
+            }
+
+            if (data.isAuthorized) {
+                $('.v2t-search-term').show();
+            } else {
+                $('.v2t-search-container').hide()
+                if (data.generalError) {
+                    $('.v2t-general-error').show();
+                    console.log(`Voice2Text Error: ${data.response}`);
+                } else {
+                    $('.v2t-not-authorized').show();
+                }
+            }
+        });
+    }
+    function V2TlistFiles() {
+
+        postContent('@Url.Action("List", "Voice2Text")', { name: $('#txtV2Tname').val() }, function (data) {
+            fillCombo(data, '#selV2Tfile');
+            $('.v2t-file-content').show();
+        });
+    }
+    function V2TloadContent() {
+        let fileId = $('#selV2Tfile').val();
+        if (fileId == '-1') {
+            swalOk('Моля, изберете файл за изтегляне!');
+            return false;
+        }
+        postContent('@Url.Action("FileContent", "Voice2Text")', { fileId: fileId }, function (text) {
+            if (text) {
+                navigator.clipboard.writeText(text);
+                HideModal();
+                swalOk('Съдържанието на избрания файл е копирано в клипборда.');
+            } else {
+                swalError('Избраното съдържание не е достъпно в момента. Моля, опитайте по-късно.');
+            }
+        });
+    }
+</script>

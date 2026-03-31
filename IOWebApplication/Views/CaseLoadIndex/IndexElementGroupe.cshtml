@@ -67,6 +67,13 @@
                         searchable: true
                     },
                     {
+                        name: 'isAdditionalText',
+                        data: 'isAdditionalText',
+                        title: 'Допълнителна дейност',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -77,7 +84,14 @@
                             return TemplateToHtml('#templateEdit', value);
                         }
                     }
-                ]
+                ],
+                "createdRow": function (row, data, index) {
+                    if (data.isValid == false) {
+                        $(row).css("background-color", "#ffe0e0");
+                        $(row).css("color", "#d80000");
+                        $(row).attr('title', 'В сила до ' + moment(data.dateEnd).format("DD.MM.YYYY"))
+                    }
+                }
             }).order([[ 0, "asc" ]]);
         });
     </script>

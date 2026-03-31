@@ -1,0 +1,11 @@
+﻿@model bool
+@{ 
+    var add_class = ((string)ViewData["class"] ?? "");
+}
+<div class="form-group">
+    <label asp-for="@Model" class="control-label">
+        @Html.CheckBox("", Model, new { @class = "eispp-checkbox " + add_class })
+        @ViewData["label"]
+        @*<label class="control-label">@ViewData["label"]</label>*@
+    </label>
+</div>

@@ -31,6 +31,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("is_active")]
         public bool IsActive { get; set; }
 
+        [Display(Name = "Начална дата")]
+        [Column("date_start")]
+        public DateTime? DateStart { get; set; }
+
+        [Display(Name = "Крайна дата")]
+        [Column("date_end")]
+        public DateTime? DateEnd { get; set; }
+
         [ForeignKey(nameof(SessionResultId))]
         public virtual SessionResult SessionResult { get; set; }
 

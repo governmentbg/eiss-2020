@@ -1,0 +1,53 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Election;
+@model LogSearchVM
+<table id="logTable" class="table table-hover table-striped">
+</table>
+<script>
+    $(function () {
+        var table = $('#logTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("GetLogData")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.electionGroupId = '@Model.Group';
+                    d.personGid = '@Model.Person';
+                    d.electionProtocolId = '@Model.Protocol';
+                }
+
+            },
+            sortable: false,
+            filter: false,
+            columns: [
+                {
+                    name: 'dateWrt',
+                    data: 'dateWrt',
+                    title: 'Дата',
+                    sortable: false,
+                    "render": function (value) {
+                        return JsonBGdateTime(value);
+                    }
+                },
+                {
+                    name: 'userName',
+                    data: 'userName',
+                    title: 'Служител',
+                    sortable: false
+                },
+                {
+                    name: 'operation',
+                    data: 'operation',
+                    title: 'Операция',
+                    sortable: false
+                }
+                ,
+                {
+                    name: 'description',
+                    data: 'description',
+                    title: 'Описание',
+                    sortable: false
+                }
+            ]
+        });
+    });
+</script>

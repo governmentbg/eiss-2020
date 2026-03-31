@@ -1,7 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Base;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -37,8 +35,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Дата до")]
         public DateTime? DateTo { get; set; }
 
+        [Column("hour_fee_eur")]
+        [Display(Name = "Възнаграждение на час в евро")]
+        public decimal HourFeeEUR { get; set; }
+
+        [Column("min_date_fee_eur")]
+        [Display(Name = "Минимална сума на ден в евро")]
+        public decimal MinDayFeeEUR { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
-
     }
 }

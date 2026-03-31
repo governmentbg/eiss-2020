@@ -1,11 +1,14 @@
-﻿@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+﻿@inject IOWebApplication.Infrastructure.Contracts.IDBUserContext dbUserContext;
+@using IOWebApplication.Infrastructure.Constants;
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
 @{
     ViewData["Title"] = "ЕИСС";
     Layout = "~/Views/Shared/_MasterLayout.cshtml";
-    var settings = userContext.Settings().Result;
-
+    var settings = await dbUserContext.Settings();
+    ViewData["ShowWaitingElectronicDocs"] = true;
+    ViewData["ShowMenuCounts"] = true;
 }
-@section menuHeader{
+@section menuHeader {
     <header class="main-header">
         @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
     </header>
@@ -13,13 +16,18 @@
 
 <div class="row">
     <div class="col-lg-6">
+        @if (settings.CaseFastSearchVisible)
+        {
+            <div>
+                <partial name="../Case/_CaseFastSearch.cshtml" model="@(new CaseFastSearchVM())" />
+            </div>
+        }
         @if (settings.NewsVisible)
         {
             <div>
                 <partial name="LatestNews" />
             </div>
         }
-
         @if (settings.CalendarVisible)
         {
             <partial name="CalendarPerson" />
@@ -30,17 +38,22 @@
         {
             @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyTasksComponent))
         }
+        @if (settings.FPnotificationsVisible)
+        {
+            @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyNotificationComponent), new { view = "FPnotifications" })
+        }
         @if (settings.CaseMoveVisible)
         {
             @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyMovementComponent))
         }
+
     </div>
 </div>
 
 
 @section scripts {
     @*Тези скриптове са с демонстрационна цел*@
-    <script type="text/javascript" src="~/lib/adminlte/plugins/chartJs/Chart.js"></script>
+    @*  <script type="text/javascript" src="~/lib/adminlte/plugins/chartJs/Chart.js"></script> *@
     @*<script type="text/javascript" src="~/lib/adminlte/js/pages/dashboard2.js"></script>*@
     @*<script type="text/javascript" src="~/lib/adminlte/js/pages/dashboard2.js"></script>*@
 }

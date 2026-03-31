@@ -1,6 +1,8 @@
+@using IOWebApplication.Core.Helper.GlobalConstants
 @model ErrorViewModel
 @{
     ViewData["Title"] = Model.Title;
+    var dateTimeLabel = DateTime.Now.ToString(FormattingConstant.DateFormat);
 }
 <h2>@ViewData["Title"]</h2>
 <h3>@ViewData["Message"]</h3>
@@ -13,3 +15,6 @@
         @Model.InnerException
     </p>
 }
+<p>
+    @dateTimeLabel
+</p>

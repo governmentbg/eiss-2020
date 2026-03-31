@@ -14,8 +14,8 @@ using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
-using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +25,6 @@ using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
@@ -37,25 +36,26 @@ namespace IOWebApplication.Core.Services
         private readonly IDocumentPersonLinkService documentPersonLinkService;
         private readonly INomenclatureService nomenclatureService;
         private readonly ICdnService cdnService;
+        private readonly IDeliveryAreaAddressService deliveryAreaAddressService;
 
         public DocumentNotificationService(
             ILogger<DocumentNotificationService> _logger,
-            AutoMapper.IMapper _mapper,
             ICounterService _counterService,
             IDeliveryItemService _deliveryItemService,
             IDocumentPersonLinkService _documentPersonLinkService,
             INomenclatureService _nomenclatureService,
+            IDeliveryAreaAddressService _deliveryAreaAddressService,
             ICdnService _cdnService,
             IRepository _repo,
             IUserContext _userContext)
         {
             logger = _logger;
             repo = _repo;
-            mapper = _mapper;
             userContext = _userContext;
             counterService = _counterService;
             deliveryItemService = _deliveryItemService;
             nomenclatureService = _nomenclatureService;
+            deliveryAreaAddressService = _deliveryAreaAddressService;
             documentPersonLinkService = _documentPersonLinkService;
             cdnService = _cdnService;
         }
@@ -65,7 +65,7 @@ namespace IOWebApplication.Core.Services
                .Include(x => x.NotificationType)
                .Include(x => x.NotificationState)
                .Include(x => x.HtmlTemplate)
-               .Where(x => x.DocumentId == documentId && 
+               .Where(x => x.DocumentId == documentId &&
                            (documentResolutionId <= 0 || x.DocumentResolutionId == documentResolutionId) &&
                            x.DateExpired == null)
                .Select(x => new DocumentNotificationVM()
@@ -85,22 +85,18 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        private void CreateDeliveryItem(DocumentNotification notification, bool operIsChanged)
+        private async Task<DeliveryItem> CreateDeliveryItem(DocumentNotification notification, bool operIsChanged)
         {
             if (notification.NotificationStateId == NomenclatureConstants.NotificationState.Proekt)
-                return;
+                return null;
             if (!NomenclatureConstants.NotificationDeliveryGroup.DeliveryGroupForDeliveryItem.Contains(notification.NotificationDeliveryGroupId ?? 0))
-                return;
+                return null;
             DeliveryItem deliveryItem = null;
             if (notification.Id > 0)
                 deliveryItem = deliveryItemService.GetDeliveryItemByDocumentNotificationId(notification.Id);
             deliveryItem = deliveryItem ?? new DeliveryItem();
             bool stateIsChanged = (deliveryItem.NotificationStateId != notification.NotificationStateId);
             deliveryItem.FromCourtId = notification.Document?.CourtId ?? userContext.CourtId;
-            if (deliveryItem.DateSend == null && notification.NotificationStateId == NomenclatureConstants.DeliveryOper.Send)
-                deliveryItem.DateSend = DateTime.Now;
-            deliveryItem.DateAccepted = notification.DateAccepted;
-            deliveryItem.DeliveryDate = notification.DeliveryDate;
             deliveryItem.ReturnDate = notification.ReturnDate;
             deliveryItem.RegNumber = notification.RegNumber ?? "";
             deliveryItem.RegDate = notification.RegDate;
@@ -114,7 +110,7 @@ namespace IOWebApplication.Core.Services
             deliveryItem.CourtId = notification.ToCourtId ?? (notification.CourtId ?? 0);
             deliveryItem.DeliveryAreaId = notification.DeliveryAreaId; //deliveryAreaService.GetDeliveryAreaIdByLawUnitId(deliveryItem.CourtId, notification.LawUnitId);
             deliveryItem.LawUnitId = notification.LawUnitId;
-
+            deliveryItem.NotificationDeliveryGroupId = notification.NotificationDeliveryGroupId;
             Document aDocument = notification.Document;
             if (aDocument == null)
             {
@@ -140,7 +136,8 @@ namespace IOWebApplication.Core.Services
             deliveryItem.UserId = userContext.UserId;
             if (stateIsChanged || operIsChanged)
             {
-                deliveryItemService.CreateDeliveryItemOper(deliveryItem, notification.DeliveryOperId ?? notification.NotificationStateId);
+                var oper = deliveryItemService.CreateDeliveryItemOper(deliveryItem, notification.DeliveryOperId ?? notification.NotificationStateId);
+                await deliveryItemService.SetDeliveryItemDates(deliveryItem, oper);
             }
 
             notification.DeliveryItems = notification.DeliveryItems ?? new HashSet<DeliveryItem>();
@@ -149,193 +146,204 @@ namespace IOWebApplication.Core.Services
                 repo.Update(deliveryItem);
             else
                 repo.Add(deliveryItem);
+            return deliveryItem;
         }
-        public bool DocumentNotification_SaveData(DocumentNotification model, List<DocumentNotificationMLink> documentNotificationMLinks)
+
+        public async Task<bool> DocumentNotification_SaveData(DocumentNotification model, List<DocumentNotificationMLink> documentNotificationMLinks, DeliveryLogVM logVM)
         {
             try
             {
-                using (var scope = TransactionScopeBuilder.CreateReadCommitted())
+                using (var ts = repo.BeginTransaction())
                 {
-
-                    model.DocumentPersonId = model.DocumentPersonId <= 0? null : model.DocumentPersonId;
-                    model.DocumentPersonLinkId = model.DocumentPersonLinkId.EmptyToNull();
-                    model.NotificationAddressId = model.NotificationAddressId <= 0 ? null : model.NotificationAddressId;
-                    model.ToCourtId = model.ToCourtId.EmptyToNull();
-                    model.LawUnitId = model.LawUnitId.EmptyToNull();
-                    model.DeliveryOperId = model.DeliveryOperId.EmptyToNull();
-                    model.DeliveryAreaId = model.DeliveryAreaId.EmptyToNull();
-
-                    if (model.DocumentPersonLinkId == -2)
-                    {
-                        model.DocumentPersonLinkId = null;
-                        model.IsMultiLink = true;
-                    }
-                    else
-                    {
-                        model.IsMultiLink = false;
-                    }
-
-                    var documentPerson = repo.AllReadonly<DocumentPerson>()
-                                         .Include(x => x.PersonRole)
-                                         .Where(x => x.Id == model.DocumentPersonId)
-                                         .FirstOrDefault();
-
-                    model.NotificationPersonName = documentPerson.FullName;
-                    model.NotificationPersonRole = documentPerson.PersonRole.Label;
-                    model.NotificationLinkName = null;
-
-                    var documentPersonAddress = repo.AllReadonly<DocumentPersonAddress>()
-                                            .Include(x => x.Address)
-                                            .Where(x => x.Id == model.DocumentPersonAddressId)
-                                            .FirstOrDefault();
-
-
-                    if (documentPersonAddress?.Address != null)
-                    {
-                        model.NotificationAddress = new Address();
-                        model.NotificationAddress.CopyFrom(documentPersonAddress.Address);
-                        if (model.Id < 1)
-                            model.NotificationAddress.Id = 0;
-                    }
-                    if (model.NotificationAddress != null)
-                        nomenclatureService.SetFullAddress(model.NotificationAddress);
-
-                    var htmlTemplate = repo.AllReadonly<HtmlTemplate>()
-                                           .FirstOrDefault(x => x.Id == model.HtmlTemplateId);
-                    
-                    if (model.Id > 0)
-                    {
-                        //Update
-                        var saved = repo.All<DocumentNotification>()
-                                        .Include(x => x.DocumentNotificationMLinks) 
-                                        .Where(x => x.Id == model.Id)
-                                        .FirstOrDefault();
-
-                        if (saved.DocumentNotificationMLinks == null || saved.DocumentNotificationMLinks.Count == 0)
-                        {
-                            saved.DocumentNotificationMLinks = documentNotificationMLinks;
-                        }
-                        else
-                        {
-                            foreach (var toLink in saved.DocumentNotificationMLinks)
-                            {
-                                if (documentNotificationMLinks == null || !documentNotificationMLinks.Any(x => x.DocumentPersonLinkId == toLink.DocumentPersonLinkId))
-                                {
-                                    toLink.IsChecked = false;
-                                    toLink.IsActive = false;
-                                }
-                            }
-                            if (documentNotificationMLinks != null)
-                            {
-                                foreach (var fromLink in documentNotificationMLinks)
-                                {
-                                    var toLink = saved.DocumentNotificationMLinks.FirstOrDefault(x => x.DocumentPersonLinkId == fromLink.DocumentPersonLinkId);
-                                    if (toLink == null)
-                                    {
-                                        saved.DocumentNotificationMLinks.Add(fromLink);
-                                    }
-                                    else
-                                    {
-                                        toLink.DocumentNotificationId = fromLink.DocumentNotificationId;
-                                        toLink.DocumentResolutionId = fromLink.DocumentResolutionId;
-                                        toLink.DocumentPersonLinkId = fromLink.DocumentPersonLinkId;
-                                        toLink.DocumentPersonSummonedId = fromLink.DocumentPersonSummonedId;
-                                        toLink.DocumentPersonId = fromLink.DocumentPersonId;
-                                        toLink.PersonSummonedName = fromLink.PersonSummonedName;
-                                        toLink.PersonSummonedRole = fromLink.PersonSummonedRole;
-
-                                        toLink.IsChecked = fromLink.IsChecked;
-                                        toLink.IsActive = true;
-                                    }
-                                }
-
-                            }
-                        }
-                        bool operIsChanged = (saved.DeliveryOperId != model.DeliveryOperId);
-                        saved.DocumentId = model.DocumentId;
-                        saved.DocumentResolutionId = model.DocumentResolutionId;
-                        saved.DocumentPersonId = model.DocumentPersonId;
-                        saved.DocumentPersonLinkId = model.DocumentPersonLinkId;
-                        saved.DocumentPersonAddressId = model.DocumentPersonAddressId;
-                        saved.NotificationTypeId = model.NotificationTypeId;
-                        saved.NotificationNumber = model.NotificationNumber;
-                        saved.NotificationPersonName = model.NotificationPersonName;
-                        saved.NotificationPersonRole = model.NotificationPersonRole;
-                        saved.NotificationAddress = model.NotificationAddress;
-                        saved.NotificationAddressId = model.NotificationAddressId;
-                        saved.Description = model.Description;
-                        saved.NotificationStateId = model.NotificationStateId;
-                        saved.NotificationDeliveryGroupId = model.NotificationDeliveryGroupId;
-                        if (NomenclatureConstants.NotificationDeliveryGroup.OnMoment(saved.NotificationDeliveryGroupId) ||
-                            saved.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ||
-                            saved.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithCourier)
-                        {
-                            saved.DeliveryDate = model.DeliveryDate;
-                            saved.DeliveryInfo = model.DeliveryInfo;
-                        }
-                        saved.HaveАppendix = model.HaveАppendix;
-                        saved.IsOfficialNotification = model.IsOfficialNotification;
-                        saved.HtmlTemplateId = model.HtmlTemplateId;
-                        saved.DeliveryAreaId = model.DeliveryAreaId;
-                        saved.LawUnitId = model.LawUnitId;
-                        saved.ToCourtId = model.ToCourtId;
-                        saved.IsFromEmail = model.IsFromEmail;
-                        if (model.NotificationStateId == NomenclatureConstants.NotificationState.UnDeliveredMail)
-                        {
-                            CreateDeliveryItem(saved, operIsChanged);
-                            saved.NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
-                            saved.NotificationStateId = NomenclatureConstants.NotificationState.Ready;
-                            saved.DateSend = null;
-                            saved.IsFromEmail = true;
-                        }
-
-                        if (model.DatePrint != null)
-                            saved.DatePrint = model.DatePrint;
-                        saved.DateWrt = DateTime.Now;
-                        saved.UserId = userContext.UserId;
-                        // CreateHistory<CaseNotification, CaseNotificationH>(saved);
-                        repo.Update(saved);
-                        repo.SaveChanges();
-                        CreateDeliveryItem(saved, operIsChanged);
-                    }
-                    else
-                    {
-                        model.DocumentNotificationMLinks = documentNotificationMLinks;
-                        if (counterService.Counter_GetNotificationCounter(model, userContext.CourtId))
-                        {
-                            if (NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId))
-                            {
-                                if (model.DeliveryDate == null)
-                                    model.DeliveryDate = DateTime.Now;
-                            }
-                            if (model.NotificationStateId == NomenclatureConstants.NotificationState.UnDeliveredMail)
-                            {
-                                CreateDeliveryItem(model, true);
-                                model.NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
-                                model.NotificationStateId = NomenclatureConstants.NotificationState.Ready;
-                                model.DateSend = null;
-                                model.IsFromEmail = true;
-                            }
-
-                            model.DateWrt = DateTime.Now;
-                            model.UserId = userContext.UserId;
-                            // CreateHistory<CaseNotification, CaseNotificationH>(model);
-                            repo.Add(model);
-                            repo.SaveChanges();
-                            CreateDeliveryItem(model, true);
-                        }
-                    }
-
-                    repo.SaveChanges();
-                    scope.Complete();
+                    await DocumentNotification_SaveData_NoTransaction(model, documentNotificationMLinks, logVM);
+                    ts.Commit();
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на уведомление към документ Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на уведомление към документ Id={model.Id}");
             }
             return false;
+
+        }
+        public async Task DocumentNotification_SaveData_NoTransaction(DocumentNotification model, List<DocumentNotificationMLink> documentNotificationMLinks, DeliveryLogVM logVM)
+        {
+            model.DocumentPersonId = model.DocumentPersonId <= 0 ? null : model.DocumentPersonId;
+            model.DocumentPersonLinkId = model.DocumentPersonLinkId.EmptyToNull();
+            model.NotificationAddressId = model.NotificationAddressId <= 0 ? null : model.NotificationAddressId;
+            model.ToCourtId = model.ToCourtId.EmptyToNull();
+            model.LawUnitId = model.LawUnitId.EmptyToNull();
+            model.DeliveryOperId = model.DeliveryOperId.EmptyToNull();
+            model.DeliveryAreaId = model.DeliveryAreaId.EmptyToNull();
+
+            if (model.DocumentPersonLinkId == -2)
+            {
+                model.DocumentPersonLinkId = null;
+                model.IsMultiLink = true;
+            }
+            else
+            {
+                model.IsMultiLink = false;
+            }
+
+            var documentPerson = repo.AllReadonly<DocumentPerson>()
+                                 .Include(x => x.PersonRole)
+                                 .Where(x => x.Id == model.DocumentPersonId)
+                                 .FirstOrDefault();
+
+            model.NotificationPersonName = documentPerson.FullName;
+            model.NotificationPersonRole = documentPerson.PersonRole.Label;
+            model.NotificationLinkName = null;
+
+            var documentPersonAddress = repo.AllReadonly<DocumentPersonAddress>()
+                                    .Include(x => x.Address)
+                                    .Where(x => x.Id == model.DocumentPersonAddressId)
+                                    .FirstOrDefault();
+
+
+            if (documentPersonAddress?.Address != null)
+            {
+                model.NotificationAddress = new Address();
+                model.NotificationAddress.CopyFrom(documentPersonAddress.Address);
+                if (model.Id < 1)
+                    model.NotificationAddress.Id = 0;
+            }
+            if (model.NotificationAddress != null)
+                nomenclatureService.SetFullAddress(model.NotificationAddress);
+
+            var htmlTemplate = repo.AllReadonly<HtmlTemplate>()
+                                   .FirstOrDefault(x => x.Id == model.HtmlTemplateId);
+
+            if (model.Id > 0)
+            {
+                //Update
+                var saved = repo.All<DocumentNotification>()
+                                .Include(x => x.DocumentNotificationMLinks)
+                                .Where(x => x.Id == model.Id)
+                                .FirstOrDefault();
+
+                if (saved.DocumentNotificationMLinks == null || saved.DocumentNotificationMLinks.Count == 0)
+                {
+                    saved.DocumentNotificationMLinks = documentNotificationMLinks;
+                }
+                else
+                {
+                    foreach (var toLink in saved.DocumentNotificationMLinks)
+                    {
+                        if (documentNotificationMLinks == null || !documentNotificationMLinks.Any(x => x.DocumentPersonLinkId == toLink.DocumentPersonLinkId))
+                        {
+                            toLink.IsChecked = false;
+                            toLink.IsActive = false;
+                        }
+                    }
+                    if (documentNotificationMLinks != null)
+                    {
+                        foreach (var fromLink in documentNotificationMLinks)
+                        {
+                            var toLink = saved.DocumentNotificationMLinks.FirstOrDefault(x => x.DocumentPersonLinkId == fromLink.DocumentPersonLinkId);
+                            if (toLink == null)
+                            {
+                                saved.DocumentNotificationMLinks.Add(fromLink);
+                            }
+                            else
+                            {
+                                toLink.DocumentNotificationId = fromLink.DocumentNotificationId;
+                                toLink.DocumentResolutionId = fromLink.DocumentResolutionId;
+                                toLink.DocumentPersonLinkId = fromLink.DocumentPersonLinkId;
+                                toLink.DocumentPersonSummonedId = fromLink.DocumentPersonSummonedId;
+                                toLink.DocumentPersonId = fromLink.DocumentPersonId;
+                                toLink.PersonSummonedName = fromLink.PersonSummonedName;
+                                toLink.PersonSummonedRole = fromLink.PersonSummonedRole;
+
+                                toLink.IsChecked = fromLink.IsChecked;
+                                toLink.IsActive = true;
+                            }
+                        }
+
+                    }
+                }
+                bool operIsChanged = (saved.DeliveryOperId != model.DeliveryOperId);
+                saved.DocumentId = model.DocumentId;
+                saved.DocumentResolutionId = model.DocumentResolutionId;
+                saved.DocumentPersonId = model.DocumentPersonId;
+                saved.DocumentPersonLinkId = model.DocumentPersonLinkId;
+                saved.DocumentPersonAddressId = model.DocumentPersonAddressId;
+                saved.NotificationTypeId = model.NotificationTypeId;
+                saved.NotificationNumber = model.NotificationNumber;
+                saved.NotificationPersonName = model.NotificationPersonName;
+                saved.NotificationPersonRole = model.NotificationPersonRole;
+                saved.NotificationAddress = model.NotificationAddress;
+                saved.NotificationAddressId = model.NotificationAddressId;
+                saved.Description = model.Description;
+                saved.NotificationStateId = model.NotificationStateId;
+                saved.NotificationDeliveryGroupId = model.NotificationDeliveryGroupId;
+                if (NomenclatureConstants.NotificationDeliveryGroup.OnMoment(saved.NotificationDeliveryGroupId) ||
+                    NomenclatureConstants.NotificationDeliveryGroup.WithCourierLike(saved.NotificationDeliveryGroupId))
+                {
+                    saved.DeliveryDate = model.DeliveryDate;
+                    saved.DeliveryInfo = model.DeliveryInfo;
+                }
+                saved.HaveАppendix = model.HaveАppendix;
+                saved.IsOfficialNotification = model.IsOfficialNotification;
+                saved.HtmlTemplateId = model.HtmlTemplateId;
+                saved.DeliveryAreaId = model.DeliveryAreaId;
+                saved.LawUnitId = model.LawUnitId;
+                saved.ToCourtId = model.ToCourtId;
+                saved.IsFromEmail = model.IsFromEmail;
+                if (model.NotificationStateId == NomenclatureConstants.NotificationState.UnDeliveredMail)
+                {
+                    await CreateDeliveryItem(saved, operIsChanged);
+                    saved.NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
+                    saved.NotificationStateId = NomenclatureConstants.NotificationState.Ready;
+                    saved.DateSend = null;
+                    saved.IsFromEmail = true;
+                }
+
+                if (model.DatePrint != null)
+                    saved.DatePrint = model.DatePrint;
+                saved.DateWrt = DateTime.Now;
+                saved.UserId = userContext.UserId;
+                // CreateHistory<CaseNotification, CaseNotificationH>(saved);
+                repo.Update(saved);
+                repo.SaveChanges();
+                var deliveryItem = await CreateDeliveryItem(saved, operIsChanged);
+                repo.SaveChanges();
+                deliveryItemService.CreateDeliveryItemOperLog(deliveryItem, null, logVM);
+                repo.SaveChanges();
+            }
+            else
+            {
+                model.DocumentNotificationMLinks = documentNotificationMLinks;
+                if (counterService.Counter_GetNotificationCounter(model, userContext.CourtId))
+                {
+                    if (NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId))
+                    {
+                        if (model.DeliveryDate == null)
+                            model.DeliveryDate = DateTime.Now;
+                    }
+                    if (model.NotificationStateId == NomenclatureConstants.NotificationState.UnDeliveredMail)
+                    {
+                        await CreateDeliveryItem(model, true);
+                        model.NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
+                        model.NotificationStateId = NomenclatureConstants.NotificationState.Ready;
+                        model.DateSend = null;
+                        model.IsFromEmail = true;
+                    }
+
+                    model.DateWrt = DateTime.Now;
+                    model.UserId = userContext.UserId;
+                    // CreateHistory<CaseNotification, CaseNotificationH>(model);
+                    repo.Add(model);
+                    repo.SaveChanges();
+                    var deliveryItem = await CreateDeliveryItem(model, true);
+                    repo.SaveChanges();
+                    deliveryItemService.CreateDeliveryItemOperLog(deliveryItem, null, logVM);
+                    repo.SaveChanges();
+
+                }
+            }
+            repo.SaveChanges();
         }
         public DocumentNotification ReadById(int? id)
         {
@@ -517,6 +525,105 @@ namespace IOWebApplication.Core.Services
 
             documentNotification.DocumentPersonId = documentPersonId;
             return DocumentPersonLinks(documentNotification, notificationTypeId);
+        }
+        public List<SelectListItem> GetAddrForPerson(List<DocumentNotificationLinkVM> linkListVM, long documentPersonId, long documentPersonLinkId, int notificationDeliveryGroupId)
+        {
+            List<SelectListItem> addrList;
+            if (documentPersonLinkId > 0 && linkListVM.Any(x => x.Id == documentPersonLinkId))
+            {
+                long documentPersonAddrId = documentPersonId;
+                var documentPersonLink = linkListVM.FirstOrDefault(x => x.Id == documentPersonLinkId);
+                if (documentPersonLink != null)
+                {
+                    documentPersonAddrId = (documentPersonLink.PersonSecondRelId ?? 0) != 0 ? (documentPersonLink.PersonSecondRelId ?? 0) :
+                                           (documentPersonLink.isXFirst ? documentPersonLink.PersonRelId : documentPersonLink.PersonId);
+                }
+                addrList = documentPersonLinkService.GetDDL_DocumentPersonAddress(documentPersonAddrId, notificationDeliveryGroupId);
+            }
+            else
+            {
+                addrList = documentPersonLinkService.GetDDL_DocumentPersonAddress(documentPersonId, notificationDeliveryGroupId);
+            }
+            return addrList;
+        }
+        public NotificationDocGroupVM GenerateNotificationGroup(long? documentId, long? documentResolutionId, int notificationTypeId)
+        {
+            var documentPersons = repo.AllReadonly<DocumentPerson>()
+                                        .Where(x => x.DocumentId == documentId)
+                                        .ToList();
+            var notificationGroup = new NotificationDocGroupVM()
+            {
+                NotificationItems = new List<NotificationDocItemVM>(),
+                NotificationTypeId = notificationTypeId,
+                DocumentId = documentId,
+                DocumentResolutionId = documentResolutionId,
+                NotificationStateId = NomenclatureConstants.NotificationState.Ready,
+                NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons,
+            };
+            foreach (var documentPerson in documentPersons)
+            {
+                var notificationItem = new NotificationDocItemVM()
+                {
+                    PersonId = documentPerson.Id,
+                    LinkId = null,
+                    AddressId = null,
+                    IsChecked = true,
+                    PersonLabel = documentPerson.FullName
+                };
+
+                var linkListVM = documentPersonLinkService.GetLinkForPerson(notificationItem.PersonId, notificationTypeId, null);
+                notificationItem.AddressId_Ddl = GetAddrForPerson(linkListVM, notificationItem.PersonId, notificationItem.LinkId ?? 0, notificationGroup.NotificationDeliveryGroupId ?? 0);
+                notificationItem.LinkId_Ddl = documentPersonLinkService.ListForPersonToDropDown(linkListVM, notificationItem.PersonId)
+                                                                       .Where(x => x.Value != "-2")
+                                                                       .ToList();
+
+                notificationGroup.NotificationItems.Add(notificationItem);
+            }
+            return notificationGroup;
+        }
+
+        public DocumentNotification GenerateFormMulti(NotificationDocGroupVM notificationGroup, NotificationDocItemVM notificationItem)
+        {
+            var notification = new DocumentNotification();
+            notification.IsMultiLink = false;
+            notification.HtmlTemplateId = notificationGroup.HtmlTemplateId;
+            notification.DocumentPersonId = notificationItem.PersonId;
+            notification.DocumentPersonLinkId = notificationItem.LinkId;
+            notification.DocumentPersonAddressId = (int?)(notificationItem.AddressId < 0 ? null : notificationItem.AddressId);
+
+
+            notification.DocumentId = notificationGroup.DocumentId;
+            notification.DocumentResolutionId = notificationGroup.DocumentResolutionId;
+            notification.NotificationDeliveryGroupId = notificationGroup.NotificationDeliveryGroupId.EmptyToNull();
+            notification.NotificationTypeId = notificationGroup.NotificationTypeId;
+            notification.DeliveryDate = notificationGroup.DeliveryDate;
+            notification.NotificationStateId = notificationGroup.NotificationStateId;
+            notification.CourtId = userContext.CourtId;
+            if (notification.DocumentPersonAddressId != null) {
+                var documentPersonAddress = repo.AllReadonly<DocumentPersonAddress>()
+                                       .Where(x => x.Id == notification.DocumentPersonAddressId)
+                                       .FirstOrDefault();
+                var deliveryAreaFind = deliveryAreaAddressService.DeliveryAreaAddressIdFind(documentPersonAddress?.AddressId ?? 0, notification.CourtId ?? 0);
+                notification.ToCourtId = deliveryAreaFind.ToCourtId;
+                notification.DeliveryAreaId = deliveryAreaFind.DeliveryAreaId;
+                notification.LawUnitId = deliveryAreaFind.LawUnitId;
+            }
+            return notification;
+        }
+        
+        public async Task SaveMultiNotification(NotificationDocGroupVM notificationGroup, DeliveryLogVM logVM)
+        {
+            using (var ts = repo.BeginTransaction())
+            {
+                foreach (var notificationItem in notificationGroup.NotificationItems)
+                {
+                    if (!notificationItem.IsChecked)
+                        continue;
+                    var notification = GenerateFormMulti(notificationGroup, notificationItem);
+                    await DocumentNotification_SaveData_NoTransaction(notification, null, logVM);
+                }
+                ts.Commit();
+            }
         }
     }
 }

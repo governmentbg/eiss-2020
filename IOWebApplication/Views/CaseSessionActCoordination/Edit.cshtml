@@ -4,10 +4,10 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
-
+    bool canUpdate = access.CanAccess && (bool)ViewBag.canUpdate;
     if (Model.Id > 0)
     {
-        ViewData["Title"] = access.CanChange ? "Редакция на съгласуване" : "Преглед на съгласуване";
+        ViewData["Title"] = canUpdate ? "Редакция на съгласуване" : "Преглед на съгласуване";
     }
     else
     {
@@ -15,7 +15,7 @@
     }
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -40,7 +40,7 @@
             </div>
 
             <div class="form-group">
-                @if (access.CanChange)
+                @if (canUpdate)
                 {
                     <input type="submit" value="Запис" class="btn btn-success" />
                 }
@@ -62,9 +62,9 @@
         }
     </div>
 </div>
-@section scripts{
+@section scripts {
     <script>
-        $(function(){
+        $(function  ( ) {
             $('#ActCoordinationTypeId').change(function () {
                 switch ($(this).val()) {
                     case '@(NomenclatureConstants.ActCoordinationTypes.AcceptWithOpinion)':

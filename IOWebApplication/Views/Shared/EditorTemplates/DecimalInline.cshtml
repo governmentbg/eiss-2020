@@ -1,0 +1,10 @@
+﻿@model decimal?
+@{
+    var txtValue = "";
+    if (Model.HasValue)
+    {
+        txtValue = $"{Model:0.00}".Replace(",", ".");
+    }
+}
+@Html.TextBox("", txtValue, new { @class = "form-control text-right" })
+<span asp-validation-for="@Model" class="text-danger"></span>

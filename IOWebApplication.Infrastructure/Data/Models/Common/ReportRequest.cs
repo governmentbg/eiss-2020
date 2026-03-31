@@ -14,9 +14,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
   {
     [Key]
     [Column("id")]
-    public string Id { get; set; }
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    [Column("report_id")]
+        [Column("report_id")]
     public int ReportId { get; set; }
 
     [Column("court_list")]

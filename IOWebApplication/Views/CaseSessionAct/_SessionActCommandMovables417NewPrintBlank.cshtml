@@ -1,0 +1,186 @@
+﻿@model CaseSessionActCommandVM
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@inject IUserContext userContext
+@{
+    Layout = null;
+}
+
+<style>
+    div.just {
+        text-align: justify;
+        text-justify: inter-word;
+        text-rendering: geometricPrecision;
+    }
+</style>
+
+<div style="font-family: 'Times New Roman'">
+    <center>
+        <b>ЗАПОВЕД</b><br />
+        <b>ЗА ИЗПЪЛНЕНИЕ НА ЗАДЪЛЖЕНИЕ ЗА ПРЕДАВАНЕ НА ВЕЩИ ВЪЗ ОСНОВА НА ДОКУМЕНТ</b><br />
+        <b>по чл. 417 от ГПК</b><br />
+        <p>гр. @Model.CaseSessionActPrint.CourtCity</p><br />
+        <br />
+    </center>
+    <div class="just">
+        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName в проведеното на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г. в закрито разпоредително заседание по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear г., по описа на съда за @Model.CaseSessionActPrint.CaseRegYear г.@(string.IsNullOrEmpty(Model.CaseSessionActPrint.DepartmentName) ? string.Empty : " " + Model.CaseSessionActPrint.DepartmentName), докладвано от @Model.CaseSessionActPrint.JudgeReporter – районен съдия, като разгледа подаденото заявление за издаване на заповед за изпълнение по реда на чл. 417 и 418 ГПК@(!string.IsNullOrEmpty(Model.CaseSessionActPrint.RelatedActTypeName) ? " и след като прецени с " + Model.CaseSessionActPrint.RelatedActTypeName.ToLower() + " № " + Model.CaseSessionActPrint.RelatedActNumber + "/" + Model.CaseSessionActPrint.RelatedActYear + " г." : string.Empty), че са налице предпоставките за уважаване на искането за допускане на незабавно изпълнение и на основание чл. 418 ГПК<br />
+    </div>
+    <br />
+    <center>
+        <b>РАЗПОРЕЖДА:</b><br />
+    </center>
+    <br />
+
+    @if (Model.CaseSessionActPrint.LeftSide.Any())
+    {
+        string _row = string.Empty;
+        if (Model.CaseSessionActPrint.RightSide.Count() > 1)
+        {
+            _row = ", да предадат на ";
+        }
+        else
+        {
+            _row = ", да предаде на ";
+        }
+
+        @Html.Raw("<div class='just'>")
+        @Html.Raw(string.Join(" и ", Model.CaseSessionActPrint.RightSide) + " " + _row + string.Join(" и ", Model.CaseSessionActPrint.LeftSide) + "<br />")
+        @Html.Raw("</div>")
+        <br />
+    }
+
+    @if (Model.FastProcessRequest != null)
+    {
+        @if (Model.FastProcessRequest.ItemSubstitutionClaims != null && Model.FastProcessRequest.ItemSubstitutionClaims.Count() > 0)
+        {
+            @Html.Raw("следната/те вещ/и:<br />");
+            int _number = 0;
+            @Html.Raw("<div class='just'>");
+            @foreach (var item in Model.FastProcessRequest.ItemSubstitutionClaims)
+            {
+                _number++;
+                @Html.Raw($"{_number}. {item.TypeName} {item.QuantityText}, в размер на {"<b>" + (Model.IsInEuro ? item.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : item.TotalAmountBGN.ToString("### ### ##0.00") + " BGN") + "</b>"}");
+                <br />
+            }
+            @Html.Raw("</div>");
+        }
+
+        @if (Model.FastProcessRequest.ItemClaim != null && !string.IsNullOrEmpty(Model.FastProcessRequest.ItemClaim.Description))
+        {
+            @Html.Raw("следната/те вещ/и:<br />");
+            @Html.Raw("<div class='just'>");
+            @Html.Raw($"{Model.FastProcessRequest.ItemClaim.Description} на стойност {"<b>" + (Model.IsInEuro ? Model.FastProcessRequest.ItemClaim.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : Model.FastProcessRequest.ItemClaim.TotalAmountBGN.ToString("### ### ##0.00") + " BGN") + "</b>"}");
+            @Html.Raw("</div>");
+            <br />
+        }
+        <br />
+        <br />
+
+        @if (Model.FastProcessRequest.Expenses.Any())
+        {
+            @if (Model.CaseSessionActPrint.RightSide.Any())
+            {
+                string _row = string.Empty;
+                @if (Model.CaseSessionActPrint.RightSide.Count() > 1)
+                {
+                    _row = " да заплатят, следните разноски на ";
+                }
+                else
+                {
+                    _row = " да заплати, следните разноски на ";
+                }
+
+                @Html.Raw("<div class='just'>")
+                @Html.Raw(string.Join(" и ", Model.CaseSessionActPrint.RightSide) + _row + string.Join(" и ", Model.CaseSessionActPrint.LeftSide) + "<br />")
+                @Html.Raw("</div>")
+            }
+
+            @foreach (var expence in Model.FastProcessRequest.Expenses)
+            {
+                string _row = $"{expence.Index + 1}. {Model.getNomenclature(NomenclatureConstants.FPaliases.FP_ExpenseTypes, expence.ExpenseTypeCode)} в размер на: {"<b>" + (Model.IsInEuro ? expence.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : expence.TotalAmountBGN.ToString("### ### ##0.00") + " BGN") + "</b>"}";
+                @Html.Raw(_row);
+                <br />
+            }
+            <br />
+        }
+
+        @if (!string.IsNullOrEmpty(Model.FastProcessRequest.ClaimCircumstances.Number) ||
+             !string.IsNullOrEmpty(Model.FastProcessRequest.ClaimCircumstances.Description) ||
+             (Model.FastProcessRequest.CededClaim == 1 && !string.IsNullOrEmpty(Model.FastProcessRequest.CededClaimDescription)))
+        {
+            @Html.Raw("<div class='just'>");
+            if (!string.IsNullOrEmpty(Model.FastProcessRequest.ClaimCircumstances.Number))
+            {
+                string _row1 = $"Вземането произтича от следните обстоятелства: {Model.getNomenclature(NomenclatureConstants.FPaliases.FP_ClaimCircumstances, Model.FastProcessRequest.ClaimCircumstances.ClaimCircumstancesCode)} № {Model.FastProcessRequest.ClaimCircumstances.Number}{(Model.FastProcessRequest.ClaimCircumstances.Date.HasValue ? " от дата " + Model.FastProcessRequest.ClaimCircumstances.Date.ConvertDateTimeToString() + "г." : string.Empty)}:";
+                @Html.Raw(_row1);
+            }
+            else
+            {
+                string _row1 = $"Вземането произтича от следните обстоятелства:";
+                @Html.Raw(_row1);
+            }
+            @if (!string.IsNullOrEmpty(Model.FastProcessRequest.ClaimCircumstances.Description))
+            {
+                string _row2 = $"{Model.FastProcessRequest.ClaimCircumstances.Description}.";
+                @Html.Raw("&nbsp;&nbsp;" + _row2);
+            }
+            @Html.Raw("</div>")
+            @if (Model.FastProcessRequest.CededClaim == 1 && !string.IsNullOrEmpty(Model.FastProcessRequest.CededClaimDescription))
+            {
+                string _row = $"Уточнения относно цедирано вземане: {Model.FastProcessRequest.CededClaimDescription}.";
+                @Html.Raw("<div class='just'>");
+                @Html.Raw("&nbsp;&nbsp;" + _row);
+                @Html.Raw("</div>");
+            }
+            <br />
+            <br />
+        }
+
+        @Html.Raw("<div class='just'>");
+        @if (!string.IsNullOrEmpty(Model.FastProcessRequest.BankAccount.IBAN))
+        {
+            string _currency = Model.FastProcessRequest.BankAccount.CurrencyCode != "-1" ? $"валута на сметката: {Model.FastProcessRequest.BankAccount.CurrencyCode}, " : string.Empty;
+            string _row = $"Присъдената сума може да бъде внесена по следната банкова сметка на титуляр {Model.FastProcessRequest.BankAccount.OwnerNames} IBAN: {Model.FastProcessRequest.BankAccount.IBAN}, {_currency}име на банката (BIC) или друг подходящ банков код: {Model.FastProcessRequest.BankAccount.BankName}";
+            @Html.Raw(_row);
+        }
+        else
+        {
+            string _row = $"&nbsp;&nbsp; Присъдената сума може да бъде платена по друг начин: {Model.FastProcessRequest.BankAccount.OtherPaymentDescription}";
+            @Html.Raw(_row);
+        }
+        @Html.Raw("</div>");
+        <br />
+        <br />
+    }
+
+    <center>
+        <b>ВАЖНА ИНФОРМАЦИЯ ЗА ДЛЪЖНИКА</b>
+    </center>
+    <br />
+    <div class='just'>
+    1. Предоставя Ви се възможност в едномесечен срок:<br />
+    &nbsp;&nbsp;1.1. Да подадете възражение по чл. 414 ГПК по образец, приложен към заповедта, че не дължите изпълнение на вземането по издадената заповед за изпълнение. Ако оспорвате само част от претенцията, следва да посочите тази част във възражението, в противен случай заявителят може да предяви иск за цялото вземане. Възражението може да бъде подадено писмено на хартиен носител до който и да е районен съд или в електронна форма чрез Единния портал за електронно правосъдие. В случай че възражението е неоснователно, може да понесете разноски в по-висок размер от посочения в заповедта.<br />
+    &nbsp;&nbsp;1.2. Да предадете вещта, посочена в настоящата заповед, и да подадете възражение по чл. 414а ГПК по образец, приложен към заповедта, за изпълнение изцяло или частично на задължението Ви. Ако с поведението си не сте дали повод за предявяване на вземането, може да възразите, че не дължите разноски за производството. Към това възражение се прилагат доказателства за изпълнението на задължението с препис за заявителя.<br />
+    2. Ако възражението бъде подадено в едномесечния срок, кредиторът може да предяви с иск вземането си срещу Вас. Ако иск не бъде предявен, заповедта няма да влезе в сила и ще бъде обезсилена.<br />
+    3. Заповедта подлежи на незабавно изпълнение и въз основа на нея е издаден изпълнителен лист срещу Вас.<br />
+    4. Подаването на писмено възражение до съда не спира изпълнението на заповедта. Изпълнението се спира само ако заповедта е издадена въз основа на запис на заповед, менителница или приравнена на тях друга ценна книга на заповед, както и облигация или купони по нея.<br />
+    5. Принудителното изпълнение се спира, ако представите надлежно обезпечение пред съда по реда на чл. 180 и 181 от Закона за задълженията и договорите. Ако сте потребител, обезпечението е в размер до една трета от вземането.<br />
+    6. Съдът може да спре изпълнението и без да е необходимо обезпечение, ако в срока за възражение представите писмени доказателства, че:<br />
+    &nbsp;&nbsp;- вземането не се дължи;<br />
+    &nbsp;&nbsp;- вземането се основава на неравноправна клауза в договор, сключен с потребител;<br />
+    &nbsp;&nbsp;- неправилно е изчислен размерът на вземането по договор, сключен с потребител;<br />
+    7. Съгласно чл. 41 ГПК ако длъжникът, неговият законен представител, попечител или пълномощник отсъства повече от един месец от адреса, който е съобщен по делото или на който веднъж му е връчено съобщение, той е длъжен да уведоми съда за новия си адрес. Такова задължение имате и когато е посочен електронен адрес за връчване. При неизпълнение на задължението за уведомяване на съда, както и при посочване на неверен или несъществуващ адрес, всички съобщения се прилагат към делото и се смятат за връчени.<br />
+    8. Настоящата заповед е издадена въз основа на представен от кредитора документ, който е редовен от външна страна и удостоверява присъденото вземане. Препис от заповедта за изпълнение и копие от документа, въз основа на който е издадена заповедта за изпълнение с отбелязването за издаден изпълнителен лист, се връчва на длъжника от съдебния изпълнител.<br />
+    9. Разпореждането за незабавно изпълнение подлежи на обжалване пред окръжен съд в едномесечен срок от връчването на заповедта. Частната жалба срещу разпореждането за незабавно изпълнение се подава заедно с възражението срещу издадената заповед.<br />
+    10. Заповедта подлежи на обжалване пред @Model.CaseSessionActPrint.CourtParent само в частта за разноските в едномесечен срок от връчването.<br />
+    </div>
+    <br />
+    <br />
+    <div align="right">
+        Заповедта е подписана с квалифициран електронен подпис от районен съдия:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
+    </div>
+</div>
+

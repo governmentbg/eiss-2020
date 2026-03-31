@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using IOWebApplication.Infrastructure.Constants;
+using System;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 {
@@ -23,6 +22,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public bool CanEdit { get; set; }
         public bool CanAccept { get; set; }
         public DateTime DateWrt { get; set; }
+
+        public long? OutDocumentId { get; set; }
         public string OutDocumentLabel { get; set; }
         public DateTime? OutDocumentDate { get; set; }
         public bool? IsReturned { get; set; }
@@ -31,5 +32,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string InitDocumentNumber { get; set; }
         public DateTime InitDocumentDate { get; set; }
         public string InitDocumentType { get; set; }
+        public bool IsSendCompetence { get; set; }
+        public bool HasAcceptWithInterval { get; set; }
+        public bool PriorCaseMigration { get; set; }
+
+        public int? MigrationKind { get; set; }
+        public bool CanPreviewOutCase
+        {
+            get
+            {
+                return MigrationKind == NomenclatureConstants.CaseMigrationKinds.EpepInMigration && MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Incoming;
+            }
+        }
     }
 }

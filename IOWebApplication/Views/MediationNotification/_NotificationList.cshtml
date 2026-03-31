@@ -1,0 +1,125 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseNavigationVM
+
+@{
+
+}
+
+<div id="myDiv">
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.MediationCaseSessionId)
+
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="MediationNotification"
+               asp-action="Add"
+               asp-route-mediationSessionId="@Model.MediationCaseSessionId"
+               asp-route-notificationTypeId="@NomenclatureConstants.NotificationType.Subpoena"
+               class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави призовка
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="notificationTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+         var table = $('#notificationTable').DataTable({
+              ajax: {
+                  "url": "@Url.Action("ListData", "MediationNotification")",
+                  "type": "POST",
+                  "datatype": "json",
+                  data: function (d) {
+                      d.mediationSessionId = @Model.MediationCaseSessionId;
+                  },
+                  initialCall: false
+              },
+              stateSave: false,
+              deferLoading: deferLoadingOnTab('#caseNotificationListMainTable'),
+              columns: [
+                  {
+                      name: 'personName',
+                      data: 'personName',
+                      title: 'Наименование',
+                      sortable: true,
+                      searchable: true
+                  },
+                  {
+                      name: 'personRole',
+                      data: 'personRole',
+                      title: 'Вид лице',
+                      sortable: true,
+                      searchable: true
+                  },
+                  {
+                      name: 'notificationTable',
+                      data: 'id',
+                      title: TemplateToHtml('#caseNotificationTableHeader'),
+                      sortable: false,
+                      searchable: false,
+                      className: "col-md-6",
+                      "render": function (value, type, row) {
+                          if (row.notifications[0].id <= 0) {
+                              return ""
+                          } else {
+                             return TemplateToHtml('#caseNotificationTable', row);
+                          }
+                      }
+                  },
+                  {
+                      name: 'actions',
+                      data: "id",
+                      title: "",
+                      sortable: false,
+                      searchable: false,
+                      className: "text-center noExport",
+                      width: 145,
+                      "render": function (value, type, row) {
+                          if (row.isDeleted) {
+                              return "";
+                          } else {
+                             return TemplateToHtml('#caseNotificationListTemplateAdd', value);
+                          }
+                      }
+                  }
+              ]
+          });
+     });
+</script>
+
+<script id="caseNotificationListTemplateAdd" type="text/x-handlebars-template">
+    <a href="@Url.Action("Add", "MediationNotification")?mediationSessionId=@Model.MediationCaseSessionId&mediationPersonId={{this}}" class="btn btn-def btn-sm m-b-5" title="Добави призовка"><i class="fa fa-bell"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+<script id="caseNotificationListTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit", "MediationNotification")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script id="caseNotificationTable" type="text/x-handlebars-template">
+    <table class="notification-table">
+        {{#each notifications}}
+        <tr>
+            <td class="notification-mtd1">{{addressString}}</td>
+            <td class="notification-mtd2">{{remark}}</td>
+            <td class="notification-mtd3">{{dateSend}}</td>
+            <td class="notification-mtd4"><a href="@Url.Action("Edit", "MediationNotification")?id={{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a></td>
+        </tr>
+        {{/each}}
+    </table>
+</script>
+<script id="caseNotificationTableHeader" type="text/x-handlebars-template">
+    <table class="notification-table">
+        <tr>
+            <th class="notification-mtd1">Адрес</th>
+            <th class="notification-mtd2">Забележка</th>
+            <th class="notification-mtd3">Дата на изпращане</th>
+            <th class="notification-mtd4">&nbsp;&nbsp;</th>
+        </tr>
+    </table>
+</script>

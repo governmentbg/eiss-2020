@@ -29,6 +29,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(ParentId))]
         public virtual Person Parent { get; set; }
-      
+
+        public Person()
+        {
+            ActualtoDate = DateTime.Now;
+        }
+
     }
 }

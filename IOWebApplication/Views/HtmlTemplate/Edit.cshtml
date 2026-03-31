@@ -23,132 +23,152 @@
     <div class="col-md-12 col-lg-6">
 
         <form action="@Url.Action("EditPost","HtmlTemplate")" id="cdnUploadFile" method="post" enctype="multipart/form-data">
-            @*<form action="@Url.Action("ImportHtmlBlank","HtmlTemplate")" id="cdnUploadFile" method="post" enctype="multipart/form-data">*@
-            @Html.HiddenFor(x => x.Id)
-            @Html.HiddenFor(x => x.IsCreate)
-            @Html.HiddenFor(x => filterJson)
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @*<form action="@Url.Action("ImportHtmlBlank","HtmlTemplate")" id="cdnUploadFile" method="post" enctype="multipart/form-data">*@
+                @Html.HiddenFor(x => x.Id)
+                @Html.HiddenFor(x => x.IsCreate)
+                @Html.HiddenFor(x => filterJson)
 
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HtmlTemplateTypeId, "GenericDropDown")
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HtmlTemplateTypeId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.Alias)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Alias)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.Label)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Label)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.Description)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Description)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
-                <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.LandscapeVM)
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.SmartShrinkingPDF)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.LandscapeVM)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveSessionAct)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.SmartShrinkingPDF)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveSessionActComplain)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveSessionAct)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.RequiredSessionActComplain)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveSessionActComplain)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveActComplainFree)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.RequiredSessionActComplain)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveMultiActComplain)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveSessionMultiAct)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveExpertReport)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveActComplainFree)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveCasePerson)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveMultiActComplain)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveDocumentSenderPerson)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveExpertReport)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveMoneyObligation)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveCasePerson)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveInstitutionDocument)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveDocumentSenderPerson)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveNotificationIspnReason)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveMoneyObligation)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    @Html.EditorFor(x => x.HaveFromToDate)
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveInstitutionDocument)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    @Html.EditorFor(x => x.XlsTitleRow, "Int32Nullable")
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveNotificationIspnReason)
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    @Html.EditorFor(x => x.XlsDataRow, "Int32Nullable")
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveFromToDate)
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    @Html.EditorFor(x => x.XlsRecapRow, "Int32Nullable")
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveDocuments)
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.HaveMongoFiles)
+                    </div>
+                </div>
 
+                <div class="row">
+                    <div class="col-md-4">
+                        @Html.EditorFor(x => x.XlsTitleRow, "Int32Nullable")
+                    </div>
+                    <div class="col-md-4">
+                        @Html.EditorFor(x => x.XlsDataRow, "Int32Nullable")
+                    </div>
+                    <div class="col-md-4">
+                        @Html.EditorFor(x => x.XlsRecapRow, "Int32Nullable")
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
                     <div id="DownloadFileDiv">
                         <a href="#" class="DownloadFile" data-toggle='tooltip' title='Сваляне на файл'>Линк за сваляне на файла: @Model.FileName</a>
                         <p />
                     </div>
-
-                    <input type="file" name="files" id="files" />
                     @*<input type="file" name="files" id="files" multiple="multiple" />*@
-                    <br />
-                    <input type="submit" value="Запис" id="cdnUploadButton" class="btn btn-success" />
-                    @await Html.PartialAsync("_ButtonClose")
+                    <input type="file" name="files" id="files" />
                 </div>
             </div>
-
+            <div class="row">
+                <div class="col-md-12">
+                    <input type="submit" value="Запис" id="cdnUploadButton" class="btn btn-success" />
+                    @await Html.PartialAsync("_ButtonClose")
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                </div>
+            </div>
         </form>
     </div>
 </div>

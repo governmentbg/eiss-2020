@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
@@ -21,7 +22,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         [Display(Name = "Прихваната сума")]
         public decimal AmountPayObligation { get; set; }
 
-        public decimal AmountFree { get { return this.Amount - this.AmountPayObligation; } }
+//        public decimal AmountFree { get { return this.Amount - this.AmountPayObligation; } }
+
+        public decimal AmountFree { get; set; }
 
         [Display(Name = "Платено на")]
         public DateTime PaidDate { get; set; }
@@ -42,6 +45,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public string UserName { get; set; }
 
         [Display(Name = "Дело")]
-        public string CaseNumbers { get; set; }
+        public string CaseNumbers { get { return this.CaseNumberArray == null ? "" : string.Join("; ", this.CaseNumberArray.Distinct()); } }
+
+        public string[] CaseNumberArray { get; set; }
     }
 }

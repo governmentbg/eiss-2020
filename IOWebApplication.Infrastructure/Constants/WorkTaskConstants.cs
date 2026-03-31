@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -57,27 +58,65 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int SendFor_NewSelection = 19;
             public const int SendFor_NewSession = 20;
             public const int SendFor_Competency = 21;
+            public const int CasePersonBulletin_SentToSign = 23;
+            public const int CasePersonBulletin_Sign = 24;
+            public const int CasePersonBulletin_SentToSignNewNumber = 25;
+
+            public const int CaseSessionAct_SentMotiveToCoordinate = 26;
+            public const int CaseSessionAct_MotiveCoordinate = 27;
+            public const int DocumentForGlobalAssignment = 28;
+
+            /// <summary>
+            /// Уведомяване по чл.41, ал. 1 от Наредба 12
+            /// </summary>
+            public const int Notification_41_1_12 = 30;
+
+            /// <summary>
+            /// Уведомяване по чл.41, ал. 2 от Наредба 12
+            /// </summary>
+            public const int Notification_41_2_12 = 31;
+
+            /// <summary>
+            /// Уведомяване по чл.41, ал. 5 от Наредба 12
+            /// </summary>
+            public const int Notification_41_5_12 = 32;
 
             /// <summary>
             /// Задачи, които се приключват сами и неможе да се приключват ръчно
             /// </summary>
-            public static int[] SelfCompleteTasks = { CaseSessionAct_SentToSign, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_SentToSign, CaseSessionActMotives_Sign };
+            public static int[] SelfCompleteTasks = {
+                                                    Document_Sign,
+                                                    DocumentResolution_Sign,
+                                                    CaseSessionAct_SentToSign,
+                                                    CaseSessionAct_Sign,
+                                                    CaseSessionActCoordination_Sign,
+                                                    CaseSessionActMotives_SentToSign,
+                                                    CaseSessionActMotives_Sign,
+                                                    CasePersonBulletin_SentToSign,
+                                                    CasePersonBulletin_Sign,
+                                                    CasePersonBulletin_SentToSignNewNumber,
+                                                    ExecList_Sign
+            };
 
 
             /// <summary>
             /// Задачи, които се приключват сами при създаването
             /// </summary>
-            public static int[] AutoCompleteTasks = {  };
+            public static int[] AutoCompleteTasks = { DocumentForGlobalAssignment };
             /// <summary>
             /// задачи, които немогат да бъдат редактирани и пренасочвани
             /// </summary>
-            public static int[] TaskCantUpdate = { CaseSessionAct_Coordinate, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
-            public static int[] TaskCanChangeUser = { CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
+            public static int[] TaskCantUpdate = { Document_Sign, DocumentResolution_Sign, CaseSessionAct_Coordinate, CaseSessionAct_MotiveCoordinate, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
+            public static int[] TaskCanChangeUser = { CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign, CasePersonBulletin_Sign };
             /// <summary>
             /// Задачи, които не могат да бъдат пренасочвани през Преглед на всички задачи
             /// </summary>
-            public static int[] TaskCantReroute = { Document_Sign, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
-            public static int[] TaskTypeElFolder = { Case_SelectLawUnit,Case_ForReject, For_Resolution, ForReport, ReassignmentByCompetence, ForDocumentResolution };
+            public static int[] TaskCantReroute = { Document_Sign, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign, CasePersonBulletin_Sign };
+
+            public static int[] ExpireConnectedTasks = { CaseSessionAct_Sign, CaseSessionActMotives_Sign, DocumentResolution_Sign, CasePersonBulletin_Sign };
+            public static int[] AutomatedTasks = { DocumentForGlobalAssignment };
+
+            public static int[] Notification_41 = { Notification_41_1_12, Notification_41_2_12, Notification_41_5_12 };
         }
 
         public class States
@@ -122,5 +161,7 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const int ByOrganization = 2;
         }
+
+        public static int[] LongDescriptionTasks = { SourceTypeSelectVM.CasePersonBulletin };
     }
 }

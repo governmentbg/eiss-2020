@@ -37,12 +37,6 @@ namespace IOWebApplicationService.Infrastructure.Services
         err.ErrorDate = DateTime.Now;
         dwRepo.Add<DWErrorLog>(err);
         dwRepo.SaveChanges();
-
-
-
-
-
-
       }
       catch (Exception ex)
       {

@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
 @model CaseLoadIndexFilterVM
 
 @{
@@ -21,7 +22,8 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>
+    @*<div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>*@
+    <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.JudgeLoadActivityId, "GenericDropDown")</div>
 </div>
 
@@ -59,19 +61,119 @@
                     }
 
                 },
+                //buttons: [
+                //    {
+                //        extend: 'excel',
+                //        title: function () {
+                //            var datefrom = $("#DateFrom").val();
+                //            var dateto = $("#DateTo").val();
+                //            var lawunit = $("#LawUnitId").data().label;
+                //            return 'СПРАВКА ЗА ИНДИВИДУАЛНАТА НАТОВАРЕНОСТ НА СЪДИЯ ' + lawunit + ' \n' + 'за период ' + datefrom.toString("dd.MM.yyyy") + ' - ' + dateto.toString("dd.MM.yyyy");
+                //        }
+                //    },
+                //    {
+                //        extend: 'print',
+                //        title: function () {
+                //            var datefrom = $("#DateFrom").val();
+                //            var dateto = $("#DateTo").val();
+                //            var lawunit = $("#LawUnitId").text();
+                //            return 'СПРАВКА ЗА ИНДИВИДУАЛНАТА НАТОВАРЕНОСТ НА СЪДИЯ ' + lawunit + '\n' + 'за период ' + datefrom.toString("dd.MM.yyyy") + ' - ' + dateto.toString("dd.MM.yyyy");
+                //        }
+                //    }
+                //],
                 filter:false,
                 columns: [
                     {
                         name: 'lawUnitLabel',
                         data: 'lawUnitLabel',
-                        title: 'Име',
+                        title: 'Съдия',
                         sortable: true,
                         searchable: false
                     },
                     {
-                        name: 'loadIndex',
-                        data: 'loadIndex',
-                        title: 'Натоварване',
+                        name: 'year',
+                        data: 'year',
+                        title: 'Година',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex',
+                        data: 'sumLoadIndex',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Текущо натоварване',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col1',
+                        data: 'sumLoadIndex_Col1',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Председател',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col2',
+                        data: 'sumLoadIndex_Col2',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Заместник председател',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col3',
+                        data: 'sumLoadIndex_Col3',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Участие в съдебен състав по дело на доклад на друг съдия',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col4',
+                        data: 'sumLoadIndex_Col4',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Съдия-наставник на младши съдии',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col5',
+                        data: 'sumLoadIndex_Col5',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Доклад на Бюро Съдимост',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col6',
+                        data: 'sumLoadIndex_Col6',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Участие в комисии',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col7',
+                        data: 'sumLoadIndex_Col7',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Обучение (собствена квалификация)',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col8',
+                        data: 'sumLoadIndex_Col8',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Работа като обучител и експерт',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'sumLoadIndex_Col9',
+                        data: 'sumLoadIndex_Col9',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Други дейности, които не са част от правораздавателния процес, но изискват заетост от съдията',
                         sortable: true,
                         searchable: false
                     },
@@ -100,5 +202,21 @@
 <script>
     $(function () {
         initLawUnit();
+        //changeTitle();
     });
+
+    //$('#DateFrom').change(function () {
+    //    changeTitle();
+    //});
+
+    //$('#DateТо').change(function () {
+    //    changeTitle();
+    //});
+
+    //function changeTitle() {
+    //    var datefrom = $("#DateFrom").val();
+    //    var dateto = $("#DateTo").val();
+    //    var lawunit = $("#LawUnitId").text();
+    //    $("h1").text("СПРАВКА ЗА ИНДИВИДУАЛНАТА НАТОВАРЕНОСТ НА СЪДИЯ " + lawunit + "\n" + "за период " + datefrom.toString("dd.MM.yyyy") + " - " + dateto.toString("dd.MM.yyyy"));
+    //}
 </script>

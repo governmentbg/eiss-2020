@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Common
@@ -8,7 +9,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
    /// Съдебен район
    /// </summary>
     [Table("common_court_region")]
-    public class CourtRegion : UserDateWRT
+    public class CourtRegion : UserDateWRT, IHaveId
     {
         [Key]
         [Column("id")]
@@ -28,7 +29,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(ParentId))]
         public virtual CourtRegion ParentRegion { get; set; }
-       
+
         public virtual ICollection<CourtRegionArea> Areas { get; set; }
     }
 }

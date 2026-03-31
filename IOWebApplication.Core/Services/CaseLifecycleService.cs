@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -59,23 +60,21 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseLifecycleVM> CaseLifecycle_Select(int CaseId)
         {
             return repo.AllReadonly<CaseLifecycle>()
-                       .Include(x => x.Case)
-                       .Include(x => x.LifecycleType)
                        .Where(x => x.CaseId == CaseId &&
                                    x.DateExpired == null)
+                       .Where(x => NomenclatureConstants.LifecycleType.Deadline.Contains(x.LifecycleTypeId))
                        .Select(x => new CaseLifecycleVM()
                        {
                            Id = x.Id,
                            CaseId = x.CaseId,
-                           LifecycleTypeLabel = (x.LifecycleType != null) ? x.LifecycleType.Label : string.Empty,
+                           LifecycleTypeLabel = x.LifecycleType.Label,
                            LifecycleTypeId = x.LifecycleTypeId,
                            DateFrom = x.DateFrom,
                            DateTo = x.DateTo,
                            Iteration = x.Iteration,
-                           IterationText = ToRoman(x.Iteration) + " интервал",
                            DurationMonths = x.DurationMonths,
                            DurationMonthsText = (x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop) ? "-" : x.DurationMonths.ToString(),
-                           ModelEdit = (x.LifecycleTypeId != NomenclatureConstants.LifecycleType.InProgress)
+                           ModelEdit = x.LifecycleTypeId != NomenclatureConstants.LifecycleType.InProgress
                        })
                        .AsQueryable();
         }
@@ -120,12 +119,17 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         private int ClacMonth(int CaseId, int Iteration, DateTime DateFrom, DateTime DateTo, List<CaseLifecycle> CaseLifecycleIterations = null)
         {
-            var caseLifecycles = CaseLifecycleIterations == null ? repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == CaseId && x.DateExpired == null && x.Iteration == Iteration).ToList() : CaseLifecycleIterations;
+            var caseLifecycles = CaseLifecycleIterations == null ? repo.AllReadonly<CaseLifecycle>()
+                                                                       .Where(x => x.CaseId == CaseId && x.DateExpired == null && x.Iteration == Iteration)
+                                                                       .Where(x => NomenclatureConstants.LifecycleType.Deadline.Contains(x.LifecycleTypeId))
+                                                                       .ToList() 
+                                                                 : CaseLifecycleIterations;
+            
             var daysProgres = (DateTo.Date - DateFrom.Date).TotalDays;
             double daysStop = 0;
 
-            foreach (var caseLifecycle in caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop))
-                daysStop += ((caseLifecycle.DateTo ?? caseLifecycle.DateFrom).Date - caseLifecycle.DateFrom.Date).TotalDays;
+            foreach (var caseLifecycle in caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop && x.DateFrom.Date >= DateFrom.Date))
+                daysStop += (((caseLifecycle.DateTo ?? caseLifecycle.DateFrom) > DateTo ? DateTo : ((caseLifecycle.DateTo ?? caseLifecycle.DateFrom))).Date - caseLifecycle.DateFrom.Date).TotalDays;
 
             var dateEnd = DateFrom.AddDays(daysProgres - daysStop);
 
@@ -137,16 +141,14 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseLifecycle_SaveData(CaseLifecycle model)
+        public async Task<bool> CaseLifecycle_SaveData(CaseLifecycle model)
         {
             try
             {
-                var caseLifecycles = repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == model.CaseId && x.DateExpired == null);
-
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CaseLifecycle>(model.Id);
+                    var saved = await repo.GetByIdAsync<CaseLifecycle>(model.Id);
                     saved.LifecycleTypeId = model.LifecycleTypeId;
                     saved.Iteration = model.Iteration;
                     saved.Description = model.Description;
@@ -162,21 +164,21 @@ namespace IOWebApplication.Core.Services
                     saved.UserId = userContext.UserId;
 
                     repo.Update(saved);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
                 }
                 else
                 {
                     //Insert
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
-                    repo.Add<CaseLifecycle>(model);
-                    repo.SaveChanges();
+                    repo.Add(model);
+                    await repo.SaveChangesAsync();
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на интервал по дело Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на интервал по дело Id={model.Id}");
                 return false;
             }
         }
@@ -187,21 +189,33 @@ namespace IOWebApplication.Core.Services
         /// <param name="CaseId"></param>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        public bool CaseLifecycle_SaveFirst(int CaseId, DateTime dateTime)
+        public bool CaseLifecycle_SaveFirst(int CaseId, DateTime dateTime,  DateTime? lifecycleDateClosed = null)
         {
             try
             {
-                var caseLifecycle = repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == CaseId && x.DateExpired == null && x.Iteration == 1 && x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress).FirstOrDefault();
+                var caseLifecycles = repo.All<CaseLifecycle>()
+                                         .Where(x => x.CaseId == CaseId &&
+                                                     x.DateExpired == null &&
+                                                     x.Iteration == 1 &&
+                                                     x.DateTo == null)
+                                         .ToList();
+
+                CaseLifecycle caseLifecycle = caseLifecycles.FirstOrDefault(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress);
                 if (caseLifecycle != null)
                 {
                     caseLifecycle.DateFrom = dateTime;
-                    caseLifecycle.UserId = userContext.UserId;
-                    caseLifecycle.DateWrt = DateTime.Now;
+                    caseLifecycle.UserId = ImpersonatedUserId ?? userContext.UserId;
+                    caseLifecycle.DateWrt = lifecycleDateClosed ?? DateTime.Now;
 
-                    if (caseLifecycle.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress && caseLifecycle.DateTo != null)
-                        caseLifecycle.DurationMonths = ClacMonth(caseLifecycle.CaseId, caseLifecycle.Iteration, caseLifecycle.DateFrom, caseLifecycle.DateTo ?? caseLifecycle.DateFrom);
+                    CaseLifecycle caseLifecycleStop = caseLifecycles.FirstOrDefault(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop &&
+                                                                                         x.DateFrom <= dateTime);
+                    if (caseLifecycleStop != null)
+                    {
+                        caseLifecycleStop.DateTo = dateTime;
+                        caseLifecycleStop.UserId = ImpersonatedUserId ?? userContext.UserId;
+                        caseLifecycleStop.DateWrt = lifecycleDateClosed ?? DateTime.Now;
+                    }
 
-                    repo.Update<CaseLifecycle>(caseLifecycle);
                     repo.SaveChanges();
                 }
 
@@ -209,7 +223,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на интервал по дело CaseId={ CaseId }");
+                logger.LogError(ex, $"Грешка при запис на интервал по дело CaseId={CaseId}");
                 return false;
             }
         }
@@ -219,7 +233,7 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="CaseSessionId"></param>
         /// <returns></returns>
-        public bool CaseLifecycle_SaveFirst_ForCaseType(int CaseSessionId)
+        public bool CaseLifecycle_SaveFirst_ForCaseType(int CaseSessionId, DateTime? lifecycleDateClosed = null)
         {
             var caseSession = repo.AllReadonly<CaseSession>()
                                   .Include(x => x.Case)
@@ -249,13 +263,15 @@ namespace IOWebApplication.Core.Services
             if (caseSessionAct == null)
                 return true;
 
-            var isSessionAndResult = ((caseSession.CaseSessionResults.Any(x => x.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSession && x.DateExpired == null)) &&
-                                      (caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno));
+            var isSessionAndResult = caseSession.CaseSessionResults.Any(x => (x.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSession ||
+                                                                              x.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSessionWithoutDocuments) &&
+                                                                             x.DateExpired == null) &&
+                                     caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno;
 
             if (!isSessionAndResult)
                 return true;
 
-            return CaseLifecycle_SaveFirst(caseSession.CaseId, (caseSessionAct.RegDate ?? DateTime.Now));
+            return CaseLifecycle_SaveFirst(caseSession.CaseId, (caseSessionAct.RegDate ?? DateTime.Now), lifecycleDateClosed);
         }
 
         /// <summary>
@@ -265,14 +281,30 @@ namespace IOWebApplication.Core.Services
         /// <param name="CaseSessionActId"></param>
         /// <param name="DateToLifeCycle"></param>
         /// <returns></returns>
-        public bool CaseLifecycle_CloseInterval(int CaseId, int CaseSessionActId, DateTime DateToLifeCycle)
+        public async Task<bool> CaseLifecycle_CloseInterval(int CaseId, int CaseSessionActId, DateTime DateToLifeCycle)
         {
             try
             {
+                var caseSessionAct = await repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == CaseSessionActId).FirstOrDefaultAsync();
+                if (caseSessionAct != null)
+                {
+                    if (!caseSessionAct.IsFinalDoc || caseSessionAct.ActDeclaredDate == null)
+                        return true;
+                }
+                else
+                    return true;
+
+
+
                 // Изчита всички интервали за делото
-                var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
-                                         .ToList();
+                List<CaseLifecycle> caseLifecycles = await repo.All<CaseLifecycle>()
+                                                               .Where(x => x.CaseId == CaseId && 
+                                                                           x.DateExpired == null)
+                                                               .Where(x => NomenclatureConstants.LifecycleType.Deadline.Contains(x.LifecycleTypeId))
+                                                               .ToListAsync() ?? new List<CaseLifecycle>();
+
+                if (caseLifecycles.Any(x => x.CaseSessionActId == caseSessionAct.Id))
+                    return true;
 
                 // Търси главен интервал, които не е затворен и ако са повече от един взема първият (не би трянвало да са повече от един)
                 var caseLifecycle = caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
@@ -282,34 +314,33 @@ namespace IOWebApplication.Core.Services
 
                 if (caseLifecycle != null)
                 {
+                    if (caseLifecycle.DateFrom > caseSessionAct.RegDate)
+                        return true;
+
                     var caseLifecyclesStop = caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop &&
-                                                                       x.Iteration == caseLifecycle.Iteration &&
-                                                                       x.DateTo != null)
+                                                                       x.Iteration == caseLifecycle.Iteration)
                                                            .ToList() ?? new List<CaseLifecycle>();
 
-                    foreach (var lifecycleStop in caseLifecyclesStop)
+                    foreach (var lifecycleStop in caseLifecyclesStop.Where(x => x.DateTo == null))
                     {
                         lifecycleStop.DateTo = DateToLifeCycle;
-                        lifecycleStop.DateWrt = DateTime.Now;
-                        lifecycleStop.UserId = userContext.UserId;
-
-                        repo.Update(lifecycleStop);
+                        lifecycleStop.DateWrt = DateToLifeCycle;
+                        lifecycleStop.UserId = ImpersonatedUserId  ?? userContext.UserId;
                     }
 
                     caseLifecycle.CaseSessionActId = CaseSessionActId;
                     caseLifecycle.DurationMonths = ClacMonth(CaseId, caseLifecycle.Iteration, caseLifecycle.DateFrom, DateToLifeCycle, caseLifecyclesStop);
                     caseLifecycle.DateTo = DateToLifeCycle;
-                    caseLifecycle.DateWrt = DateTime.Now;
-                    caseLifecycle.UserId = userContext.UserId;
-                    repo.Update(caseLifecycle);
-                    repo.SaveChanges();
+                    caseLifecycle.DateWrt = DateToLifeCycle;
+                    caseLifecycle.UserId = ImpersonatedUserId ?? userContext.UserId;
+                    await repo.SaveChangesAsync();
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при затваряне на интервал по дело Id={ CaseId }");
+                logger.LogError(ex, $"Грешка при затваряне на интервал по дело Id={CaseId}");
                 return false;
             }
         }
@@ -326,8 +357,10 @@ namespace IOWebApplication.Core.Services
             {
                 // Изчита всички интервали за делото
                 var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
-                                         .ToList();
+                                         .Where(x => x.CaseId == CaseId && 
+                                                     x.DateExpired == null)
+                                         .Where(x => NomenclatureConstants.LifecycleType.Deadline.Contains(x.LifecycleTypeId))
+                                         .ToList() ?? new List<CaseLifecycle>();
 
                 // Търси главен интервал, които не е затворен и ако са повече от един взема първият (не би трянвало да са повече от един)
                 var caseLifecycle = caseLifecycles.Where(x => x.CaseSessionActId == CaseSessionActId)
@@ -353,7 +386,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при затваряне на интервал по дело Id={ CaseId }");
+                logger.LogError(ex, $"Грешка при затваряне на интервал по дело Id={CaseId}");
                 return false;
             }
         }
@@ -367,8 +400,9 @@ namespace IOWebApplication.Core.Services
         public bool CaseLifecycle_IsExistLifcycleAfter(int CaseId, int CaseSessionActId)
         {
             var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
-                                         .ToList();
+                                     .Where(x => x.CaseId == CaseId && x.DateExpired == null)
+                                     .Where(x => NomenclatureConstants.LifecycleType.Deadline.Contains(x.LifecycleTypeId))
+                                     .ToList() ?? new List<CaseLifecycle>();
 
             var caseLifecycle = caseLifecycles.Where(x => x.CaseSessionActId == CaseSessionActId)
                                                   .FirstOrDefault();
@@ -384,36 +418,43 @@ namespace IOWebApplication.Core.Services
         /// <param name="CaseId"></param>
         /// <param name="DateFromLifeCycle"></param>
         /// <returns></returns>
-        public bool CaseLifecycle_NewIntervalSave(int CaseId, DateTime DateFromLifeCycle)
+        public bool CaseLifecycle_NewIntervalSave(int CaseId, DateTime DateFromLifeCycle, int? migrationId)
         {
             try
             {
                 // Изчита всички интервали за делото
                 var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
-                                         .ToList();
+                                         .Where(x => x.CaseId == CaseId && 
+                                                     x.DateExpired == null)
+                                         .Where(x => NomenclatureConstants.LifecycleType.Deadline.Contains(x.LifecycleTypeId))
+                                         .ToList() ?? new List<CaseLifecycle>();
 
                 if (!caseLifecycles.Any(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
                                              x.DateTo == null))
                 {
-                    repo.Add(new CaseLifecycle()
+                    if (!caseLifecycles.Any(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
+                                                 x.DateFrom.Date == DateFromLifeCycle.Date))
                     {
-                        CourtId = userContext.CourtId,
-                        CaseId = CaseId,
-                        LifecycleTypeId = NomenclatureConstants.LifecycleType.InProgress,
-                        Iteration = caseLifecycles.Max(x => x.Iteration) + 1,
-                        DateFrom = DateFromLifeCycle,
-                        DateWrt = DateTime.Now,
-                        UserId = userContext.UserId
-                    });
-                    repo.SaveChanges();
+                        repo.Add(new CaseLifecycle()
+                        {
+                            CourtId = userContext.CourtId,
+                            CaseId = CaseId,
+                            LifecycleTypeId = NomenclatureConstants.LifecycleType.InProgress,
+                            Iteration = caseLifecycles.Max(x => x.Iteration) + 1,
+                            DateFrom = DateFromLifeCycle,
+                            DateWrt = DateTime.Now,
+                            UserId = userContext.UserId,
+                            CaseMigrationId = migrationId,
+                        });
+                        repo.SaveChanges();
+                    }
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при стартиране на интервал по дело Id={ CaseId }");
+                logger.LogError(ex, $"Грешка при стартиране на интервал по дело Id={CaseId}");
                 return false;
             }
         }
@@ -439,13 +480,8 @@ namespace IOWebApplication.Core.Services
                 var lifecycles = caseLifecycles.Where(x => x.Iteration == caseLifecycle.Iteration).ToList();
                 foreach (var lifecycle in lifecycles.Where(x => x.LifecycleTypeId != NomenclatureConstants.LifecycleType.InProgress))
                 {
-                    if (lifecycle.DateTo == null)
+                    if ((lifecycle.DateTo == null) || (lifecycle.DateTo > DateTo))
                         lifecycle.DateTo = DateTo;
-                    else
-                    {
-                        if (lifecycle.DateTo > DateTo)
-                            lifecycle.DateTo = DateTo;
-                    }
                 }
 
                 result += ClacMonth(CaseId, caseLifecycle.Iteration, caseLifecycle.DateFrom, DateTo, lifecycles);
@@ -466,6 +502,96 @@ namespace IOWebApplication.Core.Services
                                   x.DateExpired == null &&
                                   x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
                                   x.DateTo == null);
+        }
+
+        public DateTime? GetDateTimeLastCaseLifecycle(int CaseId)
+        {
+            var caseLifecycle = repo.AllReadonly<CaseLifecycle>()
+                                    .Where(x => x.CaseId == CaseId &&
+                                                x.DateExpired == null &&
+                                                x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
+                                                x.DateTo != null)
+                                    .OrderByDescending(x => x.Iteration)
+                                    .FirstOrDefault();
+
+            return caseLifecycle != null ? caseLifecycle.DateTo : null;
+        }
+
+        /// <summary>
+        /// Метод проверяващ дали по дело има интервал за медиация
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <returns></returns>
+        private async Task<bool> IsExistLifecycleMediation(int caseId)
+        {
+            return await repo.AllReadonly<CaseLifecycle>()
+                             .AnyAsync(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Mediation &&
+                                            x.CaseId == caseId &&
+                                            x.DateExpired == null);
+        }
+
+        /// <summary>
+        /// Стартиране на интервал за медиация
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <returns></returns>
+        public async Task<bool> StartLifecycleMediation(int caseId)
+        {
+            try
+            {
+                if (await IsExistLifecycleMediation(caseId))
+                    return true;
+
+                int courtId = await repo.GetPropByIdAsync<Case, int>(x => x.Id == caseId, x => x.CourtId);
+
+                await repo.AddAsync(new CaseLifecycle
+                {
+                    CourtId = courtId,
+                    CaseId = caseId,
+                    LifecycleTypeId = NomenclatureConstants.LifecycleType.Mediation,
+                    Iteration = 99,
+                    DateFrom = DateTime.Now,
+                    UserId = userContext.UserId,
+                    DateWrt = DateTime.Now
+                });
+
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Проблем при стартиране на интервал за медиация по дело с идентификатор: {caseId}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Стартиране на интервал за медиация
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <returns></returns>
+        public async Task<bool> StopLifecycleMediation(int caseId)
+        {
+            try
+            {
+                CaseLifecycle lifecycle = await repo.All<CaseLifecycle>()
+                                                    .Where(x => x.CaseId == caseId)
+                                                    .Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Mediation)
+                                                    .Where(x => x.DateTo == null)
+                                                    .FirstOrDefaultAsync();
+
+                if (lifecycle == null)
+                    return true;
+
+                lifecycle.DateTo = DateTime.Now;
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Проблем при затваряне на интервал за медиация по дело с идентификатор: {caseId}");
+                return false;
+            }
         }
     }
 }

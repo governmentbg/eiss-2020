@@ -11,7 +11,7 @@ namespace IOWebApplication.Core.Contracts
     {
         byte[] MakeFile(string fileName);
 
-        Task<byte[]> GetReport(int courtId, int reportYear, int reportMonth);
+        Task<byte[]> GetReport(int courtId, int reportYear, int reportMonth, int reportTypeId);
         #region FillNames
         bool Fill_AS_CourtNamesAndDate(Court court, int reportYear, int reportMonth);
         bool Fill_RS_CourtNamesAndDate(Court court, int reportYear, int reportMonth);
@@ -24,7 +24,9 @@ namespace IOWebApplication.Core.Contracts
         IEnumerable<CaseReportVss> GetReportCases(int courtId, int caseGroupid, int reportYear, int reportMonth);
         bool FillAll_RS_CourtsDataSheets(int reportYear, int reportMonth);
         bool RS_FillSheets_Sheet4(int courtId, int reportTemplateId, int reportYear, int reportMonth);
-        Task<byte[]> GetReport_Test(int courtId, DateTime fromDate, DateTime toDate);
-        void StatisticsGenerate(DateTime date);
+        Task<byte[]> GetReport_Test(int courtId, DateTime fromDate, DateTime toDate, int reportTypeId);
+        Task StatisticsGenerate(DateTime date);
+        Task<byte[]> TestPrintSisma(int courtId, DateTime fromDate, DateTime toDate, int sheetIndex);
+        Task StatisticsGenerateMediation(DateTime date);
     }
 }

@@ -16,10 +16,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Съобщение/призовки/уведомяване
     /// </summary>
     [Table("case_notification")]
-    public class CaseNotification : BaseInfo_CaseNotification, IHaveHistory<CaseNotificationH>, IExpiredInfo
+    public class CaseNotification : BaseInfo_CaseNotification, IHaveHistory<CaseNotificationH>, IExpiredInfo, IHaveId
     {
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
+
+        [ForeignKey(nameof(ToCourtId))]
+        public virtual Court ToCourt { get; set; }
 
         [ForeignKey(nameof(CaseId))]
         public virtual Case Case { get; set; }
@@ -78,13 +81,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(HtmlTemplateId))]
         public virtual HtmlTemplate HtmlTemplate { get; set; }
 
-        public ICollection<CaseNotificationH> History { get; set; }
+        public ICollection<CaseNotificationH>? History { get; set; }
 
         public virtual ICollection<DeliveryItem> DeliveryItems { get; set; }
 
         public virtual ICollection<CaseNotificationMLink> CaseNotificationMLinks { get; set; }
-        
+
         public virtual ICollection<CaseNotificationComplain> CaseNotificationComplains { get; set; }
+        public virtual ICollection<CaseNotificationDocument> CaseNotificationDocuments { get; set; }
+        public virtual ICollection<CaseNotificationAct> CaseNotificationActs { get; set; }
 
         [ForeignKey(nameof(LawUnitId))]
         public virtual LawUnit LawUnit { get; set; }
@@ -94,9 +99,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CaseSessionActComplainId))]
         public virtual CaseSessionActComplain CaseSessionActComplain { get; set; }
-        
+
         [ForeignKey(nameof(NotificationIspnReasonId))]
         public virtual NotificationIspnReason NotificationIspnReason { get; set; }
+
+        [ForeignKey(nameof(EpepCasePersonId))]
+        public virtual CasePerson EpepCasePerson { get; set; }
+
         [NotMapped]
         [Display(Name = "Дата на връчване")]
         public DateTime? DeliveryDateVM { get { return DeliveryDate; } }
@@ -108,7 +117,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [NotMapped]
         [Display(Name = "Приложени документи")]
         public bool HaveAppendixVM { get { return HaveАppendix == true; } set { HaveАppendix = value; } }
-        
+
         [NotMapped]
         [Display(Name = "Печат на диспозитив")]
         public bool HaveDispositivVM { get { return HaveDispositiv == true; } set { HaveDispositiv = value; } }
@@ -118,7 +127,21 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public string MultiComplainIdVM { get; set; }
 
         [NotMapped]
-         public string MultiComplainIdResultVM { get; set; }
+        public string MultiComplainIdResultVM { get; set; }
+
+        [NotMapped]
+        [Display(Name = "Актове/протоколи")]
+        public string[] MultiActIdVM { get; set; }
+
+        [NotMapped]
+        public string MultiActIdResultVM { get; set; }
+
+        [NotMapped]
+        [Display(Name = "Съпровождащи документи")]
+        public string[] DocumentsVM { get; set; }
+
+        [NotMapped]
+        public string DocumentsResultVM { get; set; }
 
         /// <summary>
         /// Данни за доставка при доставка от куриер/кметство 
@@ -130,6 +153,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [NotMapped]
         [Display(Name = "Данни за известяване")]
         public string DeliveryInfoCC { get; set; }
+
+        [NotMapped]
+        public bool SkipSaveLists { get; set; }
     }
     /// <summary>
     /// Съобщение/призовки/уведомяване - история
@@ -145,6 +171,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(Id))]
         public virtual CaseNotification CaseNotification { get; set; }
+
+        public void ClearForeignKeys()
+        {
+            CaseNotification = null;
+        }
     }
 
     public class BaseInfo_CaseNotification : UserDateWRT
@@ -201,7 +232,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("is_multi_link")]
         [Display(Name = "Множествена призовка")]
         public bool? IsMultiLink { get; set; }
-        
+
         [Column("link_direction_id")]
         [Display(Name = "Ред на представляване")]
         public int? LinkDirectionId { get; set; }
@@ -431,5 +462,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Range(1, int.MaxValue, ErrorMessage = "Изберете Oснованиe за покана")]
         [Column("notification_ispn_reason_id")]
         public int? NotificationIspnReasonId { get; set; }
-    }       
+
+        /// <summary>
+        /// id на CasePerson на получател на призовката, според връзката
+        /// Идентификатора е на запис от дело!!!, CaseSessionId=null
+        /// </summary>
+        [Column("epep_case_person_id")]
+        public int? EpepCasePersonId { get; set; }
+    }
 }

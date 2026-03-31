@@ -12,6 +12,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         // Номер Дело
         public string RegNumber { get; set; }
+        public string RegNumberText { get; set; }
 
         // Дата дело
         public DateTime RegDate { get; set; }
@@ -49,8 +50,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         // Иницииращ документ
         public string DocumentLabel { get; set; }
 
+        // Иницииращ документ
+        public string DocumentDescription { get; set; }
+
         // Дата на влизане в законна сила
         public DateTime? CaseInforcedDate { get; set; }
+
+        public bool IsViewBtn { get; set; }
 
         // Индикатори
         public virtual ICollection<CaseClassification> CaseClassifications { get; set; }

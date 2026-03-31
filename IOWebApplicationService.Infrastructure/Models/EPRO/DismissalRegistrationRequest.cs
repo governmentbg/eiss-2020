@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using IOWebApplication.Infrastructure.Extensions.HTML;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -42,5 +43,14 @@ namespace IOWebApplicationService.Infrastructure.Models.EPRO
         public ObjectionModel Objection { get; set; }
         [Required]
         public DecisionModel Decision { get; set; }
+
+        public void DecodeTexts()
+        {
+            DismissalReason = DismissalReason.Decode();
+            if (Objection != null)
+            {
+                Objection.SideName = Objection.SideName.Decode();
+            }
+        }
     }
 }

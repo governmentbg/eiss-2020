@@ -1,0 +1,35 @@
+﻿@model WorkNotificationEditDateVM
+
+@{
+    ViewData["Title"] = "Повтори по-късно известието";
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","WorkNotification")" title="Моите известия">Моите известия</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditDateCreated" method="post">
+            @Html.HiddenFor(x => x.NotificationId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.AddDays, "Int32Nullable")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="WorkNotification" asp-action="Index" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>

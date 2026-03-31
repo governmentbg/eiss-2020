@@ -3,7 +3,6 @@
 
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -14,6 +13,7 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 
@@ -69,9 +68,9 @@ namespace IOWebApplication.Controllers
             printDocumentService = _printDocumentService;
             cdnService = _cdnService;
         }
-        public IActionResult Index(long documentId, long? documentResolutionId)
+        public async Task<IActionResult> Index(long documentId, long? documentResolutionId)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
             {
                 return Redirect_Denied();
             }
@@ -82,9 +81,9 @@ namespace IOWebApplication.Controllers
             return View();
         }
 
-        public IActionResult Add(long documentId, long? documentResolutionId, int notificationTypeId)
+        public async Task<IActionResult> Add(long documentId, long? documentResolutionId, int notificationTypeId)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
             {
                 return Redirect_Denied();
             }
@@ -104,16 +103,16 @@ namespace IOWebApplication.Controllers
            //  SetHelpFile(HelpFileValues.SessionNotification);
             return View(nameof(Edit), model);
         }
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
             var model = service.ReadById(id);
             if (model.DeliveryDateCC == null)
                 model.DeliveryDateCC = DateTime.Now;
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас уведомление не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас уведомление не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, model.DocumentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, model.DocumentId))
             {
                 return Redirect_Denied();
             }
@@ -125,8 +124,14 @@ namespace IOWebApplication.Controllers
 
         [HttpPost]
         [DisableRequestSizeLimit]
-        public IActionResult Edit(DocumentNotification model, string documentPersonLinksJson)
+        public async Task<IActionResult> Edit(DocumentNotification model, string documentPersonLinksJson)
         {
+            var logVM = new DeliveryLogVM()
+            {
+                Action = model.Id > 0 ? "Редакция" : "Добавяне",
+                PageLabel = "Призовки/съобщения към документ",
+                PageUrl = "CaseNotification/Edit"
+            };
             var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
             List<DocumentNotificationMLink> documentPersonLinks = JsonConvert.DeserializeObject<List<DocumentNotificationMLink>>(documentPersonLinksJson, dateTimeConverter);
 
@@ -158,8 +163,7 @@ namespace IOWebApplication.Controllers
                 }
             }
 
-            if (model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ||
-                model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCourier)
+            if (@NomenclatureConstants.NotificationDeliveryGroup.WithCourierLike(model.NotificationDeliveryGroupId))
             {
                 model.DeliveryDate = model.DeliveryDateCC;
                 model.DeliveryInfo = model.DeliveryInfoCC;
@@ -171,7 +175,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(Edit), model);
             }
             var currentId = model.Id;
-            if (service.DocumentNotification_SaveData(model, documentPersonLinks))
+            if (await service.DocumentNotification_SaveData(model, documentPersonLinks, logVM))
             {
                 //if (currentId == 0)
                 //    CheckAccessAdd(model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Append);
@@ -204,7 +208,7 @@ namespace IOWebApplication.Controllers
             ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(model.NotificationDeliveryGroupId ?? 0, model.NotificationStateId);
             ViewBag.DocumentPersonId_ddl = documentPersonLinkService.GetPersonDropDownList(model.DocumentId ?? 0, model.NotificationTypeId);
             var linkListVM = documentPersonLinkService.GetLinkForPerson(model.DocumentPersonId ?? 0, model.NotificationTypeId ?? 0, null);
-            List<SelectListItem> addrList = GetAddrForPerson(linkListVM, model.DocumentPersonId ?? 0, model.DocumentPersonLinkId ?? 0, model.NotificationDeliveryGroupId ?? 0);
+            List<SelectListItem> addrList = service.GetAddrForPerson(linkListVM, model.DocumentPersonId ?? 0, model.DocumentPersonLinkId ?? 0, model.NotificationDeliveryGroupId ?? 0);
             ViewBag.DocumentPersonLinkId_ddl = documentPersonLinkService.ListForPersonToDropDown(linkListVM, model.DocumentPersonId ?? 0); // casePersonLink.GetDropDownListForPerson(personId);
 
             ViewBag.DocumentPersonAddressId_ddl = addrList;
@@ -214,7 +218,7 @@ namespace IOWebApplication.Controllers
             ViewBag.NotificationTypeSummonsJson = JsonConvert.SerializeObject(NotificationTypeId_ddl.Where(x => x.value != NomenclatureConstants.NotificationType.GovernmentPaper.ToString()).ToList());
             ViewBag.NotificationTypeGovernmentJson = JsonConvert.SerializeObject(NotificationTypeId_ddl.Where(x => x.value == NomenclatureConstants.NotificationType.GovernmentPaper.ToString()).ToList());
 
-            var HtmlTemplateId_ddl = nomService.GetDDL_HtmlTemplateAll(model.NotificationTypeId ?? 0);
+            var HtmlTemplateId_ddl = nomService.GetDDL_HtmlTemplateDocument(model.NotificationTypeId ?? 0);
             ViewBag.HtmlTemplateId_ddl = HtmlTemplateId_ddl.Select(x => new SelectListItem() { Value = x.Value, Text = x.Text }).ToList();
             ViewBag.HtmlTemplateId_json = JsonConvert.SerializeObject(HtmlTemplateId_ddl);
 
@@ -229,33 +233,14 @@ namespace IOWebApplication.Controllers
             ViewBag.DeliveryAreaId_ddl = areaService.DeliveryAreaSelectDDL(model.ToCourtId ?? 0, false);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_DocumentNotification(model.Id, model.DocumentId ?? 0, model.DocumentResolutionId, model.NotificationTypeId ?? 0).DeleteOrDisableLast();
         }
-        private List<SelectListItem> GetAddrForPerson(List<DocumentNotificationLinkVM> linkListVM, long documentPersonId, long documentPersonLinkId, int notificationDeliveryGroupId)
-        {
-            List<SelectListItem> addrList;
-            if (documentPersonLinkId > 0 && linkListVM.Any(x => x.Id == documentPersonLinkId))
-            {
-                long documentPersonAddrId = documentPersonId;
-                var documentPersonLink = linkListVM.FirstOrDefault(x => x.Id == documentPersonLinkId);
-                if (documentPersonLink != null)
-                {
-                    documentPersonAddrId = (documentPersonLink.PersonSecondRelId ?? 0) != 0 ? (documentPersonLink.PersonSecondRelId ?? 0) :
-                                           (documentPersonLink.isXFirst ? documentPersonLink.PersonRelId : documentPersonLink.PersonId);
-                }
-                addrList = documentPersonLinkService.GetDDL_DocumentPersonAddress(documentPersonAddrId, notificationDeliveryGroupId);
-            }
-            else
-            {
-                addrList = documentPersonLinkService.GetDDL_DocumentPersonAddress(documentPersonId, notificationDeliveryGroupId);
-            }
-            return addrList;
-        }
+        
         public JsonResult LoadAddrForPerson(long documentPersonId, int documentPersonLinkId, int notificationDeliveryGroupId)
         {
             List<SelectListItem> addrList;
             if (documentPersonLinkId > 0)
             {
                 var linkListVM = documentPersonLinkService.GetLinkForPerson(documentPersonId, 0, null);
-                addrList = GetAddrForPerson(linkListVM, documentPersonId, documentPersonLinkId, notificationDeliveryGroupId);
+                addrList = service.GetAddrForPerson(linkListVM, documentPersonId, documentPersonLinkId, notificationDeliveryGroupId);
             }
             else
             {
@@ -266,7 +251,7 @@ namespace IOWebApplication.Controllers
         public JsonResult LoadDropDownListForPerson(long documentPersonId, int documentPersonLinkId, int notificationTypeId, int notificationDeliveryGroupId)
         {
             var linkListVM = documentPersonLinkService.GetLinkForPerson(documentPersonId, notificationTypeId, null);
-            List<SelectListItem> addrList = GetAddrForPerson(linkListVM, documentPersonId, documentPersonLinkId, notificationDeliveryGroupId);
+            List<SelectListItem> addrList = service.GetAddrForPerson(linkListVM, documentPersonId, documentPersonLinkId, notificationDeliveryGroupId);
             var linkList = documentPersonLinkService.ListForPersonToDropDown(linkListVM, documentPersonId);
             return Json(new { linkList, addrList });
         }
@@ -278,7 +263,7 @@ namespace IOWebApplication.Controllers
             htmlModel.SourceType = SourceTypeSelectVM.DocumentNotificationPrint;
             var documentNotification = service.ReadById(sourceId);
 
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentNotification.DocumentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentNotification.DocumentId))
             {
                 return Redirect_Denied();
             }
@@ -333,6 +318,12 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> EditTinyMCE(TinyMCEVM htmlModel)
         {
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Генериране",
+                PageLabel = "Печат на призовка/съобщение към документ",
+                PageUrl = "EditTinyMCE"
+            };
             string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
 
             var htmlRequest = new CdnUploadRequest()
@@ -347,7 +338,7 @@ namespace IOWebApplication.Controllers
             {
                 var documentNotification = service.ReadById(htmlModel.SourceId);
                 documentNotification.DatePrint = DateTime.Now;
-                service.DocumentNotification_SaveData(documentNotification, documentNotification.DocumentNotificationMLinks?.ToList());
+                await service.DocumentNotification_SaveData(documentNotification, documentNotification.DocumentNotificationMLinks?.ToList(), logVM);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
             }
             else
@@ -416,53 +407,12 @@ namespace IOWebApplication.Controllers
             }
             return memoryStreamNew.ToArray();
         }
-        public async Task<IActionResult> PrintPdf(int id)
-        {
-            //var caseNotification = service.GetById<CaseNotification>(id);
-            // CheckAccessWithId(caseNotification.Id, caseNotification.CaseId, caseNotification.CaseSessionId, caseNotification.CaseSessionActId, AuditConstants.Operations.Print);
-            (var pdfBytesR, var FileName) = await makePrintAndSavePdf(id);
-            return File(pdfBytesR, System.Net.Mime.MediaTypeNames.Application.Pdf, FileName);
-        }
-        private async Task<(byte[] pdfBytes, string FileName)> makePrintAndSavePdf(int id)
-        {
-            var cdnResult = await service.ReadPrintedFile(id);
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateDocumentNotification(id);
-            if (cdnResult == null)
-            {
-                if (htmlModel == null)
-                {
-                    return (null, "");
-                }
-                var cdnResultDraft = await service.ReadDraftFile(id);
-                if (cdnResultDraft != null)
-                {
-                    htmlModel.Text = Encoding.UTF8.GetString(Convert.FromBase64String(cdnResultDraft.FileContentBase64));
-                }
-                var pdfBytes = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlModel)
-                {
-                    PageOrientation = (Orientation)htmlModel.PageOrientation,
-                    PageMargins = new Margins(10, 5, 10, 5),
-                    PageSize = Size.A4,
-                    CustomSwitches = htmlModel.SmartShrinkingPDF ? "" : "--disable-smart-shrinking"
-                }.GetByte(this.ControllerContext);
-                pdfBytes = await ZoomIfHave3Pages(htmlModel, pdfBytes);
-                await service.SavePrintedFile(id, pdfBytes);
-                cdnResult = await service.ReadPrintedFile(id);
-
-            }
-
-            var pdfBytesC = Convert.FromBase64String(cdnResult.FileContentBase64);
-            if ((Orientation)htmlModel.PageOrientation == Orientation.Landscape)
-            {
-                pdfBytesC = RotateSecondPage180(pdfBytesC);
-            }
-            return (pdfBytesC, cdnResult.FileName);
-        }
+        
         [HttpPost]
-        public IActionResult DocumentNotification_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> DocumentNotification_ExpiredInfo(ExpiredInfoVM model)
         {
-            var documentNotification = service.GetById<DocumentNotification>(model.Id);
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentNotification.DocumentId ??0))
+            var documentNotification = await service.GetByIdAsync<DocumentNotification>(model.Id);
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentNotification.DocumentId ??0))
             {
                 return Redirect_Denied();
             }
@@ -483,6 +433,50 @@ namespace IOWebApplication.Controllers
             var linkList = service.DocumentPersonLinksByNotificationId(documentNotificationId, documentPersonId, notificationTypeId).Where(x => x.IsActive).ToList();
             var addrList = documentPersonLinkService.GetDDL_DocumentPersonAddress(documentPersonId, notificationDeliveryGroupId);
             return Json(new { linkList, addrList });
+        }
+        [HttpGet]
+        public IActionResult NotificationGroup(long? documentId, long? documentResolutionId, int notificationTypeId)
+        {
+            SetViewBagNotificationGroup(documentId, documentResolutionId, notificationTypeId);
+            var model = service.GenerateNotificationGroup(documentId, documentResolutionId, notificationTypeId);
+            return View(model);
+        }
+        void SetViewBagNotificationGroup(long? documentId, long? documentResolutionId, int notificationTypeId)
+        {
+            ViewBag.NotificationTypeId_ddl = nomService.GetDropDownList<NotificationType>().Where(x => x.Value != NomenclatureConstants.NotificationType.GovernmentPaper.ToString()).ToList();
+            var HtmlTemplateId_ddl = nomService.GetDDL_HtmlTemplateDocument(notificationTypeId);
+            ViewBag.HtmlTemplateId_ddl = HtmlTemplateId_ddl.Select(x => new SelectListItem() { Value = x.Value, Text = x.Text }).ToList();
+            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupDDL(notificationTypeId);
+            ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(NomenclatureConstants.NotificationDeliveryGroup.WithSummons, NomenclatureConstants.NotificationState.Ready);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_DocumentNotification(0, documentId ?? 0, documentResolutionId, notificationTypeId).DeleteOrDisableLast();
+        }
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> NotificationGroup(NotificationDocGroupVM model)
+        {
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Множествено добавяне",
+                PageLabel = "Призовки/съобщения",
+                PageUrl = "DocumentNotification/Edit"
+            };
+       
+            SetViewBagNotificationGroup(model.DocumentResolutionId, model.DocumentResolutionId, model.NotificationStateId);
+            SetHelpFile(HelpFileValues.SessionNotification);
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(NotificationGroup), model);
+            }
+            try
+            {
+                await service.SaveMultiNotification(model, logVM);
+                return RedirectToAction("Edit", "DocumentResolution", new { id = model.DocumentResolutionId});
+            }
+            catch (Exception ex)
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(nameof(NotificationGroup), model);
         }
     }
 }

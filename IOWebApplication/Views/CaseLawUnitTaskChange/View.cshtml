@@ -6,7 +6,7 @@
     ViewData["Title"] = "Пренасочване на задача при обективна невъзможност";
 }
 
-@section breadcrumb{
+@section breadcrumb {
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
         <li><a href="@Url.Action("Index")">Регистър обективна невъзможност</a></li>
@@ -21,7 +21,18 @@
             <div class="row">
                 <div class="col-lg-6">@Html.DisplayFor(x => x.ActType, "obj")</div>
                 <div class="col-lg-3">@Html.DisplayFor(x => x.ActNumber, "obj")</div>
-                <div class="col-lg-3">@Html.DisplayFor(x => x.ActDate, "date")</div>
+                @if (!string.IsNullOrEmpty(Model.ActNumber))
+                {
+                    <div class="col-lg-3">
+                        @Html.DisplayFor(x => x.ActDate, "date")
+                    </div>
+                }
+                else
+                {
+                    <div class="col-lg-3">
+                        @Html.DisplayFor(x => x.ActDate, "date", null, new { label = "Дата на заседание" })
+                    </div>
+                }
 
             </div>
             <div class="row">

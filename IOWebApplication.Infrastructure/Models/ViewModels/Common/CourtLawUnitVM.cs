@@ -18,9 +18,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string CourtOrganizationName { get; set; }
         public DateTime DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
+        public DateTime? MandateDateTo { get; set; }
         public string LawUnitPositionName { get; set; }
         public string PeriodTypeLabel { get; set; }
         public int PeriodTypeId { get; set; }
+
+        public int RowNo { get; set; }
     }
 
     public class CourtLawUnitFilter
@@ -31,13 +34,28 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         [Display(Name = "Вид")]
         public int PeriodTypeId { get; set; }
 
+        [Required]
         [Display(Name = "От дата")]
         public DateTime? DateFrom { get; set; }
 
+        [Required]
         [Display(Name = "До дата")]
         public DateTime? DateTo { get; set; }
 
         [Display(Name = "Заседател")]
         public int? LawUnitJuryId { get; set; }
+
+        [Display(Name = "Имена")]
+        public string Fullname { get; set; }
+        public int LawUnitTypeId { get; set; }
+    }
+
+    public class CourtLawunitOrderComboVM
+    {
+        public int CurrentRowNo { get; set; }
+        [Display(Name = "Съдия")]
+        public string CurrentLawunit { get; set; }
+        [Display(Name = "Нова позиция в старшинството")]
+        public int NewRowNo { get; set; }
     }
 }

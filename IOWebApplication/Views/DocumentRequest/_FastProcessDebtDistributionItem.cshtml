@@ -1,0 +1,39 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessDebtDistributionVM
+@{
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+
+<tr data-index="@Model.Index" class="item-template">
+    <td>
+        <select asp-for="@Model.PersonCode" class="form-control" asp-items="@ViewBag.RightSideDDL"></select>
+    </td>
+    <td>
+        <select asp-for="@Model.ClaimCode" data-saved="@Model.ClaimCode" asp-items="@ViewBag.MoneyClaimsDDL" class="debt-claim-code form-control"></select>
+    </td>
+    <td>
+        @Html.EditorFor(x => x.ShareProcent, "DecimalInline")
+    </td>
+    <td>
+        @Html.EditorFor(x => x.Amount, "DecimalInline")
+    </td>
+    <td>
+        <select asp-for="@Model.CurrencyCode" class="form-control" asp-items="@ViewBag.CurrenciesDDL"></select>
+    </td>
+    @if (isInEuro)
+    {
+        <td>
+            @Html.EditorFor(x => x.TotalAmountEUR, "DecimalInline")
+        </td>
+    }
+    else
+    {
+        <td>
+            @Html.EditorFor(x => x.TotalAmountBGN, "DecimalInline")
+        </td>
+    }
+    <td>
+        <a class="btn remove-item" aria-label="Премахни" title="Премахни паричното вземане" data-alert="Потвърди премахване на вземането за предаване на заместими вещи!"><i class="fa fa-remove"></i></a>
+        <input type="hidden" class="item-index" name="@(nameof(FastProcessRequestVM.DebtDistributions)).Index" value="@Model.Index" />
+    </td>
+</tr>

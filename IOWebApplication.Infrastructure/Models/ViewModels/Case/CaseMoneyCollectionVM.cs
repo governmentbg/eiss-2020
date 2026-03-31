@@ -18,6 +18,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int? CaseMoneyCollectionKindOrder { get; set; }
         public string CurrencyLabel { get; set; }
         public string CurrencyCode { get; set; }
+        public string CurrencyDescription { get; set; }
         public int CurrencyId { get; set; }
         public decimal InitialAmount { get; set; }
         public string InitialAmountString { get; set; }

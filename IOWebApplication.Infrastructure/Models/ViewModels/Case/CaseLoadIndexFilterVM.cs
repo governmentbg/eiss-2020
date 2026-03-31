@@ -13,6 +13,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         [Display(Name = "До дата")]
         public DateTime? DateTo { get; set; }
 
+        [Display(Name = "Година")]
+        public int? Year { get; set; }
+
         [Display(Name = "Съдия")]
         public int? LawUnitId { get; set; }
 
@@ -24,6 +27,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         [Display(Name = "Шифър")]
         public int CaseCodeId { get; set; }
+
+        /// <summary>
+        /// Шифър
+        /// </summary>
+        [Display(Name = "Шифър")]
+        public string[] CaseCodeIds { get; set; }
 
         [Display(Name = "Номер на дело")]
         public string RegNumber { get; set; }
@@ -45,5 +54,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         [Display(Name = "Дейност")]
         public int JudgeLoadActivityId { get; set; }
+
+        [Display(Name = "Съдебна група за разпределяне")]
+        public int CourtGroupId { get; set; }
+
+        /// <summary>
+        /// Идентификатор на съд
+        /// </summary>
+        [Display(Name = "Съд")]
+        public int? CourtId { get; set; }
     }
 }

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -12,6 +7,8 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -38,6 +35,10 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult IndexCaseLoadCorrectionActivity()
         {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
             return View();
         }
 
@@ -282,15 +283,15 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="CaseId"></param>
         /// <returns></returns>
-        public IActionResult Index(int CaseId)
+        public async Task<IActionResult> Index(int CaseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLoadCorrection, null, AuditConstants.Operations.View, CaseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLoadCorrection, null, AuditConstants.Operations.View, CaseId))
             {
                 return Redirect_Denied();
             }
-            var caseCase = service.GetById<Case>(CaseId);
+            var caseCase = await caseService.GetCaseInfo(CaseId);
             ViewBag.caseId = CaseId;
-            ViewBag.CaseName = caseCase.RegNumber;
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
             SetHelpFile(HelpFileValues.CaseLoadCorrection);
             return View();
         }
@@ -313,9 +314,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId)
+        public async Task<IActionResult> Add(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLoadCorrection, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLoadCorrection, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -325,7 +326,7 @@ namespace IOWebApplication.Controllers
                 CourtId = userContext.CourtId,
                 CorrectionDate = DateTime.Now
             };
-            SetViewbag(caseId);
+            await SetViewbag(caseId);
             return View(nameof(Edit), model);
         }
 
@@ -334,27 +335,26 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.GetById<CaseLoadCorrection>(id);
+            var model = await service.GetByIdAsync<CaseLoadCorrection>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас коригиращи коефициенти по дело не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеният от Вас коригиращи коефициенти по дело не е намерен и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLoadCorrection, id, AuditConstants.Operations.Append, model.CaseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLoadCorrection, id, AuditConstants.Operations.Append, model.CaseId))
             {
                 return Redirect_Denied();
             }
-            SetViewbag(model.CaseId);
+            await SetViewbag(model.CaseId);
             return View(nameof(Edit), model);
         }
 
-        void SetViewbag(int caseId)
+        private async Task SetViewbag(int caseId)
         {
-            var caseCase = caseService.Case_GetById(caseId);
+            var caseCase = await caseService.GetCaseInfo(caseId);
             ViewBag.CaseName = caseCase.RegNumber;
-
-            ViewBag.CaseLoadCorrectionActivityId_ddl = service.GetDDL_CaseLoadCorrectionActivity(caseCase.CaseGroupId, caseCase.CaseInstanceId);
+            ViewBag.CaseLoadCorrectionActivityId_ddl = await service.GetDDL_CaseLoadCorrectionActivityAsync(caseCase.CaseGroupId, caseCase.CaseInstanceId);
             SetHelpFile(HelpFileValues.CaseLoadCorrection);
         }
 
@@ -368,8 +368,11 @@ namespace IOWebApplication.Controllers
             if (model.CaseLoadCorrectionActivityId < 1)
                 return "Изберете вид корекция";
 
-            if (model.CorrectionDate == null)
+            if (model.CorrectionDate.Year < 2000)
                 return "Въведете дата на корекция";
+
+            if (model.CorrectionDate.Date < DateTime.Now.Date)
+                return "Дата на корекцията е по-малка от днешна дата";
 
             if (service.IsExistCaseLoadCorrection(model.Id, model.CaseId, model.CaseLoadCorrectionActivityId))
                 return "Има въведен такъв коригиращ коефициент";
@@ -383,9 +386,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Edit(CaseLoadCorrection model)
+        public async Task<IActionResult> Edit(CaseLoadCorrection model)
         {
-            SetViewbag(model.CaseId);
+            await SetViewbag(model.CaseId);
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);
@@ -397,9 +400,9 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(_isvalid);
                 return View(nameof(Edit), model);
             }
-
+            
             var currentId = model.Id;
-            if (service.CaseLoadCorrection_SaveData(model))
+            if (await service.CaseLoadCorrection_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseLoadCorrection, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,7 +11,6 @@ namespace IOWebApplication.Infrastructure.Data.Common
     /// <summary>
     /// Abstraction of repository access methods
     /// </summary>
-    /// <typeparam name="T">Repository type / db table</typeparam>
     public interface IRepository : IDisposable
     {
         /// <summary>
@@ -37,6 +38,13 @@ namespace IOWebApplication.Infrastructure.Data.Common
         IQueryable<T> AllReadonly<T>(Expression<Func<T, bool>> search) where T : class;
 
         /// <summary>
+        /// Gets specific record from database by primary key Async
+        /// </summary>
+        /// <param name="id">record identificator</param>
+        /// <returns>Single record</returns>
+        Task<T> GetByIdAsync<T>(object id) where T : class;
+
+        /// <summary>
         /// Gets specific record from database by primary key
         /// </summary>
         /// <param name="id">record identificator</param>
@@ -56,11 +64,20 @@ namespace IOWebApplication.Infrastructure.Data.Common
         Tprop GetPropById<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
             where T : class;
 
+        Task<Tprop> GetPropByIdAsync<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
+          where T : class;
+
         /// <summary>
         /// Adds entity to the database
         /// </summary>
         /// <param name="entity">Entity to add</param>
         void Add<T>(T entity) where T : class;
+
+        /// <summary>
+        /// Adds entity to the database asyncronously
+        /// </summary>
+        /// <param name="entity">Entity to add</param>
+        Task AddAsync<T>(T entity) where T : class;
 
         /// <summary>
         /// Ads collection of entities to the database
@@ -75,10 +92,33 @@ namespace IOWebApplication.Infrastructure.Data.Common
         void Update<T>(T entity) where T : class;
 
         /// <summary>
+        /// Tracks current entity
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        void Attach<T>(T entity) where T : class;
+
+        /// <summary>
         /// Updates set of records in the database
         /// </summary>
         /// <param name="entities">Enumerable collection of entities to be updated</param>
         void UpdateRange<T>(IEnumerable<T> entities) where T : class;
+
+        /// <summary>
+        /// Executes DbSet(T).ExecuteDelete; Deletes immediately!!!
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="deleteWhereClause"></param>
+        /// <returns></returns>
+        int ExecuteDelete<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class;
+
+        /// <summary>
+        /// Executes DbSet(T).ExecuteDeleteAsync; Deletes immediately!!!
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="deleteWhereClause"></param>
+        /// <returns></returns>
+        Task<int> ExecuteDeleteAsync<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class;
 
         /// <summary>
         /// Deletes a record from database
@@ -114,6 +154,17 @@ namespace IOWebApplication.Infrastructure.Data.Common
         IEnumerable<T> ExecuteSQL<T>(string query, params object[] args) where T : class;
 
         int TrackerCount { get; }
-        void RefreshDbContext(string connectionString);
+        void RefreshDbContext(string connectionString, IConfiguration config = null);
+
+        /// <summary>
+        /// Gets new Db transaction
+        /// </summary>
+        /// <param name="fakeTransaction">!!! Да се използва само за изключване на вложена транзакция</param>
+        /// <returns></returns>
+        IDbContextTransaction BeginTransaction(bool fakeTransaction = false);
+
+        void ClearEntityTracker();
+
+        bool StopTrackingApplicationUser();
     }
 }

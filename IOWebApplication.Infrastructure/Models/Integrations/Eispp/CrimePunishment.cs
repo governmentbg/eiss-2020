@@ -46,7 +46,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		[XmlAttribute("nkzpnesdc")]
 		public int PunishmentWeeks { get; set; }
 
-		// <summary>
+		/// <summary>
 		/// nkzpneden
 		/// Размер на наказание - Дни
 		/// </summary>
@@ -54,11 +54,11 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		[XmlAttribute("nkzpneden")]
 		public int PunishmentDays { get; set; }
 
-		/// <summary>
-		/// nkzpnerzm
-		/// Размер на глоба в лева
-		/// </summary>
-		[Display(Name = "Размер на глоба лв.")]
+        /// <summary>
+        /// nkzpnerzm
+        /// Размер на глоба в евро
+        /// </summary>
+        [Display(Name = "Размер на глоба евро")]
 		[XmlAttribute("nkzpnerzm", DataType = "double")]
 		public double FineAmount { get; set; }
 

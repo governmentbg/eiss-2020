@@ -1,7 +1,6 @@
 ﻿// Copyright (C) Information Services. All Rights Reserved.
 // Licensed under the Apache License, Version 2.0
 
-using DataTables.AspNet.Core;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -19,10 +18,7 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Rotativa.AspNetCore.Options;
-using Rotativa.Extensions;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;

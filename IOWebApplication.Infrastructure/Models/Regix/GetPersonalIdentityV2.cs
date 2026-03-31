@@ -574,7 +574,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetPersonalIdentityV2
             }
         }
 
-        /// <remarks/>
+        // <remarks/>
         //[System.Xml.Serialization.XmlElementAttribute(DataType = "base64Binary")]
         //public byte[] Picture
         //{

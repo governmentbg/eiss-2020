@@ -19,6 +19,45 @@
             Забранява изпращането на съобщение за одит лог за неважни методи - като четене на номенклатури
             </summary>
         </member>
+        <member name="T:IOWebApplication.TitleAuditAttribute">
+            <summary>
+            Атрибут, с който се добавя запис в лога на заглавието на страницата за списъчни полета
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.TitleAuditAttribute.Operation">
+            <summary>
+            Вид операция за добавяне към лога
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.AccountController.SetViewbagIndex">
+            <summary>
+            Метод попълващ номенклатури за странцата с потребители
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.AjaxController.GetDDL_MediationResultBase(System.Int32,System.Boolean)">
+            <summary>
+            Метод връщащ списък с основания към резултати за среща за медиация
+            </summary>
+            <param name="mediationResultId">Идентификатор на избраният резултат</param>
+            <param name="addDefaultElement">Флаг за добавяне на елемент "Избери"</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.AjaxController.GetDDL_EkatteSobr(System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+            Извличане на данни за падащ списък занаселени места
+            </summary>
+            <param name="countryId">Идентификатор на държава</param>
+            <param name="addDefaultElement">Флаг дали да се добави елемент "Избери"</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.AjaxController.GetDDL_EisppEkatte(System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+            Извличане на данни за падащ списък за населени места от ЕИСПП
+            </summary>
+            <param name="countryId">Идентификатор на държава</param>
+            <param name="addDefaultElement">Флаг дали да се добави елемент "Избери"</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.BaseController.CurrentContext_Set(IOWebApplication.Core.Models.CurrentContextModel)">
             <summary>
             Добавя информация за текущия обект и правата върху него
@@ -205,6 +244,11 @@
             <param name="caseId"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.SetViewbagIndex">
+            <summary>
+            Зареждане на номенклатури за страници
+            </summary>
+        </member>
         <member name="M:IOWebApplication.Controllers.CaseController.CaseReport">
             <summary>
             Разширено търсене на дела
@@ -228,7 +272,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexReportMaturity">
             <summary>
-            Справка за Образувани дела с участието на малолетни/непълнолетни лица
+            Справка за образувани дела с участието на малолетни/непълнолетни лица
             </summary>
             <returns></returns>
         </member>
@@ -242,7 +286,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseWithoutFinalAct">
             <summary>
-            Справка Дела с ненаписани съдебни актове от всички съдии
+            Справка дела с ненаписани съдебни актове от всички съдии
             </summary>
             <returns></returns>
         </member>
@@ -256,7 +300,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseCorruptCrimes">
             <summary>
-            Справка Oбразувани и свършени дела за коруп. престъпления
+            Справка образувани и свършени дела за коруп. престъпления
             </summary>
             <returns></returns>
         </member>
@@ -265,7 +309,7 @@
             Извличане на данни за Oбразувани и свършени дела за коруп. престъпления
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexWithoutCaseFinalActMaturity">
@@ -279,7 +323,7 @@
             Извличане на данни за Несвършени дела с участието на малолетни/непълнолетни лица
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexWithCaseFinalActMaturity">
@@ -293,12 +337,12 @@
             Извличане на данни Свършили дела с участието на малолетни/непълнолетни лица
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseWithoutFinal">
             <summary>
-            Справка Справка Несвършени дела към дата
+            Справка не свършени дела към дата
             </summary>
             <returns></returns>
         </member>
@@ -307,10 +351,23 @@
             Извличане на данни за Справка Несвършени дела към дата
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.CaseWithoutFinalExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.CaseFilterReport)">
+            <summary>
+            Експорт Справка Несвършени дела към дата
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseWithoutFinalWithCourt">
+            <summary>
+            Справка не свършени дела към дата
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.CaseWithoutFinalWithCourtExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.CaseFilterReport)">
             <summary>
             Експорт Справка Несвършени дела към дата
             </summary>
@@ -342,8 +399,13 @@
             Извличане на данни за Справка за срочност за насрочване на дела
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter"></param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.ViewBagCaseBeginReport">
+            <summary>
+            Зареждане на номенклатури за справка за срочност за насрочване на дела
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseActReport">
             <summary>
@@ -353,11 +415,16 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.ListDataCaseActReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.CaseFilterReport)">
             <summary>
-            Извличане на данни за Справка за срочност за изготвяне на съдебен акт
+            Извличане на данни за справка за срочност за изготвяне на съдебен акт
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="model">Филтър попълнен от потребител</param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.ViewBagCaseActReport">
+            <summary>
+            Метод зареждащ номенклатури за справка за срочност за изготвяне на съдебен акт
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseFirstLifecyclie">
             <summary>
@@ -370,8 +437,13 @@
             Извличане на данни за Справка за времетраене на размяната на книжата (първи интервал)
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.ViewBagCaseFirstLifecyclie">
+            <summary>
+            Зареждане на номенклатури за справка за времетраене на размяната на книжата (първи интервал)
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseController.IndexCaseFirstLifecyclieDoubleExchange">
             <summary>
@@ -385,6 +457,47 @@
             </summary>
             <param name="request"></param>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.ViewBagCaseFirstLifecyclieDoubleExchange">
+            <summary>
+            Зареждане на номенклатури за справка за времетраене на размяната на книжата (двойна размяна)
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.MergerCasesFastProcess(System.Int32)">
+            <summary>
+            Стартиране на екран за обединяване на дела за бързопроизводство
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.GetFromCaseInfoForMergerCaseFastProcess(System.Int32)">
+            <summary>
+            Метод връщащ инфо за дело за обединяване на дела за бързо производство
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.IsValidMergerCasesFastProcess(IOWebApplication.Infrastructure.Models.ViewModels.Case.MergerCaseFastProcessVM)">
+            <summary>
+            Валидация при запис
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.IndexExsistCaseWithSamePeople(System.Int32)">
+            <summary>
+            Извличане на данни за дела със същият състав, като в текущото дело
+            </summary>
+            <param name="caseId">Идентификатор на текущо дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseController.ListDataExsistCaseWithSamePeople(DataTables.AspNet.Core.IDataTablesRequest,System.Int32)">
+            <summary>
+            Извличане на данни за дела
+            </summary>
+            <param name="request"></param>
+            <param name="caseId">Идентификатор на дело</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseEvidenceController.Index">
@@ -497,7 +610,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseFastProcessController.Index(System.Int32)">
             <summary>
-            Страница с Заповедни производства към дело
+            Страница със Заповедни производства към дело
             </summary>
             <param name="caseId"></param>
             <returns></returns>
@@ -866,7 +979,7 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.IsValid(IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnitDismisal)">
+        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.IsValidDismissal(IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnitDismisal)">
             <summary>
             Валидация преди запис на отвод
             </summary>
@@ -900,7 +1013,16 @@
             <summary>
             Страница за промяна на председател и състав
             </summary>
-            <param name="id"></param>
+            <param name="caseId"></param>
+            <param name="caseSessionId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.CaseSelectionProtokolSubstitutionApply(System.Int32,System.Int32)">
+            <summary>
+            Запис на заместване (случайно разпределение извън дело)
+            </summary>
+            <param name="protokolId">Идентификатор на протокола</param>
+            <param name="caseSessionId">Идентификатор на заседанието</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseLifecycleController.Edit(System.Int32)">
@@ -1378,7 +1500,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataCourtLawUnitActivity(DataTables.AspNet.Core.IDataTablesRequest)">
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataCourtLawUnitActivity(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseLoadIndexFilterVM)">
             <summary>
             Извличане на данни за Допълнителни и административни дейности към съдии по съд
             </summary>
@@ -1418,23 +1540,52 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.IndexSprWithCourt">
+            <summary>
+            Справка за Натовареност по дела: основни и допълнителни дейности - със съд
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataSpr(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseLoadIndexFilterVM)">
             <summary>
             Извличане на данни за Натовареност по дела: основни и допълнителни дейности
             </summary>
             <param name="request"></param>
-            <param name="DateFrom"></param>
-            <param name="DateTo"></param>
-            <param name="LawUnitId"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ViewBagIndexSpr">
+            <summary>
+            Зареждане на номенклатури за натовареност по дела: основни и допълнителни дейности
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.IndexCourtGroupSpr">
+            <summary>
+            Натовареност по групи: основни и допълнителни дейности
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.IndexCourtGroupSprWithCourt">
+            <summary>
+            Натовареност по групи: основни и допълнителни дейности
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataCourtGroupeSpr(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseLoadIndexFilterVM)">
+            <summary>
+            Извличане на данни за натовареност по групи: основни и допълнителни дейности
+            </summary>
+            <param name="request"></param>
+            <param name="model">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.IndexCourtLawUnitActivitySpr">
             <summary>
-            Справка за Натоварване на съдии извън дело
+            Справка за натоварване на съдии извън дело
             </summary>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataCourtLawUnitActivitySpr(DataTables.AspNet.Core.IDataTablesRequest,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.Int32},System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataCourtLawUnitActivitySpr(DataTables.AspNet.Core.IDataTablesRequest,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.Int32},System.Int32,System.Nullable{System.Int32})">
             <summary>
             Извличане на данни за Натоварване на съдии извън дело
             </summary>
@@ -1446,11 +1597,17 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.IndexLawUnitActivitySprSpr">
             <summary>
-            Справка за Натовареност - извън и в дело
+            Справка за натовареност - извън и в дело
             </summary>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataLawUnitActivitySprSpr(DataTables.AspNet.Core.IDataTablesRequest,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.Int32})">
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.IndexLawUnitActivitySprSprWithCourt">
+            <summary>
+            Справка за натовареност - извън и в дело - със съд
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.ListDataLawUnitActivitySprSpr(DataTables.AspNet.Core.IDataTablesRequest,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             Извличане на данни за Натовареност - извън и в дело
             </summary>
@@ -1496,7 +1653,7 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseMigrationController.AcceptMigration(System.Int32,System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CaseMigrationController.AcceptMigration(System.Int32,System.Int32,System.Boolean)">
             <summary>
             Приемане на движение
             </summary>
@@ -1659,7 +1816,22 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CaseNotificationController.ValidateModelGroup(IOWebApplication.Infrastructure.Models.ViewModels.Delivery.NotificationGroupVM)">
+            <summary>
+            Аддед Бай Косьо
+            </summary>
+            <param name="model"></param>
+        </member>
         <member name="M:IOWebApplication.Controllers.CasePersonController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Извличане на данни за страни по дело/заседание
+            </summary>
+            <param name="request"></param>
+            <param name="caseId"></param>
+            <param name="caseSessionId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CasePersonController.ListDataList(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Nullable{System.Int32})">
             <summary>
             Извличане на данни за страни по дело/заседание
             </summary>
@@ -2190,6 +2362,13 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.GetSentenceTypeHas(System.Int32)">
+            <summary>
+            Метод извличащ настройките на присъда
+            </summary>
+            <param name="sentenceTypeId">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.IndexCasePersonSentencePunishmentCrime(System.Int32)">
             <summary>
             Страница с Наложени наказания към присъда
@@ -2233,6 +2412,13 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.CasePersonSentencePunishmentCrime_Delete(System.Int32)">
+            <summary>
+            Изтриване на Участие в престъпления
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.NewItem_CasePersonCrimePunishment(System.Int32)">
             <summary>
             Създаване на динамичен панел Наказание към престъпление
@@ -2261,7 +2447,7 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.SaveFileBulletin(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.SaveFileBulletin(System.Int32,System.Int32)">
             <summary>
             запис на файл за бюлетин към лице
             </summary>
@@ -2282,11 +2468,58 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CaseSelectionChangeController.ReplaceJudge">
+            <summary>
+            Преразпределение: 1 към 1 съдия
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseSelectionChangeController.ReplaceJudgeJudge">
+            <summary>
+            Преразпределение съдия от състав: 1 към 1 съдия
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionActController.Get_ActKindsByActType(System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Метод зареждащ списък с ActKind
+            </summary>
+            <param name="actTypeId">Идентификатор на тип на акт</param>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CaseSessionActController.Divorce_ExpiredInfo(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
             <summary>
             Анулиране на документ
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionActController.IndexActReport">
+            <summary>
+            Справка за съдебни актове
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionActController.ListDataActReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionActReportFilterVM)">
+            <summary>
+            Извличане на данни за справка за съдебни актове
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionActController.SetViewbagIndexActReport">
+            <summary>
+            Зареждане на номенклатури за справка за съдебни актове
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionActController.GetContentByActId(System.Int32,System.Int32)">
+            <summary>
+            Изтегляне на бланка от свързан акт
+            </summary>
+            <param name="actId"></param>
+            <param name="actPart">1-Основно съдържание,2-Диспозитив</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseSessionController.Index_Spr">
@@ -2470,6 +2703,19 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionController.ChecksOnSaveSession(System.Int32,System.Int32,System.Int32,System.Int32,System.DateTime,System.Int32,System.Int32)">
+            <summary>
+            Функция за групова проверка при запис на заседание - за сега няма да се ползва
+            </summary>
+            <param name="CaseId">ИД на дело</param>
+            <param name="CaseSessionId">Ид на заседание</param>
+            <param name="SessionStateId">Статус</param>
+            <param name="SessionTypeId">Тип на заседание</param>
+            <param name="DateTimeFrom">Час на започване</param>
+            <param name="DateTo_Minutes">Колко минути ще е заседанието</param>
+            <param name="CourtHallId">ИД на зала</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CaseSessionController.IsFullComposition(System.Int32)">
             <summary>
             Проверка за пълен състав по дело
@@ -2496,7 +2742,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CaseSessionController.IndexCaseSessionWithActProject">
             <summary>
-            Справка Заседания с не написани съдебни актове към [дата] от всички съдии
+            Справка заседания с не написани съдебни актове към [дата] от всички съдии
             </summary>
             <returns></returns>
         </member>
@@ -2505,7 +2751,6 @@
             Извличане на данни за Заседания с не написани съдебни актове към [дата] от всички съдии
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseSessionFastDocumentController.Index(System.Int32)">
@@ -2630,6 +2875,17 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CaseSessionMeetingController.ChecksOnSaveSessionMeeting(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Int32)">
+            <summary>
+            Проверка преди запис на заседание
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <param name="caseSessionId">Идентификатор на заседание</param>
+            <param name="dateTimeFrom">От дата</param>
+            <param name="dateTimeТо">До дата</param>
+            <param name="courtHallId">Идентификатор на зала</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CaseSessionMeetingController.CaseSessionMeeting_ExpiredInfo(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
             <summary>
             Анулиране на сесии към заседание
@@ -2715,6 +2971,85 @@
             Запис на банкови сметки към обект
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.ExcelReportTemplate">
+            <summary>
+            Темплейти за статистиката
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.ExcelReportTemplateListData(DataTables.AspNet.Core.IDataTablesRequest)">
+            <summary>
+            Извличане на данните за темплйтите за статистиката
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.AddExcelReportTemplate">
+            <summary>
+            Добавяне на темплейт
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.DownloadFile(System.Int32)">
+            <summary>
+            Сваляне на файл
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.IndexFilterTemplates(System.Int32)">
+            <summary>
+            Страница с шаблони за филтри за справки
+            </summary>
+            <param name="FilterTemplateTypeId">Тип шаблон</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.IndexFilterTemplatesSpecializedReport">
+            <summary>
+            Страница с шаблони за филтри за специализирана справка
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.ListDataFilterTemplates(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.FilterTemplatesFilterVM)">
+            <summary>
+            Метод за извличане на данни за шаблони за филтри за справки
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.AddFilterTemplatesSpecializedReport">
+            <summary>
+            Добавяне на нов шаблон за филтър на специализирана справка
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.EditFilterTemplatesSpecializedReport(System.Int32)">
+            <summary>
+            Метод за редакция на шаблон за филтър на специализирана справка
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.EditFilterTemplatesSpecializedReport(IOWebApplication.Infrastructure.Models.ViewModels.Common.FilterTemplatesSpecializedReportEditVM)">
+            <summary>
+            Запис на шаблон за филтър на специализирана справка
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.SetViewbagFilterTemplatesSpecializedReport">
+            <summary>
+            Зареждане на номенклатурни листове за добавяне/редакция на шаблон за филтър на специализирана справка
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CommonController.IsValidFilterTemplatesSpecializedReport(IOWebApplication.Infrastructure.Models.ViewModels.Common.FilterTemplatesSpecializedReportEditVM)">
+            <summary>
+            Валидация при добавяне/редакция на шаблон за филтър на специализирана справка
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CounterController.Index">
@@ -3001,22 +3336,39 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CourtDepartmentController.GetCourtDepartmentCentralDistributionCCDDL(System.Int32)">
+            <summary>
+            Зареждане на съдебна структура за падащ списък
+            </summary>
+            <param name="courtId">Идентификатор на съд</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtDepartmentController.GetDDL_DepartmentByLawUnit(System.Int32,System.Int32)">
+            <summary>
+            Зареждане на съдебна структура за падащ списък
+            </summary>
+            <param name="courtId">Идентификатор на съд</param>
+            <param name="lawUnitId">Идентификатор на лице</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CourtDutyController.Index">
             <summary>
             Страница с дежурства
             </summary>
+            <param name="kind">Вид: null - дежурство, 1 - заместване</param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtDutyController.ListData(DataTables.AspNet.Core.IDataTablesRequest)">
+        <member name="M:IOWebApplication.Controllers.CourtDutyController.ListData(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.CourtDutyFilterVM)">
             <summary>
             Извличане на данните за дежурства
             </summary>
             <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CourtDutyController.Add">
             <summary>
-            Добавяне на дежурство
+            Добавяне на дежурство/заместване
             </summary>
             <returns></returns>
         </member>
@@ -3048,14 +3400,14 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtGroupController.Index(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CourtGroupController.Index(System.Int32,System.Int32)">
             <summary>
             Страница с групи шифри
             </summary>
             <param name="filterCaseGroupId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtGroupController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CourtGroupController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Int32)">
             <summary>
             Извличане на данни за групи шифри
             </summary>
@@ -3071,7 +3423,7 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtGroupController.Add(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CourtGroupController.Add(System.Int32,System.Int32)">
             <summary>
             Добавяне на група шифри
             </summary>
@@ -3143,14 +3495,14 @@
             <param name="filterCaseGroupId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtGroupController.CourtGroupLawUnitRightList(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CourtGroupController.CourtGroupLawUnitRightList(System.Int32,System.Int32)">
             <summary>
             Списък със записани съдии към група
             </summary>
             <param name="courtGroupId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtGroupController.CourtGroupLawUnitLeftList">
+        <member name="M:IOWebApplication.Controllers.CourtGroupController.CourtGroupLawUnitLeftList(System.Int32)">
             <summary>
             Списък със съдии за добавяне към група
             </summary>
@@ -3245,13 +3597,11 @@
             <param name="lawUnitType"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.ListData(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitFilter)">
             <summary>
             Извличане на данни за служители към съд
             </summary>
-            <param name="request"></param>
-            <param name="periodType"></param>
-            <param name="lawUnitType"></param>
+            <param name="request"></param>       
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CourtLawUnitController.Add(System.Int32,System.Int32)">
@@ -3274,6 +3624,63 @@
             Запис на служител в съд
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.ListDataCourtLawUnitAssistant(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitAssistantFilterViewModel)">
+            <summary>
+            Извличане на данни за служители към съд
+            </summary>
+            <param name="request"></param>       
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.SetBreadcrumsCourtLawUnitAssistant(System.Int32,System.Int32)">
+            <summary>
+            Конфигуриране на breadcrumbs за асистент/помощник/секретар
+            </summary>
+            <param name="courtLawUnitId">Идентификатор на CourtLawUnit</param>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.AddCourtLawUnitAssistant(System.Int32,System.Int32)">
+            <summary>
+            Добавяне на асистент/помощник/секретар
+            </summary>
+            <param name="courtLawUnitId">Идентификатор на CourtLawUnit</param>
+            <param name="courtId">Идентификатор на съд</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.EditCourtLawUnitAssistant(System.Int32)">
+            <summary>
+            Редакция на асистент/помощник/секретар
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.EditCourtLawUnitAssistant(IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitAssistantEditViewModel)">
+            <summary>
+            Запис на асистент/помощник/секретар
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.IsValidCourtLawUnitAssistant(IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitAssistantEditViewModel)">
+            <summary>
+            Метод валидиращ данните за запис
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.SetViewBagCourtLawUnitAssistant">
+            <summary>
+            Зареждане на списъци за добавяне редкация на асистент/помощник/секретар
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.CourtLawUnitAssistant_ExpiredInfo(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
+            <summary>
+            Метод сторниращ секретар към заседание
+            </summary>
+            <param name="model">Модел попълнен от потребител за сторно на запис</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CourtLawUnitController.EditCourtLawUnitGroup(System.Int32)">
@@ -3326,6 +3733,76 @@
             <summary>
             Заместване на съдии
             </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.SetViewbagIndexCentralDistributionCC">
+            <summary>
+            Зареждане на листове за преглед на данни за служители в Група Централизирано разпределение ГД
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.IndexCentralDistributionCC(System.Int32)">
+            <summary>
+            Зарежда страница с данни за служители в Група Централизирано разпределение ГД
+            </summary>
+            <param name="courtGroupKind">Kind на група</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.IndexCentralDistributionCCWithoutEdit(System.Int32)">
+            <summary>
+            Зарежда страница с данни за служители в Група Централизирано разпределение ГД
+            </summary>
+            <param name="courtGroupKind">Kind на група</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.ListDataCentralDistribution(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitGroupCCFilterVM)">
+            <summary>
+            Извличане на данни за служители в Група Централизирано разпределение ГД
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.SetViewBagCentralDistributionCC">
+            <summary>
+            Зареждане на листове за добавяне/редакция на данни за служители в Група Централизирано разпределение ГД
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.AddCentralDistributionCCLawUnitGroup(System.Int32)">
+            <summary>
+            Добавяне на служител в Група Централизирано разпределение ГД
+            </summary>
+            <param name="courtGroupKind">Kind на група</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.EditCentralDistributionCCLawUnitGroup(System.Int32)">
+            <summary>
+            Редакция на служител в Група Централизирано разпределение ГД
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.ValidateCentralDistributionCCLawUnitGroup(IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitGroupCCEditVM)">
+            <summary>
+            Валидация на данни преди запис/редакция на служител в Група Централизирано разпределение ГД
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.EditCentralDistributionCCLawUnitGroup(IOWebApplication.Infrastructure.Models.ViewModels.Common.CourtLawUnitGroupCCEditVM)">
+            <summary>
+            Запис на служител в Група Централизирано разпределение ГД
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CourtLawUnitController.GetDDL_CommonCourtLawUnitCentralDistributionCC(System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Метод извличащ данни за назначени служители в съд
+            </summary>
+            <param name="courtId">Идентификатор на съд</param>
+            <param name="lawUnitId">Служител за редакция и да се провери дали го има в списъка, ако е с конфигурирана дата до</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CourtOrganizationController.Index">
@@ -3480,8 +3957,13 @@
             Извличане на данни за справка Съдебна регистратура
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.DocumentController.ViewBagIndex">
+            <summary>
+            Метод зареждащ номеклатурите за преглед на данни за регистрирани документи
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.DocumentController.Add(System.Int32)">
             <summary>
@@ -3495,6 +3977,13 @@
             Регистриране на нов документ по подадена бланка на документ
             </summary>
             <param name="templateId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.DocumentController.AddFromElectronicDocument(System.Int64)">
+            <summary>
+            Регистриране на нов документ по документ от портала
+            </summary>
+            <param name="electronicDocumentId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.DocumentController.Edit(System.Int64)">
@@ -3629,7 +4118,7 @@
             <param name="index"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.DocumentController.SendDocumentForSign(System.Int32,System.Int64)">
+        <member name="M:IOWebApplication.Controllers.DocumentController.SendDocumentForSign(System.Int64,System.Int64)">
             <summary>
             Подаване на създадения документ за електронен подпис
             </summary>
@@ -3701,6 +4190,25 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.DocumentController.IndexDocumentCaseInfoSpr">
+            <summary>
+            Страница за справка съпровождащи документи
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.DocumentController.ListDataDocumentCaseInfoSpr(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Documents.DocumentCaseInfoSprFilterVM)">
+            <summary>
+            Метод извличащ данни за справка съпровождащи документи
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.DocumentController.SetViewbagDocumentCaseInfoSpr">
+            <summary>
+            Зарежда номенклатури за филтър за справка съпровождащи документи
+            </summary>
+        </member>
         <member name="M:IOWebApplication.Controllers.DocumentPersonLinkController.Index(System.Int64,System.Nullable{System.Int64})">
             <summary>
             Връзки между страни
@@ -3741,6 +4249,14 @@
             Запис на Връзки между страни
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.DocumentRequestController.Index(System.Int64,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="id">DocumentId от ЦР</param>
+            <param name="caseId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.DocumentTemplateController.Index(System.Int32,System.Int64)">
@@ -4101,7 +4617,7 @@
             <param name="lawUnitType"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.LawUnitController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.Int32,System.Boolean)">
+        <member name="M:IOWebApplication.Controllers.LawUnitController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.Int32,System.Nullable{System.Int32},System.Boolean)">
             <summary>
             Извличане на данни за лица
             </summary>
@@ -4133,6 +4649,13 @@
             Запис на лице
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.LawUnitController.TypeChange(System.Int32)">
+            <summary>
+            Корекция на типа на лице
+            </summary>
+            <param name="id"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.LawUnitController.ValidateModel(IOWebApplication.Infrastructure.Data.Models.Common.LawUnit)">
@@ -4252,7 +4775,7 @@
             <summary>
             натовареност по група
             </summary>
-            <param name="caseGroupId"></param>
+            <param name="loadGroupId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.LoadGroupController.ListDataLoadGroupLink(DataTables.AspNet.Core.IDataTablesRequest,System.Int32)">
@@ -4338,7 +4861,575 @@
             </summary>
             <param name="model"></param>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.Obligation(System.Nullable{System.Int32},System.Nullable{System.Int64},System.Nullable{System.Int32})">
+        <member name="T:IOWebApplication.Controllers.MediationCommonController">
+            <summary>
+            Допълнителни регистри за медиацията
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.#ctor(IOWebApplication.Core.Contracts.IMediationCommonService,IOWebApplication.Core.Contracts.INomenclatureService)">
+            <summary>
+            Допълнителни регистри за медиацията
+            </summary>
+            <param name="_mediationCommonService"></param>
+            <param name="_nomService"></param>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.IndexMediationCenter">
+            <summary>
+            Зареждане на страница с данни за центрове за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ListDataMediationCenter(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationCenterFilterVM)">
+            <summary>
+            извличане на данни за центрове за медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.SetViewBagEditMediationCenter(System.Nullable{System.Int32})">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на центрове за медиация
+            </summary>
+            <param name="idSelected">Идентификаотр на текущият център, за да се премахме от списъка</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ValidateMediationCenter(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationCenterVM)">
+            <summary>
+            Валидация на център за медиация преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.AddMediationCenter">
+            <summary>
+            Добавяне на център за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediationCenter(System.Int32)">
+            <summary>
+            Редакция на център за медиация
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediationCenter(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationCenterVM)">
+            <summary>
+            Запис на център за медиация
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.IndexMediationMediator">
+            <summary>
+            Зареждане на страница с данни за медиатори
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ListDataMediationMediator(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationMediatorFilterVM)">
+            <summary>
+            извличане на данни за медиатори
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.SetViewBagEditMediationMediator">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на медиатори
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ValidateMediationMediator(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationMediatorVM)">
+            <summary>
+            Валидация на медиатори преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.AddMediationMediator">
+            <summary>
+            Добавяне на медиатори
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediationMediator(System.Int32)">
+            <summary>
+            Редакция на медиатори
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediationMediator(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationMediatorVM)">
+            <summary>
+            Запис на медиатори
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.IndexMediationCoordinator">
+            <summary>
+            Зареждане на страница с данни за Координатори
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ListDataMediationCoordinator(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationCoordinatorFilterVM)">
+            <summary>
+            извличане на данни за Координатори
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.SetViewBagEditMediationCoordinator">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на Координатори
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ValidateMediationCoordinator(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationCoordinatorVM)">
+            <summary>
+            Валидация на Координатори преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.AddMediationCoordinator">
+            <summary>
+            Добавяне на Координатори
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediationCoordinator(System.Int32)">
+            <summary>
+            Редакция на Координатори
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediationCoordinator(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediationCoordinatorVM)">
+            <summary>
+            Запис на Координатори
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.IndexMediatorFee">
+            <summary>
+            Зареждане на страница със ставки за заплащане на медиатор
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ListDataMediatorFee(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediatorFeeFilterVM)">
+            <summary>
+            Извличане на данни за ставки за заплащане на медиатор
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.SetViewBagEditMediatorFee">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на ставки за заплащане на медиатор
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.ValidateMediatorFee(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediatorFeeVM)">
+            <summary>
+            Валидация на ставки за заплащане на медиатор преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.AddMediatorFee">
+            <summary>
+            Добавяне на ставки за заплащане на медиатор
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediatorFee(System.Int32)">
+            <summary>
+            Редакция на ставки за заплащане на медиатор
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationCommonController.EditMediatorFee(IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation.MediatorFeeVM)">
+            <summary>
+            Запис на ставки за заплащане на медиатор
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="T:IOWebApplication.Controllers.MediationController">
+            <summary>
+            Медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.#ctor(IOWebApplication.Core.Contracts.IMediationService,IOWebApplication.Core.Contracts.IMediationCommonService,IOWebApplication.Core.Contracts.INomenclatureService,IOWebApplication.Core.Contracts.ICommonService)">
+            <summary>
+            Медиация
+            </summary>
+            <param name="_mediationService"></param>
+            <param name="_mediationCommonService"></param>
+            <param name="_nomService"></param>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.IndexCaseMediation">
+            <summary>
+            Страница с дела подлежащи на медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ViewBagIndexCaseMediation">
+            <summary>
+            Метод зареждащ номенклатури за справка за дейността на медиаторите
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataCaseMediation(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseFilterVM)">
+            <summary>
+            извличане на данни за дела подлежащи на медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.CasePreviewMediation(System.Int32)">
+            <summary>
+            Добавяне/редактиране на данни за медиация
+            </summary>
+            <param name="id">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SetViewBagEditMediationCase(System.Int32)">
+            <summary>
+            Зареждане на списъци за редактиране на дело подлежащо на медиация
+            </summary>
+            <param name="caseId">Идентификаотр на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationCase(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseEditVM)">
+            <summary>
+            Валидация на дело подлежащо на медиация преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCase(System.Int32)">
+            <summary>
+            Редакция на дело подлежащо на медиация
+            </summary>
+            <param name="id">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCase(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseEditVM)">
+            <summary>
+            Запис на дело подлежащо на медиация
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataMediators(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseMediatorFilterVM)">
+            <summary>
+            Извличане на данни за медиатори към дело
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SetViewBagEditMediationCaseMediator(System.Int32)">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на медиатори към дело
+            </summary>
+            <param name="caseId">Идентификаотр на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationCaseMediator(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseMediatorVM)">
+            <summary>
+            Валидация на медиатори към дело преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.AddMediationCaseMediator(System.Int32)">
+            <summary>
+            Добавяне на медиатори към дело
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseMediator(System.Int32)">
+            <summary>
+            Редакция на медиатори към дело
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseMediator(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseMediatorVM)">
+            <summary>
+            Запис на медиатори към дело
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.MediationCaseMediator_ExpiredInfo(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
+            <summary>
+            Премахване на медиатор
+            </summary>
+            <param name="model">Модел с данни за обекта за премахване</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataSessions(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionFilterVM)">
+            <summary>
+            извличане на данни за срещи към дело
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SetViewBagEditMediationCaseSession(System.Int32)">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на срещи към дело
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationCaseSession(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionVM)">
+            <summary>
+            Валидация на среща към дело преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.AddMediationCaseSession(System.Int32)">
+            <summary>
+            Добавяне на среща към дело
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseSession(System.Int32)">
+            <summary>
+            Редакция на среща към дело
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseSession(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionVM)">
+            <summary>
+            Запис на среща към дело
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SessionPreviewMediation(System.Int32)">
+            <summary>
+            Добавяне/редактиране на данни за среща за медиация
+            </summary>
+            <param name="id">Идентификатор на среща</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.MediationCaseSession_ExpiredInfo(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
+            <summary>
+            Премахване на среща
+            </summary>
+            <param name="model">Модел с данни за обекта за премахване</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataPeople(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCasePersonFilterVM)">
+            <summary>
+            Извличане на данни за лице в срещи за медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SetViewBagEditMediationCasePerson">
+            <summary>
+            Зареждане на списъци за редактиране на лице в срещи за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCasePerson(System.Int32)">
+            <summary>
+            Редакция на лице в срещи за медиация
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCasePerson(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCasePersonVM)">
+            <summary>
+            Запис на среща към дело
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataResults(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionResultFilterVM)">
+            <summary>
+            Извличане на данни за резултати в среща за медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SetViewBagEditMediationCaseSessionResult">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на резултати в среща за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationCaseSessionResult(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionResultVM)">
+            <summary>
+            Валидация на резултати в среща за медиация преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.AddMediationCaseSessionResult(System.Int32)">
+            <summary>
+            Добавяне на резултати в среща за медиация
+            </summary>
+            <param name="mediationCaseSessionId">Идентификатор на среща</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseSessionResult(System.Int32)">
+            <summary>
+            Редакция на резултати в среща за медиация
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseSessionResult(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionResultVM)">
+            <summary>
+            Запис на резултати в среща за медиация
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataDocuments(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionDocumentFilterVM)">
+            <summary>
+            Извличане на данни за резултати в среща за медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationCaseSessionDocument(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionDocumentVM)">
+            <summary>
+            Валидация на резултати в среща за медиация преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.AddMediationCaseSessionDocument(System.Int32)">
+            <summary>
+            Добавяне на резултати в среща за медиация
+            </summary>
+            <param name="mediationCaseSessionId">Идентификатор на среща</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseSessionDocument(System.Int32)">
+            <summary>
+            Редакция на резултати в среща за медиация
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseSessionDocument(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseSessionDocumentVM)">
+            <summary>
+            Запис на резултати в среща за медиация
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataAppraisals(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseMediatorAppraisalFilterVM)">
+            <summary>
+            Извличане на данни за оценка в среща за медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationCaseMediatorAppraisal(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseMediatorAppraisalVM)">
+            <summary>
+            Валидация на оценка в среща за медиация преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.SetViewBagEditMediationCaseMediatorAppraisal(System.Int32,System.Int32)">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на оценка в среща за медиация
+            </summary>
+            <param name="caseId">идентификатор на дело</param>
+            <param name="mediationCaseSessionId">Идентификатор на среща</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.AddMediationCaseMediatorAppraisal(System.Int32)">
+            <summary>
+            Добавяне на оценка в среща за медиация
+            </summary>
+            <param name="mediationCaseSessionId">Идентификатор на среща</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.AddMediationCaseMediatorAppraisalSummary(System.Int32)">
+            <summary>
+            Добавяне на оценка в среща за медиация
+            </summary>
+            <param name="mediationCaseSessionId">Идентификатор на среща</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseMediatorAppraisal(System.Int32)">
+            <summary>
+            Редакция на оценка в среща за медиация
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationCaseMediatorAppraisal(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationCaseMediatorAppraisalVM)">
+            <summary>
+            Запис на оценка в среща за медиация
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.MediationCaseMediatorAppraisal_ExpiredInfo(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
+            <summary>
+            Премахване на оценка
+            </summary>
+            <param name="model">Модел с данни за обекта за премахване</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ListDataMediationObligations(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationObligationFilterVM)">
+            <summary>
+            Извличане на данни за оценка в среща за медиация
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.ValidateMediationObligation(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationObligationVM)">
+            <summary>
+            Валидация на резултати в среща за медиация преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationObligation(System.Int32)">
+            <summary>
+            Редакция на резултати в среща за медиация
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MediationController.EditMediationObligation(IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation.MediationObligationVM)">
+            <summary>
+            Запис на резултати в среща за медиация
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.Obligation(System.Nullable{System.Int32},System.Nullable{System.Int64},System.Nullable{System.Int32},System.Nullable{System.Int64})">
             <summary>
             Страница за задължения към Акт/Документ/Заседание
             </summary>
@@ -4347,7 +5438,7 @@
             <param name="caseSessionId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.ListDataObligation(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Int64,System.Int32)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.ListDataObligation(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Int64,System.Int32,System.Int64)">
             <summary>
             Извличане на задължения за Datatable
             </summary>
@@ -4396,7 +5487,7 @@
             <param name="caseSessionId"></param>
             <param name="sourceType"></param>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.SetViewBagObligationForPayFilter">
+        <member name="M:IOWebApplication.Controllers.MoneyController.SetViewBagObligationForPayFilter(System.Int32)">
             <summary>
             Зареждане на данни за филтър на страница за дължими суми
             </summary>
@@ -4416,7 +5507,7 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.Payment(System.String)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.Payment(System.String,System.Int64)">
             <summary>
             Добавяне на плащане към задължение
             </summary>
@@ -4611,11 +5702,11 @@
             <param name="expenseOrderRegNumber"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.StornoExpenseOrder(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.StornoExpenseOrder(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
             <summary>
             Сторно на разходен ордер
             </summary>
-            <param name="id"></param>
+            <param name="expired"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.MoneyController.EditExpenseOrder(System.Int32)">
@@ -4688,11 +5779,11 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.StornoExecList(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.StornoExecList(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
             <summary>
             Сторно на изпълнителен лист
             </summary>
-            <param name="id"></param>
+            <param name="expired"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.MoneyController.EditExecList(System.Int32)">
@@ -4761,11 +5852,11 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.StornoExchangeDoc(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.StornoExchangeDoc(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
             <summary>
             Сторно на протокол
             </summary>
-            <param name="id"></param>
+            <param name="expired"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.MoneyController.EditExchangeDoc(System.Int32)">
@@ -4819,6 +5910,83 @@
             <param name="del"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.FillElPartidaFastProcess(System.String)">
+            <summary>
+            Добавяне на Генериране на партира за заповед за бързо производство
+            </summary>
+            <param name="actHTML">HTML вид на акта</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.CheckObligationBeforePayment(System.String)">
+            <summary>
+            Проверка на задълженията преди плащане
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.ListDataBankFilePayment(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Money.BankFilePaymentFilterVM)">
+            <summary>
+            Извличане на плащания от банков файл за Datatable
+            </summary>
+            <param name="request"></param>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.BankFilePayment">
+            <summary>
+            Страница за плащания от банков файл
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.ListDataBankFilePaymentReference(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Money.BankFilePaymentReferenceFilterVM)">
+            <summary>
+            Извличане на плащания от банков файл за Datatable
+            </summary>
+            <param name="request"></param>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.BankFilePaymentReference">
+            <summary>
+            Страница за плащания от банков файл
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.SearchBalanceBankPayment(System.String,System.Decimal)">
+            <summary>
+            Извличане на банкови плащания по референция
+            </summary>
+            <param name="query"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.GetBankPayment(System.Int64)">
+            <summary>
+            Извличане на плащане по id
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.BalanceBankPayment(System.String)">
+            <summary>
+            Въвеждане на авансово плащане
+            </summary>
+            <param name="idStr"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.BalanceBankPayment(IOWebApplication.Infrastructure.Models.ViewModels.Money.BalanceBankPaymentVM)">
+            <summary>
+            Запис на плащане от банков файл
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.StornoBankFilePayment(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
+            <summary>
+            Сторно на изпълнителен лист
+            </summary>
+            <param name="expired"></param>
+            <returns></returns>
+        </member>
         <member name="F:IOWebApplication.Controllers.NomenclatureController.nomenclatureService">
             <summary>
             Работа с номенклатури
@@ -4838,7 +6006,6 @@
             <summary>
             Инжектиране на зависимости
             </summary>
-            <param name="_nomenclatureRepo"></param>
             <param name="_localizer"></param>
         </member>
         <member name="M:IOWebApplication.Controllers.NomenclatureController.Index(System.String)">
@@ -4879,7 +6046,6 @@
             <summary>
             Промяна на подредбата на елементите
             </summary>
-            <param name="orderArray"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.NomenclatureController.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
@@ -4908,6 +6074,53 @@
             Запис на адрес
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.IndexCaseCodeSub">
+            <summary>
+            Зареждане на страница с данни за подкодове на шифри
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.ListDataCaseCodeSub(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures.CaseCodeSubFilterVM)">
+            <summary>
+            извличане на данни за подкодове на шифри
+            </summary>
+            <param name="request">IDataTablesRequest</param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.SetViewBagEditCaseCodeSub">
+            <summary>
+            Зареждане на списъци за добавяне/редактиране на подкодове на шифри
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.ValidateCaseCodeSub(IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures.CaseCodeSubVM)">
+            <summary>
+            Валидация на подкодове на шифри преди запис
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.AddCaseCodeSub">
+            <summary>
+            Добавяне на подкодове на шифри
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.EditCaseCodeSub(System.Int32)">
+            <summary>
+            Редакция на подкодове на шифри
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.NomenclatureController.EditCaseCodeSub(IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures.CaseCodeSubVM)">
+            <summary>
+            Запис на подкодове на шифри
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="T:IOWebApplication.Controllers.RegixReportController">
@@ -5046,7 +6259,6 @@
             <summary>
             Справка за Лице + адреси
             </summary>
-            <param name="addressTypeId"></param>
             <param name="id"></param>
             <returns></returns>
         </member>
@@ -5085,7 +6297,35 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.ReportController.#ctor(IOWebApplication.Core.Contracts.IReportService,IOWebApplication.Core.Contracts.INomenclatureService,IOWebApplication.Core.Contracts.ICourtDepartmentService,IOWebApplication.Core.Contracts.ICommonService,IOWebApplication.Core.Contracts.ICourtDepartmentService,IOWebApplication.Core.Contracts.IExcelReportService,IOWebApplication.Infrastructure.Contracts.IElasticService)">
+        <member name="M:IOWebApplication.Controllers.RegixReportController.RelationsSearch(System.Nullable{System.Int32})">
+            <summary>
+            Справка родствени връзки
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.RegixReportController.RelationsSearch(IOWebApplication.Infrastructure.Models.ViewModels.RegixReport.RegixRelationsSearchVM)">
+            <summary>
+            Извличане на Справка трудови договори
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.RegixReportController.CriminalRecordsReport(System.Nullable{System.Int32})">
+            <summary>
+            Справка за съдимост
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.RegixReportController.CriminalRecordsReport(IOWebApplication.Infrastructure.Models.ViewModels.RegixReport.RegixCriminalRecordsReportVM)">
+            <summary>
+            Извличане на данни Справка за съдимост
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.#ctor(IOWebApplication.Core.Contracts.IReportService,IOWebApplication.Core.Contracts.INomenclatureService,IOWebApplication.Core.Contracts.ICourtDepartmentService,IOWebApplication.Core.Contracts.ICommonService,IOWebApplication.Core.Contracts.ICourtDepartmentService,IOWebApplication.Core.Contracts.IExcelReportService,IOWebApplication.Infrastructure.Contracts.IElasticService,IOWebApplication.Core.Contracts.IMediationCommonService)">
             <summary>
             Справки
             </summary>
@@ -5096,6 +6336,7 @@
             <param name="_courtDepartmentService"></param>
             <param name="_excelReportService"></param>
             <param name="_elasticService"></param>
+            <param name="_mediationCommonService"></param>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.DocumentOutGoingReport">
             <summary>
@@ -5327,7 +6568,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.PublicInformationReport">
             <summary>
-            Регистър на заявленията за достъп до обществена информация 
+            Регистър на заявленията за достъп до обществена информация
             </summary>
             <returns></returns>
         </member>
@@ -5373,6 +6614,19 @@
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.HeritageReport(IOWebApplication.Infrastructure.Models.ViewModels.Report.HeritageFilterReportVM)">
+            <summary>
+            Експорт Книга за приемане и отказ от наследство
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.HeritageReportNew">
+            <summary>
+            Книга за приемане и отказ от наследство
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.HeritageReportNew(IOWebApplication.Infrastructure.Models.ViewModels.Report.HeritageFilterReportVM)">
             <summary>
             Експорт Книга за приемане и отказ от наследство
             </summary>
@@ -5605,7 +6859,7 @@
             Извличане на данни Справка влезли в сила присъди
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.SentenceListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.SentenceListFilterReportVM)">
@@ -5614,6 +6868,11 @@
             </summary>
             <param name="model"></param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagSentenceListReport">
+            <summary>
+            Зареждане на номенклатури за справка влезли в сила присъди
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.SessionActForDepersonalizeReport">
             <summary>
@@ -5629,6 +6888,11 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagSessionActForDepersonalizeReport">
+            <summary>
+            Зареждане на номенклатурите за актове за обезличаване
+            </summary>
+        </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CasePersonDefendantListReport">
             <summary>
             Справка Съдени и осъдени лица
@@ -5640,7 +6904,7 @@
             Извличане на данни Справка Съдени и осъдени лица
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CasePersonDefendantListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CasePersonDefendantListFilterReportVM)">
@@ -5650,23 +6914,59 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SetViewbagCasePersonDefendant">
+            <summary>
+            Метод зареждащ номенклатури за Справка Съдени и осъдени лица
+            </summary>
+        </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFirstInstanceListReport">
             <summary>
-            Справка Постъпили дела за период – първоинстанционни дела
+            Справка постъпили дела за период – първоинстанционни дела
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseFirstInstanceListReport">
+            <summary>
+            Метод зареждащ номенклатури за справка постъпили дела за период – първоинстанционни дела
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseFirstInstanceListReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFirstInstanceListFilterReportVM)">
             <summary>
             Справка Постъпили дела за период – първоинстанционни дела
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFirstInstanceListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFirstInstanceListFilterReportVM)">
             <summary>
+            Справка Постъпили дела за период – първоинстанционни дела - в ексел
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseFirstInstanceWithCourtListReport">
+            <summary>
+            Справка постъпили дела за период – първоинстанционни дела
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseFirstInstanceWithCourtListReport">
+            <summary>
+            Метод зареждащ номенклатури за справка постъпили дела за период – първоинстанционни дела
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseFirstInstanceWithCourtListReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFirstInstanceListFilterReportVM)">
+            <summary>
             Справка Постъпили дела за период – първоинстанционни дела
+            </summary>
+            <param name="request"></param>
+            <param name="filter"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseFirstInstanceWithCourtListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFirstInstanceListFilterReportVM)">
+            <summary>
+            Справка Постъпили дела за период – първоинстанционни дела - в ексел
             </summary>
             <param name="model"></param>
             <returns></returns>
@@ -5677,12 +6977,17 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseSecondInstanceListReport">
+            <summary>
+            Метод зареждащ номенклатури за справка постъпили дела за период – въззивни/касационни дела
+            </summary>
+        </member>
         <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseSecondInstanceListReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseSecondInstanceListFilterReportVM)">
             <summary>
             Справка Постъпили дела за период – въззивни дела
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseSecondInstanceListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseSecondInstanceListFilterReportVM)">
@@ -5693,17 +6998,22 @@
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFinishFirstInstanceListReport">
-             <summary>
-            Справка Свършени дела за период – първоинстанционни дела
-             </summary>
-             <returns></returns>
+            <summary>
+            Справка свършени дела за период – първоинстанционни дела
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseFinishFirstInstanceListReport">
+            <summary>
+            Метод зареждащ номенклатури за справка свършени дела за период – първоинстанционни дела
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseFinishFirstInstanceListReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFinishListFilterReportVM)">
             <summary>
-            Извличане на данни Справка Свършени дела за период – първоинстанционни дела
+            Извличане на данни справка свършени дела за период – първоинстанционни дела
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFinishFirstInstanceListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFinishListFilterReportVM)">
@@ -5713,25 +7023,488 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseFinishFirstInstanceListReportWithCourt">
+            <summary>
+            Справка свършени дела за период – първоинстанционни дела - със съд
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseFinishFirstInstanceListReportWithCourt">
+            <summary>
+            Метод зареждащ номенклатури за справка свършени дела за период – първоинстанционни дела - със съд
+            </summary>
+        </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFinishSecondInstanceListReport">
-             <summary>
-            Справка Свършени дела за период – въззивни  дела
-             </summary>
-             <returns></returns>
+            <summary>
+            Справка свършени дела за период – въззивни/касационни дела
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseFinishSecondInstanceListReport">
+            <summary>
+            Зареждане на номенклатури за справка свършени дела за период – въззивни/касационни дела
+            </summary>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseFinishSecondInstanceListReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFinishListFilterReportVM)">
             <summary>
-            Извличане на данни Справка Свършени дела за период – въззивни  дела
+            Извличане на данни за свършени дела за период – въззивни/касационни дела
             </summary>
             <param name="request"></param>
-            <param name="model"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFinishSecondInstanceListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFinishListFilterReportVM)">
             <summary>
-            Excel Справка Свършени дела за период – въззивни  дела
+            Excel Справка свършени дела за период – въззивни/касационни дела
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ActReport">
+            <summary>
+            Страница за визуализация на данни за справка съдебни актове
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataActReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionActReportFilterVM)">
+            <summary>
+            Извличане на данни за справка съдебни актове
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SetViewbagActReport">
+            <summary>
+            Зареждане на номенклатури за справка съдебни актове
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseWithoutFinalAct">
+            <summary>
+            Справка дела с ненаписани съдебни актове от всички съдии
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseWithoutFinalAct(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.CaseFilterReport)">
+            <summary>
+            Извличане на данни за Дела с ненаписани съдебни актове от всички съдии
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SetViewbagCaseWithoutFinalAct">
+            <summary>
+            Зарежда номенклатури за страница за Справка Дела с ненаписани съдебни актове от всички съдии
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CasePersonInformation">
+            <summary>
+            Справка за Информация за страни
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCasePersonInformation(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.CasePersonFilterVM)">
+            <summary>
+            Зиавлича данни за справка за Информация за страни
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SetViewbagCasePersonInformation">
+            <summary>
+            Зарежда номенклатури за справка за Информация за страни
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.DocumentsReceivedEESPP">
+            <summary>
+            Справка документи, постъпили чрез ЕЕСПП
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataDocumentsReceivedEESPP(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.DocumentsReceivedEESPPFilterVM)">
+            <summary>
+            Метод извличащ данни за справка документи, постъпили чрез ЕЕСПП
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseMigrationReport">
+            <summary>
+            Справка движение на делата
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseMigrationReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.MigrationReportFilterVM)">
+            <summary>
+            Извличне на данни за справка за движение на делата
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseMigrationReport">
+            <summary>
+            Зареждане на номенклатури за движение на делата
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SpecializedReport(System.Nullable{System.Int32})">
+            <summary>
+            Страница за специализирана справка - заявка 13
+            </summary>
+            <param name="filterTemplatesId">Идентификатор на шаблон за филтър</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataSpecializedReport(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.SpecializedReportFilterVM)">
+            <summary>
+            Метод извличащ данни за специализирана справка
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SetViewbagSpecializedReport">
+            <summary>
+            Зареждане на номенклатури за специализирана справка - заявка 13
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.SpecializedReportMigrations(System.Int32)">
+            <summary>
+            Страница с данни за дела от движенията към дело от специализирана справка  - заявка 13
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataSpecializedReportMigrations(DataTables.AspNet.Core.IDataTablesRequest,System.Int32)">
+            <summary>
+            Извличане на данни за дела от движенията към дело от специализирана справка  - заявка 13
+            </summary>
+            <param name="request"></param>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseSelectionProtokolFastProcess">
+            <summary>
+            Справка разпределение на дела
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseSelectionProtokolFast(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseSelectionProtokolFilterFastProcessVM)">
+            <summary>
+            Извличне на данни за справка за разпределение на дела
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseSelectionProtokolFastProcess">
+            <summary>
+            Зареждане на номенклатури за справка разпределение на дела
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseFastProcess">
+            <summary>
+            Справка на заповедните производства
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseFastProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFilterFastProcessVM)">
+            <summary>
+            Извличне на данни за справка на заповедните производства
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseFastProcess">
+            <summary>
+            Зареждане на номенклатури за справка на заповедните производства
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDebtorsApplicantsFastProcess">
+            <summary>
+            Справка за списък на длъжници/заявители за дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataListDebtorsApplicantsFastProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.ListDebtorsApplicantsFilterFastProcessVM)">
+            <summary>
+            Извличне на данни за списък на длъжници/заявители за дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.RegisteredDocumentsFastProcess">
+            <summary>
+            Справка за регистрираните документи за определен период
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataRegisteredDocumentsFastProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.RegisteredDocumentsFilterFastProcessVM)">
+            <summary>
+            Извличне на данни за регистрираните документи за определен период
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagRegisteredDocumentsFastProcess">
+            <summary>
+            Зареждане на номенклатури за регистрираните документи за определен период
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.RawDocumentsFastProcess">
+            <summary>
+            Справка необработени документ по чл 410 и 417 от ЕИСС
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataRawDocumentsFastProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.RawDocumentsFilterFastProcessVM)">
+            <summary>
+            Извличне на данни за необработени документ по чл 410 и 417 от ЕИСС
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.WorkNotificationFatsProcess">
+            <summary>
+            Справка нотификации по дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.WorkNotificationCaseFatsProcess(System.Int32)">
+            <summary>
+            Справка нотификации за дело по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <param name="caseId">Идентификатор на дело</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataWorkNotificationFatsProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.WorkNotificationFilterFatsProcessVM)">
+            <summary>
+            Извличне на данни справка нотификации по дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagWorkNotificationFatsProcess">
+            <summary>
+            Зареждане на номенклатури за справка нотификации по дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.WorkNotificationsIsRead(System.String)">
+            <summary>
+            Групова отмяна на нотификации
+            </summary>
+            <param name="notificationIds">Идентификатори на нотификации</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.WorkNotificationsIsRead(IOWebApplication.Infrastructure.Models.ViewModels.Common.WorkNotificationSetIsReadVM)">
+            <summary>
+            Групова отмяна на нотификации
+            </summary>
+            <param name="model">Модел попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExecListFatsProcess">
+            <summary>
+            Справка изпълнителни листове по дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataExecListFatsProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.ExecListFilterFatsProcessVM)">
+            <summary>
+            Извличне на данни за справка изпълнителни листове по дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagExecListFatsProcess">
+            <summary>
+            Зареждане на номенклатури за справка изпълнителни листове по дела по чл. 410 ГПК и чл. 417 ГПК
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CourtJudgeCount">
+            <summary>
+            Справка действителен зает щат в съд
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCourtJudgeCount(DataTables.AspNet.Core.IDataTablesRequest)">
+            <summary>
+            Извличне на данни за справка действителен зает щат в съд
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseSessionActFastProcess">
+            <summary>
+            Справка действителен зает щат в съд
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseSessionActFastProcess(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseSessionActFastProcessFilterVM)">
+            <summary>
+            Извличне на данни за справка действителен зает щат в съд
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseMediation">
+            <summary>
+            Справка за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseMediation">
+            <summary>
+            Метод зареждащ номенклатури за справка за медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseMediation(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.MediationCaseFilterVM)">
+            <summary>
+            Справка за медиация
+            </summary>
+            <param name="request"></param>
+            <param name="filter"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseMediationCourt">
+            <summary>
+            Справка за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseMediationCourt">
+            <summary>
+            Метод зареждащ номенклатури за справка за медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseMediationCourt(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.MediationCaseFilterVM)">
+            <summary>
+            Справка за медиация
+            </summary>
+            <param name="request"></param>
+            <param name="filter"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseMediationSession">
+            <summary>
+            Справка за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseMediationSession">
+            <summary>
+            Метод зареждащ номенклатури за справка за медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseMediationSession(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.MediationCaseSessionFilterVM)">
+            <summary>
+            Справка за медиация
+            </summary>
+            <param name="request"></param>
+            <param name="filter"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.CaseMediationSessionCourt">
+            <summary>
+            Справка за медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagCaseMediationSessionCourt">
+            <summary>
+            Метод зареждащ номенклатури за справка за медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataCaseMediationSessionCourt(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.MediationCaseSessionFilterVM)">
+            <summary>
+            Справка за медиация
+            </summary>
+            <param name="request"></param>
+            <param name="filter"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ReportWorkJudicialMediationCenters">
+            <summary>
+            Отчет за работата на съдебните центрове по медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagReportWorkJudicialMediationCenters">
+            <summary>
+            Метод зареждащ номенклатури за отчет за работата на съдебните центрове по медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataReportWorkJudicialMediationCenters(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.ReportWorkJudicialMediationCenters.ReportWorkJudicialMediationCentersFilterVM)">
+            <summary>
+            Отчет за работата на съдебните центрове по медиация
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ReportWorkJudicialMediationCentersCurrentCourt">
+            <summary>
+            Отчет за работата на съдебните центрове по медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagReportWorkJudicialMediationCentersCurrentCourt">
+            <summary>
+            Метод зареждащ номенклатури за отчет за работата на съдебните центрове по медиация
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataReportWorkJudicialMediationCentersCurrentCourt(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.ReportWorkJudicialMediationCenters.ReportWorkJudicialMediationCentersFilterVM)">
+            <summary>
+            Отчет за работата на съдебните центрове по медиация
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.InformationActivitiesMediators">
+            <summary>
+            Справка за дейността на медиаторите
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagInformationActivitiesMediators">
+            <summary>
+            Метод зареждащ номенклатури за справка за дейността на медиаторите
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataInformationActivitiesMediators(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.ReportWorkJudicialMediationCenters.ReportWorkJudicialMediationCentersFilterVM)">
+            <summary>
+            Справка за дейността на медиаторите
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.InformationActivitiesMediatorsCurrentCourt">
+            <summary>
+            Справка за дейността на медиаторите
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ViewBagInformationActivitiesMediatorsCurrentCourt">
+            <summary>
+            Метод зареждащ номенклатури за справка за дейността на медиаторите
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ListDataInformationActivitiesMediatorsCurrentCourt(DataTables.AspNet.Core.IDataTablesRequest,IOWebApplication.Infrastructure.Models.ViewModels.Report.ReportWorkJudicialMediationCenters.ReportWorkJudicialMediationCentersFilterVM)">
+            <summary>
+            Справка за дейността на медиаторите
+            </summary>
+            <param name="request"></param>
+            <param name="filter">Филтър попълнен от потребител</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportPeriod">
@@ -5740,9 +7513,22 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportPeriodMediation">
+            <summary>
+            Статистика медиация за период
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportPeriod(IOWebApplication.Infrastructure.Models.ViewModels.Report.ExcelReportDataFilterVM)">
             <summary>
             Статистика експорт
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportPeriodMediation(IOWebApplication.Infrastructure.Models.ViewModels.Report.ExcelReportDataFilterVM)">
+            <summary>
+            Статистика медиация експорт
             </summary>
             <param name="model"></param>
             <returns></returns>
@@ -5760,13 +7546,78 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportMediation">
+            <summary>
+            Статистика медиация към месец/година от вече готови данни
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportMediation(IOWebApplication.Infrastructure.Models.ViewModels.Report.ExcelReportDataFilterVM)">
+            <summary>
+            Експорт в ексел Статистика медиация към месец/година от вече готови данни
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.ReportController.StatisticsGenerate">
             <summary>
             Генериране на статистика
             </summary>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Extensions.DataTablesExtension.GetResponse``1(DataTables.AspNet.Core.IDataTablesRequest,System.Linq.IQueryable{``0},System.Linq.IQueryable{``0},System.Collections.Generic.Dictionary{System.String,System.Object})">
+        <member name="M:IOWebApplication.Controllers.ReportController.StatisticsGenerateMediation">
+            <summary>
+            Генериране на статистика медиация
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.IsValidateDate(System.DateTime,System.DateTime)">
+            <summary>
+            Проверка между 2 дати дали е по голамо от година дни
+            </summary>
+            <param name="dateFrom">От дата</param>
+            <param name="dateTo">До дата</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.IsValidateDateMonth(System.DateTime,System.DateTime)">
+            <summary>
+            Проверка между 2 дати дали е по голамо от година дни
+            </summary>
+            <param name="dateFrom">От дата</param>
+            <param name="dateTo">До дата</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.SignDocumentController.PrepareBeforeSave(IOWebApplication.Infrastructure.Models.Cdn.CdnUploadRequest,IOWebApplication.Models.SignPdfViewModel)">
+            <summary>
+            Регистриране на документ преди последния печат
+            </summary>
+            <param name="uploadRequest"></param>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.WorkNotificationController.Index(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Зареждане на страница със нотификации
+            </summary>
+            <param name="id">Идентификатор на нотификация</param>
+            <param name="wnTypeId">Тип на нотификация</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.WorkNotificationController.EditDateCreated(System.Int32)">
+            <summary>
+            Метод променящ дата на визуализация на нотификацията
+            </summary>
+            <param name="id">Идентификатор на записа</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.WorkNotificationController.EditDateCreated(IOWebApplication.Infrastructure.Models.ViewModels.Common.WorkNotificationEditDateVM)">
+            <summary>
+            Запис на дата на визуализация на нотификацията
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Extensions.DataTablesExtension.GetResponse``1(DataTables.AspNet.Core.IDataTablesRequest,System.Linq.IQueryable{``0},System.Linq.IQueryable{``0},System.Collections.Generic.Dictionary{System.String,System.Object},System.Boolean)">
             <summary>
             Генерира отговор на AJAX заявка на DataTables
             </summary>
@@ -5776,7 +7627,7 @@
             <param name="filteredData">Филтриран сет от данни</param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Extensions.DataTablesExtension.GetFilteredData``1(DataTables.AspNet.Core.IDataTablesRequest,System.Linq.IQueryable{``0})">
+        <member name="M:IOWebApplication.Extensions.DataTablesExtension.GetFilteredData``1(DataTables.AspNet.Core.IDataTablesRequest,System.Linq.IQueryable{``0},System.Boolean)">
             <summary>
             Използва текста в полето за търсене за филтрация на данните по колоните, 
             маркирани като колони за търсене
@@ -5786,12 +7637,22 @@
             <param name="data">Пълен сет от данни</param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Extensions.IOIdentityProviderConnectOptionsExtensions.AddIOSettings(Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectOptions,Microsoft.Extensions.Configuration.IConfiguration)">
+        <member name="M:IOWebApplication.Extensions.DataTablesExtension.GetResponseServerPaging``1(DataTables.AspNet.Core.IDataTablesRequest,System.Collections.Generic.List{``0},System.Int32)">
             <summary>
-            Добавя общи параметри за настройка на Claims от и към IO Identity Server
+            Генерира отговор на AJAX заявка на DataTables
             </summary>
-            <param name="options"></param>
-            <param name="Configuration">Достъп до конфигурационните файлове</param>
+            <typeparam name="T">Тип на изходните данни</typeparam>
+            <param name="request">Заявка на DataTables</param>
+            <param name="data">Сет от данни за страницата</param>
+            <param name="dataCount">Общ брой записи</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Extensions.DataTablesExtension.GetSortedColumnsForOrderBy(DataTables.AspNet.Core.IDataTablesRequest)">
+            <summary>
+            Генерира списък от колоните, по които ще се сортира
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
         </member>
         <member name="T:IOWebApplication.Extensions.LinqExtension">
             <summary>
@@ -5878,6 +7739,16 @@
             <param name="query">Стойност на полето за търсене</param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Extensions.LinqExtension.SearchForNet8``1(System.Linq.IQueryable{``0},System.Collections.Generic.IEnumerable{DataTables.AspNet.Core.IColumn},System.String)">
+            <summary>
+            Търсене в DataTables
+            </summary>
+            <typeparam name="T">Тип на изходните данни</typeparam>
+            <param name="source">Пълен сет данни</param>
+            <param name="searchModel">Модел с колони, по които се търси</param>
+            <param name="query">Стойност на полето за търсене</param>
+            <returns></returns>
+        </member>
         <member name="T:IOWebApplication.ModelBinders.DateTimeModelBinder">
             <summary>
             Author: Stamo Petkov
@@ -5906,69 +7777,29 @@
             Description: Корекция на десетичния разделител
             </summary>
         </member>
-        <member name="T:IOWebApplication.Models.SignPdfResultViewModel">
-            <summary>
-            Result of signing PDF document
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.PdfId">
-            <summary>
-            Identifier of PDF to be signed
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.Signature">
-            <summary>
-            PDF Signature
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.FileName">
-            <summary>
-            Name of the PDF file
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.ErrorCode">
-            <summary>
-            Result code returned by StampitLSM
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.SourceId">
-            <summary>
-            Identifier of the source document
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.SourceType">
-            <summary>
-            Type of the attached file
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.SuccessUrl">
-            <summary>
-            URL to be redirected after signing
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Models.SignPdfResultViewModel.ErrorUrl">
-            <summary>
-            URL to be redirected after signing
-            </summary>
-        </member>
         <member name="T:IOWebApplication.Models.SignPdfViewModel">
             <summary>
             Information needed for signing PDF document
             </summary>
         </member>
-        <member name="P:IOWebApplication.Models.SignPdfViewModel.PdfId">
+        <member name="P:IOWebApplication.Models.SignPdfViewModel.TempFileId">
             <summary>
             Identifier of PDF to be signed
             </summary>
         </member>
-        <member name="P:IOWebApplication.Models.SignPdfViewModel.PdfHash">
+        <member name="P:IOWebApplication.Models.SignPdfViewModel.FileHash">
             <summary>
             Extracted hash to be signed
             </summary>
         </member>
-        <member name="P:IOWebApplication.Models.SignPdfViewModel.PdfUrl">
+        <member name="P:IOWebApplication.Models.SignPdfViewModel.PreviewPdfUrl">
             <summary>
             Url to PDF file
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Models.SignPdfViewModel.Signature">
+            <summary>
+            PDF Signature
             </summary>
         </member>
         <member name="P:IOWebApplication.Models.SignPdfViewModel.FileName">
@@ -6000,102 +7831,6 @@
         <member name="P:IOWebApplication.Models.SignPdfViewModel.SourceType">
             <summary>
             Type of the attached file
-            </summary>
-        </member>
-        <member name="T:IOWebApplication.Resources.Controllers.AccountController">
-            <summary>
-              A strongly-typed resource class, for looking up localized strings, etc.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.ResourceManager">
-            <summary>
-              Returns the cached ResourceManager instance used by this class.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.Culture">
-            <summary>
-              Overrides the current thread's CurrentUICulture property for all
-              resource lookups using this strongly typed resource class.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.ADMIN">
-            <summary>
-              Looks up a localized string similar to 8. Администратор.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.CASE_ARH">
-            <summary>
-              Looks up a localized string similar to 3.3. Архивиране.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.CASE_EDIT">
-            <summary>
-              Looks up a localized string similar to 3.2. Управление на дела.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.CASE_INIT">
-            <summary>
-              Looks up a localized string similar to 3.1. Разпределение.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.COURT_MAN">
-            <summary>
-              Looks up a localized string similar to 3.5. Ръководство.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.DEL_USER">
-            <summary>
-              Looks up a localized string similar to 3.4. Призоваване.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.DOC_EDIT">
-            <summary>
-              Looks up a localized string similar to 2. Деловодство.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.DOC_INIT">
-            <summary>
-              Looks up a localized string similar to 1. Регистратура.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.GLOBAL_ADMIN">
-            <summary>
-              Looks up a localized string similar to 9. Администратор на инфраструктура.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.HR_ADMIN">
-            <summary>
-              Looks up a localized string similar to 6.2. Управление на магистрати и служители.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.MONEY">
-            <summary>
-              Looks up a localized string similar to 4. Счетоводство.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.POWER_USER">
-            <summary>
-              Looks up a localized string similar to 6.1. Супервайзор на структура.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.RESTR">
-            <summary>
-              Looks up a localized string similar to 7. Ограничен достъп.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.STAT">
-            <summary>
-              Looks up a localized string similar to 5. Статистика.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.STAT_REGIX">
-            <summary>
-              Looks up a localized string similar to 5.1. Справки - регистри.
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Resources.Controllers.AccountController.SUPER">
-            <summary>
-              Looks up a localized string similar to 6. Супервайзор.
             </summary>
         </member>
         <member name="T:IOWebApplication.Resources.Controllers.NomenclatureController">
@@ -6281,23 +8016,12 @@
               Looks up a localized string similar to Да.
             </summary>
         </member>
-        <member name="M:Microsoft.AspNetCore.Mvc.Rendering.HiddenIndexHtmlHelper.HiddenIndexFor``2(Microsoft.AspNetCore.Mvc.ViewFeatures.HtmlHelper{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Int32)">
-            <summary>
-            Hiddens the index for.
-            </summary>
-            <typeparam name="TModel">The type of the model.</typeparam>
-            <typeparam name="TProperty">The type of the property.</typeparam>
-            <param name="htmlHelper">The HTML helper.</param>
-            <param name="expression">The expression.</param>
-            <param name="index">The Index</param>
-            <returns>Returns Hidden Index For</returns>
-        </member>
         <member name="T:Microsoft.Extensions.DependencyInjection.IOWebAppServiceCollectionExtension">
             <summary>
             Описва услугите и контекстите на приложението
             </summary>
         </member>
-        <member name="M:Microsoft.Extensions.DependencyInjection.IOWebAppServiceCollectionExtension.AddApplicationServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+        <member name="M:Microsoft.Extensions.DependencyInjection.IOWebAppServiceCollectionExtension.AddApplicationServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Регистрира услугите на приложението в  IoC контейнера
             </summary>

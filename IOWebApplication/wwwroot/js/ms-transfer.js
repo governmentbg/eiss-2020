@@ -75,7 +75,7 @@
                 var saveEdit = function () {
                     if (typeof right_edit.old_percent === "undefined")
                         right_edit.old_percent = right_edit.percent;
-                    right_edit.percent = $(divRightEdit).find('#percent_modal').val();
+                    right_edit.percent = parseInt($(divRightEdit).find('#percent_modal').val());
                     right_edit.reason = $(divRightEdit).find('#reason_modal').val();
                     right_edit.comment = right_edit.reason + " предишен % " + right_edit.old_percent;
                     right_edit.is_changed = true;
@@ -125,7 +125,7 @@
             },
             setOrderPlus: function (arr) {
                 arr.forEach(function (x) {
-                    x.orderPlus = ("0000000" + x.order).slice(-7) + x.text.toLowerCase();
+                    x.orderPlus = ("0000000000" + x.order).slice(-10) + x.text.toLowerCase();
                 })
             },
             loadLeft: function (data_in) {

@@ -4,6 +4,7 @@
 @inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool canCorrectAfterDeclare = (bool)(ViewBag.canCorrectAfterDeclare ?? true);
 }
 <form asp-action="Edit" method="post">
     @Html.HiddenFor(x => x.Id)
@@ -75,15 +76,17 @@
 
         @if (Model.Id > 0)
         {
-
-            <a href="#" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на акт</a>
+            if (canCorrectAfterDeclare)
+            {
+                <a href="#" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на акт</a>
+            }
             <div class="pull-right">
                 @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
                 {
                     <a href="@Url.Action("MainSession","VksSelection")" class="btn btn-success" target="_blank">График ВКС</a>
                     <span>&nbsp;</span>
                 }
-                @if (string.IsNullOrEmpty(Model.RegNumber) && (Model.DateExpired == null) && (access?.CanChangeFull == true))
+                @if ((Model.DeclaredDate == null) && (Model.DateExpired == null) && (access?.CanChangeFull == true))
                 {
                     @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { LongId = Model.Id, DialogTitle = "Премахване на разпореждане", ExpireSubmitUrl = Url.Action("Resolution_ExpiredInfo") })
                     <span>&nbsp;</span>

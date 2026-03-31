@@ -113,7 +113,7 @@ namespace Integration.Eispp
         {
             if ((endpointConfiguration == EndpointConfiguration.BasicHttpBinding_IEisppService))
             {
-                return new System.ServiceModel.EndpointAddress("http://localhost:8000/EisppService/service");
+                return new System.ServiceModel.EndpointAddress("$$SECRET$$");
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
         }

@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @model ExecListFilterVM
 
 @{
@@ -84,14 +85,14 @@
                         name: 'sessionAct',
                         data: 'sessionAct',
                         title: 'Съдебен акт',
-                        sortable: true,
+                        sortable: false,
                         searchable: true
                     },
                     {
                         name: 'moneyTypeName',
                         data: 'moneyTypeName',
                         title: 'Основание',
-                        sortable: true,
+                        sortable: false,
                         searchable: true
                     },
                     {
@@ -108,18 +109,37 @@
                                 return "0.00";
                         }
                     },
+                    @if (userContext.IsInterimPeriodEuro)
+                    {
+                        <text>
+                         {
+                            className: "text-right",
+                            name: 'amountBGN',
+                            data: 'amountBGN',
+                            title: 'Размер в лева',
+                            sortable: true,
+                            searchable: false,
+                            "render": function (value) {
+                                if (value)
+                                    return parseFloat(value).toFixed(2);
+                                else
+                                    return "0.00";
+                            }
+                         },
+                       </text>
+                    } 
                     {
                         name: 'fullName',
                         data: 'fullName',
                         title: 'Издаден срещу кого',
-                        sortable: true,
+                        sortable: false,
                         searchable: true
                     },
                     {
                         name: 'fullNameReceive',
                         data: 'fullNameReceive',
                         title: 'Издаден в полза на',
-                        sortable: true,
+                        sortable: false,
                         searchable: true
                     },
                     {

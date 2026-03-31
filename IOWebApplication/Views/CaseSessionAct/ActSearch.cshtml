@@ -1,0 +1,204 @@
+﻿@model IOWebApplication.Infrastructure.Models.IndexService.SearchFilterModel
+@using IOWebApplication.Infrastructure.Constants
+@{
+    ViewData["Title"] = "Търсене на съдебни актове по съдържание";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+@section titleAdd{
+    | <b><a asp-controller="Case" asp-action="CaseReport" class="btn btn-primary" title="Разширено търсене на дела">Търсене на дела</a></b>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupIds, "GenericDropDownMultiple")</div>
+            <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeIds, "GenericDropDownMultiple")</div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3">@Html.EditorFor(m => m.OtdelenieId, "GenericDropDown")</div>
+            <div class="col-lg-3">@Html.EditorFor(m => m.JudicalCompositionId, "GenericDropDown")</div>
+            <div class="col-lg-3" style="padding-top:30px;">@Html.EditorFor(m => m.IsFinalDoc, "Boolean")</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.Query)
+                <small class="text-muted" style="display:block;margin:-12px 0 15px 0;">Добавете <strong>*</strong> в началото или в края, за да търсите и по части от думите.</small>
+            </div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeIds, "GenericDropDownMultiple")</div>
+            <div class="col-lg-3">@Html.EditorFor(m => m.ActDateFrom, "DateTime")</div>
+            <div class="col-lg-3">@Html.EditorFor(m => m.ActDateTo, "DateTime")</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 text-left pb-15">
+                <button type="button" class="btn btn-primary" id="btnFilter" onclick="loadActResultTable()" value="Филтриране" title="Филтриране">
+                    Филтриране
+                    <i class="fa fa-search" title="Търсене"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<partial name="_CdnScript" />
+
+<script>
+    $(function () {
+        initLawUnit();
+        $('#CaseGroupIds').select2();
+        $('#CaseTypeIds').select2();
+        $('#ActTypeIds').select2();
+
+
+        $('#CaseGroupIds').change(function () {
+            requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: getSelect2Vals('#CaseGroupIds') }, '#CaseTypeIds', @(Model.CaseTypeIds ?? "0"), function () { $('#CaseTypeIds').trigger('change') });
+        });
+
+        $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+                    let url = '@Url.Action("FileListView","Files")';
+                    if ($(this).data('url')) {
+                        url = $(this).data('url');
+                    }
+                    let lnk = $(this);
+                    requestContent(url,
+                        { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                        function (html) {
+                            $(lnk).parent().html(html);
+                        });
+                    return false;
+                });
+
+    });
+    function loadActResultTable() {
+        if (isEmpty($('#Query').val())){
+            swalOk("Моля, въведете текст за търсене по съдържание!", function () {
+                $('#Query').focus();
+            });
+            return;
+        }
+
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ActSearch_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = {
+                            CaseGroupIds: getSelect2Vals('#CaseGroupIds'),
+                            CaseTypeIds: getSelect2Vals('#CaseTypeIds'),
+                            JudgeReporterId: $('#JudgeReporterId').val(),
+                            OtdelenieId: $('#OtdelenieId').val(),
+                            JudicalCompositionId: $('#JudicalCompositionId').val(),
+                            ActTypeIds: getSelect2Vals('#ActTypeIds'),
+                            ActDateFrom: $('#ActDateFrom').val(),
+                            ActDateTo: $('#ActDateTo').val(),
+                            IsFinalDoc: $('#IsFinalDoc').is(':checked'),
+                            Query: $('#Query').val()
+                        };
+                    }
+                },
+                filter: false,
+                info:false,
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Точен вид',
+                        sortable: false,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: 'Дело номер',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' target='_blank' title='Преглед' href=" + url + ">" + row.caseNumber + "</a>";
+                        }
+                    },
+                    {
+                        name: 'judgeReporterName',
+                        data: 'judgeReporterName',
+                        title: 'Съдия-докладчик',
+                        sortable: false,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'actTypeName',
+                        data: 'actTypeName',
+                        title: 'Вид акт',
+                        sortable: false,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'actNumber',
+                        data: 'actNumber',
+                        title: 'Номер акт',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            if (row.actNumber) {
+                                return "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.CaseSessionActDepersonalized + "' data-sourceId='" + row.actId + "'>" + row.actNumber + "</a></div>";
+                            } else {
+                                return "";
+                            }
+                        }
+                    },
+                    {
+                        name: 'actDeclaredDate',
+                        data: 'actDeclaredDate',
+                        title: 'Постановен на',
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        },
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "Открити съвпадения",
+                        sortable: false,
+                        searchable: false,
+                        width:"40%",
+                        className: "text-center noExport",
+                        "render": function (item, type, row, meta) {
+                            return TemplateToHtml('#templateHighlight', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateHighlight" type="text/x-handlebars-template">
+    {{#each highlights}}
+    <div>{{{this}}}</div>
+    {{/each}}
+</script>
+

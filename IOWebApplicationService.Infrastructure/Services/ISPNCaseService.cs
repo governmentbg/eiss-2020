@@ -5,9 +5,11 @@ using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Http;
-using IOWebApplication.Infrastructure.Models.Integrations.Ispn;
 using IOWebApplication.Infrastructure.Models.Cdn;
+using IOWebApplication.Infrastructure.Models.Integrations.Ispn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplicationService.Infrastructure.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -17,18 +19,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using ActType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType;
 using CaseType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType;
 using SessionType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType;
-using ActType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType;
-using System.Transactions;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -39,6 +39,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         public List<MQEpep> caseMq = null;
         private Uri uploadUrl;
         private HttpRequester requester;
+        private readonly bool DEBUG_MODE;
         public ISPNCaseService(
             IRepository _repo,
             ICdnService _cdnService,
@@ -52,6 +53,8 @@ namespace IOWebApplicationService.Infrastructure.Services
             logger = _logger;
             configuration = _configuration;
             this.mqID = null;
+            this.fromMqID = configuration.GetValue<long>("ISPN:FromId", 0);
+            DEBUG_MODE = configuration.GetValue<bool>("ISPN:DebugMode", false);
             clientFactory = _clientFactory;
         }
 
@@ -77,14 +80,26 @@ namespace IOWebApplicationService.Infrastructure.Services
             SideType result = new SideType();
             result.side_id = newId;
             result.side_involvement = GetNomValueInt(EpepConstants.Nomenclatures.PersonRoles, roleId);
-            if (person.IsPerson)
+            if (person.UicTypeId == NomenclatureConstants.UicTypes.EGN)
             {
                 SideTypeSide_citizen sidePerson = new SideTypeSide_citizen();
-                sidePerson.side_name_1 = person.FirstName;
-                sidePerson.side_rename = person.MiddleName;
-                sidePerson.side_family_1 = person.FamilyName;
-                sidePerson.side_family_2 = person.Family2Name;
+                sidePerson.side_name_1 = person.FirstName.TrimLength(22);
+                sidePerson.side_rename = person.MiddleName.TrimLength(22);
+                sidePerson.side_family_1 = person.FamilyName.TrimLength(22);
+                sidePerson.side_family_2 = person.Family2Name.TrimLength(22);
+                if (string.IsNullOrEmpty(sidePerson.side_family_1) && !string.IsNullOrEmpty(sidePerson.side_family_2))
+                {
+                    sidePerson.side_family_1 = sidePerson.side_family_2;
+                    sidePerson.side_family_2 = string.Empty;
+                }
                 sidePerson.side_egn = person.Uic;
+
+                if (string.IsNullOrEmpty(person.FamilyName) && string.IsNullOrEmpty(person.Family2Name))
+                {
+                    sidePerson.side_family_1 = ".";
+                }
+
+
                 result.Item = sidePerson;
                 //TODO: Да се махне
                 //if (string.IsNullOrEmpty(sidePerson.side_family_1))
@@ -97,6 +112,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                 sidePerson.side_bulstat = person.Uic;
                 result.Item = sidePerson;
             }
+
             return result;
         }
 
@@ -130,6 +146,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             var ispnCase = new CaseType()
             {
                 case_id = newId,
+                case_code = caseAll.CaseCode.Code,
                 case_action = ServiceMethodToAction(action),
                 case_court = GetNomValueInt(EpepConstants.Nomenclatures.Courts, caseAll.CourtId),
                 case_kind = GetNomValueInt(EpepConstants.Nomenclatures.CaseTypes, caseAll.CaseTypeId),
@@ -146,15 +163,17 @@ namespace IOWebApplicationService.Infrastructure.Services
                     indoc_date = caseAll.Document.DocumentDate,
                 },
                 Side = FillSides(caseAll.CasePersons),
-                Session = FillSessionTypeArr(caseAll.CaseSessions, caseAll.CaseLawUnits, migrations),
+                Session = FillSessionTypeArr(caseAll.CaseSessions, caseAll.CaseLawUnits, migrations, caseAll.CaseCodeId ?? 0),
                 Judge = FillJudgeType(judgeReporter),
                 Surround = FillSurroundArray(compliantDocuments)
             };
             return ispnCase;
         }
-        public CaseType FillCaseAll(MQEpep model)
+        async Task<CaseType> FillCaseAll(MQEpep model)
         {
-            var caseAll = repo.AllReadonly<Case>()
+            var caseId = (int)(model.ParentSourceId ?? 0);
+            var caseAll = await repo.AllReadonly<Case>()
+                              .Include(x => x.CaseCode)
                               .Include(x => x.Document)
                               .Include(x => x.CaseSessions)
                               .ThenInclude(x => x.CaseSessionActs)
@@ -169,28 +188,29 @@ namespace IOWebApplicationService.Infrastructure.Services
                               .Include(x => x.CasePersons)
                               .Include(x => x.CaseLawUnits)
                               .ThenInclude(x => x.LawUnit)
-                              .Where(x => x.Id == model.ParentSourceId)
-                              .FirstOrDefault();
+                              .Where(x => x.Id == caseId)
+                              .AsSplitQuery()
+                              .FirstOrDefaultAsync();
 
-            var compliantDocuments = repo.AllReadonly<Document>()
+            var compliantDocuments = await repo.AllReadonly<Document>()
                                 .Include(x => x.DocumentPersons)
                                 .Where(x => x.DocumentCaseInfo.Where(a => a.CaseId == caseAll.Id).Any())
                                 .Where(x => x.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument &&
                                             x.DateExpired == null)
-                                .ToList();
+                                .ToListAsync();
 
-            var migrations = repo.AllReadonly<CaseMigration>()
+            var migrations = await repo.AllReadonly<CaseMigration>()
                              .Include(x => x.OutDocument)
                              .Where(x => x.CaseId == caseAll.Id)
                              .Where(x => x.CaseSessionActId != null)
                              .Where(x => x.OutDocumentId != null &&
                                          x.DateExpired == null)
-                             .ToList();
+                             .ToListAsync();
 
             return FillCase(caseAll, compliantDocuments, migrations);
         }
 
-        private ActType FillActType(CaseSessionAct sessionAct, CaseSession session, List<CaseMigration> migrations)
+        private ActType FillActType(CaseSessionAct sessionAct, CaseSession session, List<CaseMigration> migrations, int caseCodeId)
         {
             (var newId, var action) = AppendUpdateIntegrationKeyAction(SourceTypeSelectVM.CaseSessionAct, sessionAct.Id, sessionAct.DateExpired != null);
             if (string.IsNullOrEmpty(newId))
@@ -204,10 +224,10 @@ namespace IOWebApplicationService.Infrastructure.Services
             int[] reason = sessionAct.ActISPNDebtorStateId > 0 ?
                               new int[1] { sessionAct.ActISPNDebtorStateId ?? 0 } :
                               new int[0];
-            return new ActType()
+            var result = new ActType()
             {
                 act_action = ServiceMethodToAction(action),
-                act_date = (session.DateTo ?? session.DateFrom).Date,
+                act_date = (sessionAct.ActDeclaredDate ?? (session.DateTo ?? session.DateFrom)).Date, //където се вика метода са всички с ActDeclaredDate != null, но ако се смени да не почне да гърми, а да връща стария вариант
                 act_id = newId,
                 act_kind = GetNomValueInt(EpepConstants.Nomenclatures.ActTypes, sessionAct.ActTypeId),
                 act_no = int.Parse(sessionAct.RegNumber),
@@ -216,10 +236,69 @@ namespace IOWebApplicationService.Infrastructure.Services
                 act_reason = reason,
                 Appeal = FillAppealArray(sessionAct.CaseSessionActComplains.ToList(),
                                        migrations.Where(x => x.CaseSessionActId == sessionAct.Id).ToList(), sessionAct),
-                //act_image = Convert.FromBase64String(actFile.FileContentBase64)
             };
+            var isForSendAct = repo.AllReadonly<CaseCodeGrouping>()
+                                   .Where(x => x.CaseCodeGroup == NomenclatureConstants.CaseCodeGroupings.InsolvencyAct &&
+                                               x.CaseCodeId == caseCodeId)
+                                   .Any();
+            if (isForSendAct)
+            {
+                if (sessionAct.TDActForRegistration != true)
+                {
+                    return null;
+                }
+                CdnDownloadResult actFile = cdnService.MongoCdn_Download(new CdnFileSelect()
+                {
+                    SourceType = SourceTypeSelectVM.CaseSessionActPdf,
+                    SourceId = sessionAct.Id.ToString(),
+                }).Result;
+                if (string.IsNullOrEmpty(actFile?.FileContentBase64))
+                {
+                    return null;
+                }
+                var docTemplate = repo.AllReadonly<DocumentTemplate>()
+                                   .Include(x => x.Document)
+                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseSessionAct &&
+                                               x.SourceId == sessionAct.Id &&
+                                               NomenclatureConstants.DocumentType.IspnLetter.Contains(x.DocumentTypeId) &&
+                                               x.DateExpired == null
+                                               //&&!string.IsNullOrEmpty(x.SignerId)
+                                               )
+                                   .OrderBy(x => x.Id)
+                                   .FirstOrDefault();
+                if (docTemplate == null)
+                    return null;
+
+                var workTask = repo.AllReadonly<WorkTask>()
+                                   .Where(x => x.TaskTypeId == WorkTaskConstants.Types.Document_Sign &&
+                                               x.SourceId == docTemplate.DocumentId &&
+                                               x.DateCompleted != null)
+                                   .FirstOrDefault();
+                if (workTask == null)
+                    return null;
+                CdnDownloadResult letterFile = cdnService.MongoCdn_Download(new CdnFileSelect()
+                {
+                    SourceType = SourceTypeSelectVM.DocumentPdf,
+                    SourceId = docTemplate.DocumentId.ToString(),
+                }).Result;
+                if (string.IsNullOrEmpty(letterFile?.FileContentBase64))
+                {
+                    return null;
+                }
+                result.act_image = Convert.FromBase64String(actFile.FileContentBase64);
+                result.act_letter_image_ = Convert.FromBase64String(letterFile.FileContentBase64);
+
+                CdnDownloadResult actFileDepersonalized = cdnService.MongoCdn_Download(new CdnFileSelect()
+                {
+                    SourceType = SourceTypeSelectVM.CaseSessionActDepersonalized,
+                    SourceId = sessionAct.Id.ToString(),
+                }).Result;
+                result.act_image_depersonalize = Convert.FromBase64String(actFileDepersonalized.FileContentBase64);
+            }
+            return result;
+
         }
-        private SessionType FillSessionType(CaseSession session, CaseSessionResult sessionResult, ICollection<CaseLawUnit> caseLawUnitsAll, List<CaseMigration> migrations)
+        private SessionType FillSessionType(CaseSession session, CaseSessionResult sessionResult, ICollection<CaseLawUnit> caseLawUnitsAll, List<CaseMigration> migrations, int caseCodeId)
         {
             var caseLawUnits = caseLawUnitsAll.Where(x => (x.DateTo ?? session.DateFrom) >= session.DateFrom)
                                               .Where(x => x.CaseSessionId == session.Id)
@@ -228,10 +307,9 @@ namespace IOWebApplicationService.Infrastructure.Services
             var acts = session.CaseSessionActs
                               .Where(x => x.DateExpired == null &&
                                           x.ActDeclaredDate != null &&
-                                          x.ActTypeId != NomenclatureConstants.ActType.ExecListPrivatePerson &&
-                                          x.ActTypeId != NomenclatureConstants.ActType.ObezpechitelnaZapoved
+                                          NomenclatureConstants.ActType.AllowActTypesISPN.Contains(x.ActTypeId)
                                           )
-                              .Select(x => FillActType(x, session, migrations)).ToArray();
+                              .Select(x => FillActType(x, session, migrations, caseCodeId)).ToArray();
             //acts = acts.Where(x => x.act_reason.Length > 0 || x.act_debtor_status > 0 || !string.IsNullOrEmpty(x.act_text)).ToArray();
             (var newId, var action) = AppendUpdateIntegrationKeyAction(SourceTypeSelectVM.CaseSession, session.Id, session.DateExpired != null);
             if (string.IsNullOrEmpty(newId))
@@ -260,14 +338,17 @@ namespace IOWebApplicationService.Infrastructure.Services
                 //extensions =
             };
         }
-        private SessionType[] FillSessionTypeArr(ICollection<CaseSession> sessions, ICollection<CaseLawUnit> caseLawUnits, List<CaseMigration> migrations)
+
+
+
+        private SessionType[] FillSessionTypeArr(ICollection<CaseSession> sessions, ICollection<CaseLawUnit> caseLawUnits, List<CaseMigration> migrations, int caseCodeId)
         {
             var sessionList = new List<SessionType>();
             foreach (var session in sessions.Where(x => x.DateExpired == null))
             {
                 var sessionResult = session.CaseSessionResults.FirstOrDefault(x => x.DateExpired == null && x.IsMain);
                 if (sessionResult != null)
-                    sessionList.Add(FillSessionType(session, sessionResult, caseLawUnits, migrations));
+                    sessionList.Add(FillSessionType(session, sessionResult, caseLawUnits, migrations, caseCodeId));
             }
             return sessionList.ToArray();
         }
@@ -432,36 +513,56 @@ namespace IOWebApplicationService.Infrastructure.Services
         }
         protected override async Task<bool> InitChanel()
         {
-            uploadUrl = new Uri(configuration.GetValue<string>("ISPN:URI"));
-            requester = new HttpRequester(clientFactory.CreateClient("ispnHttpClient"));
-            return true;
+            try
+            {
+                uploadUrl = new Uri(configuration.GetValue<string>("ISPN:URI"));
+                requester = new HttpRequester(clientFactory.CreateClient("ispnHttpClient"));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"ISPN:InitChanel:{ex.Message};{ex?.InnerException?.Message}");
+                return false;
+            }
+            return await Task.FromResult(true);
         }
 
         protected override async Task CloseChanel()
         {
+            await Task.Yield();
         }
-        private string GenerateXml(MQEpep mq)
+        private async Task<string> GenerateXml(MQEpep mq)
         {
             string text = string.Empty;
 
-            var resultCase = FillCaseAll(mq);
+            var resultCase = await FillCaseAll(mq);
 
             Transfer result = new Transfer();
             result.program = "EISS";// "ЕИСС";
             result.version = 1.8088;
             result.Case = resultCase;
+            //var xmlRoot = new XmlRootAttribute("schema");
+            //xmlRoot.Namespace = "http://www.w3.org/2001/XMLSchema";
+            //xmlRoot.ElementName = "xs";
+            IspnRoot ispnRoot = new IspnRoot
+            {
+                Transfer = result
+            };
+
+
+
             XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            ns.Add("", "");
-            XmlSerializer x = new XmlSerializer(typeof(Transfer));
+            ns.Add("xs", "http://www.w3.org/2001/XMLSchema");
+
+            XmlSerializer x = new XmlSerializer(typeof(IspnRoot));
             using (var stream = new MemoryStream())
             {
                 using (TextWriter writer = new StreamWriter(stream))
                 {
-                    x.Serialize(writer, result, ns);
+                    x.Serialize(writer, ispnRoot, ns);
                     stream.Position = 0;
                     using (StreamReader reader = new StreamReader(stream))
                     {
-                        text = reader.ReadToEnd();
+                        text = await reader.ReadToEndAsync();
                     }
                 }
             }
@@ -473,65 +574,69 @@ namespace IOWebApplicationService.Infrastructure.Services
             if (string.IsNullOrEmpty(text))
             {
 
-                text = GenerateXml(mq);
-                mq.Content = Encoding.UTF8.GetBytes(text);
-                repo.Update(mq);
-                repo.SaveChanges();
-
+                try
+                {
+                    text = await GenerateXml(mq);
+                    if (!DEBUG_MODE)
+                    {
+                        mq.Content = Encoding.UTF8.GetBytes(text);
+                    }
+                    //await repo.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    mq.LastDateError = DateTime.Now;
+                    mq.ErrorDescription = $"GenerateXml : {ex.Message}";
+                    mq.IntegrationStateId = EpepConstants.IntegrationStates.DataContentError;
+                    await repo.SaveChangesAsync();
+                    return;
+                }
             }
 
-            var response = await requester.PostAsyncTextXml(uploadUrl.AbsoluteUri, text);
+            HttpResponseMessage response = null;
+            try
+            {
+                response = await requester.PostAsyncTextXml(uploadUrl.AbsoluteUri, text);
+            }
+            catch (Exception ex)
+            {
+                mq.ErrorDescription = $"Connection error: {ex.Message}";
+                await repo.SaveChangesAsync();
+                return;
+            }
+
+            if (response == null)
+            {
+                mq.ErrorDescription = $"Empty response";
+                await repo.SaveChangesAsync();
+                return;
+            }
 
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                XElement result = null;
-                if (!string.IsNullOrEmpty(content))
+                mq.IntegrationStateId = IntegrationStates.TransferOK;
+                mq.DateTransfered = DateTime.Now;
+                mq.Content = Encoding.UTF8.GetBytes(text);
+                repo.SaveChanges();
+                if (caseMq != null)
                 {
-                    XDocument message = XDocument.Parse(content);
-                    result = message?.Element("response")?.Element("success");
-                }
-                else
-                {
-                    content = "Получен е празен резултат от ИСПН";
-                }
-                if (result != null)
-                {
-                    mq.IntegrationStateId = IntegrationStates.TransferOK;
-                    mq.DateTransfered = DateTime.Now;
-                    mq.Content = Encoding.UTF8.GetBytes(text);
-                    repo.Update(mq);
-                    repo.SaveChanges();
-                    if (caseMq != null)
-                    {
-                        var mqHash = caseMq.FirstOrDefault(x => x.Id == mq.Id);
-                        mqHash.Content = mq.Content;
-                        mqHash.IntegrationStateId = mq.IntegrationStateId;
-                    }
-                    string fileName = $"Ispn_{mq.Id}_{ DateTime.Today:dd.MM.yyyy}.xml";
-                    CdnUploadRequest request = new CdnUploadRequest()
-                    {
-                        ContentType = System.Net.Mime.MediaTypeNames.Text.Html,
-                        FileContentBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(content)),
-                        FileName = fileName,
-                        SourceId = mq.ParentSourceId.ToString(),
-                        SourceType = SourceTypeSelectVM.Integration_ISPN,
-                        Title = $"Отговор към { DateTime.Today:dd.MM.yyyy}"
-                    };
-
-                    if (!(await cdnService.MongoCdn_AppendUpdate(request)))
-                    {
-                        logger.LogError("Error in SaveContent ISPN mqId {mq.Id}!", mq.Id.ToString());
-                    }
-                }
-                else
-                {
-                    SetErrorToMQ(mq, IntegrationStates.DataContentError, content);
+                    var mqHash = caseMq.FirstOrDefault(x => x.Id == mq.Id);
+                    mqHash.Content = mq.Content;
+                    mqHash.IntegrationStateId = mq.IntegrationStateId;
                 }
             }
             else
             {
-                throw new Exception($"Error {response.StatusCode} : {response.ReasonPhrase}  sending message ISPN!");
+                var content = await response.Content.ReadAsStringAsync();
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    SetErrorToMQ(mq, IntegrationStates.DataContentError, $"Response result:{content}");
+                }
+                else
+                {
+                    mq.ErrorDescription = $"Error {response.StatusCode} : {response.ReasonPhrase} {Environment.NewLine} Response result:{content}";
+                }
+                await repo.SaveChangesAsync();
             }
         }
 
@@ -576,10 +681,10 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 return false;
             }
-            caseMq = repo.AllReadonly<MQEpep>()
+            caseMq = await repo.AllReadonly<MQEpep>()
                          .Where(x => x.ParentSourceId == caseId && x.IntegrationTypeId == this.IntegrationTypeId)
                          .OrderBy(x => x.Id)
-                         .ToList();
+                         .ToListAsync();
             foreach (var mq in caseMq)
             {
                 if (mq.IntegrationStateId == IntegrationStates.TransferOK)

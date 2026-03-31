@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Core.Models.BreadcrumbsModels;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
@@ -12,38 +13,19 @@ namespace IOWebApplication.Core.Extensions
     {
         #region Case
 
-        /// <summary>
-        /// Връща инфо на делото Тип дело/номер/дата
-        /// </summary>
-        /// <param name="model">Обект Case с изчетен CaseType</param>
-        /// <returns></returns>
-        public static string GetCaseName(Case model)
+        public static string GetCaseNameBreadcrumbs(BCCaseModel model)
         {
-            return ((model.CaseType != null) ? model.CaseType.Label + " " : string.Empty) + model.RegNumber + "/" + model.RegDate.ToString("dd.MM.yyyy");
-        }
-
-        /// <summary>
-        /// Връща инфо на делото Дело/номер
-        /// </summary>
-        /// <param name="model">Обект Case с изчетен CaseType</param>
-        /// <returns></returns>
-        public static string GetCaseNameBreadcrumbs(Case model)
-        {
-            return "Дело " + model.RegNumber;
+            return "Дело " + model.CaseTypeCode + " " + ((model.CaseStateId == NomenclatureConstants.CaseState.Rejected) ? "Отказ от образуване" : (model.ShortNumber == null ? "За образуване" : model.ShortNumber + "/" + model.RegDate.ToString("yyyy")));
         }
 
         #endregion
 
         #region CaseSession
 
-        /// <summary>
-        /// Връща инфо на заседание тип заседание/дата от
-        /// </summary>
-        /// <param name="model">Обект CaseSession с изчетен SessionType</param>
-        /// <returns></returns>
-        public static string GetCaseSessionNameBreadcrumbs(CaseSession model)
+        
+        public static string GetCaseSessionNameBreadcrumbs(BCCaseSessionModel model)
         {
-            return ((model.SessionType != null) ? model.SessionType.Label + " " : string.Empty) + model.DateFrom.ToString("dd.MM.yyyy");
+            return $"{model.SessionType} {model.DateFrom:dd.MM.yyyy}";
         }
 
         #endregion
@@ -55,9 +37,17 @@ namespace IOWebApplication.Core.Extensions
         /// </summary>
         /// <param name="model">Обект CaseSessionAct с изчетен ActType</param>
         /// <returns></returns>
-        public static string GetCaseSessionActNameBreadcrumbs(CaseSessionAct model)
+        public static string GetCaseSessionActNameBreadcrumbs(BCCaseSessionActModel model)
         {
-            return ((model.ActType != null) ? model.ActType.Label + " " : string.Empty) + ((!string.IsNullOrEmpty(model.RegNumber)) ? model.RegNumber + "/" + (model.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty);
+            if (string.IsNullOrEmpty(model.RegNumber))
+            {
+                return $"{model.ActTypeLabel}";
+            }
+            else
+            {
+                return $"{model.ActTypeLabel} {model.RegNumber}/{model.RegDate:dd.MM.yyyy}";
+            }
+            //return ((model.ActType != null) ? model.ActType.Label + " " : string.Empty) + ((!string.IsNullOrEmpty(model.RegNumber)) ? model.RegNumber + "/" + (model.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty);
         }
 
         #endregion
@@ -66,7 +56,7 @@ namespace IOWebApplication.Core.Extensions
         /// Проверка за валиден отвод - или няма статус или е Уважено искането за отвод
         /// </summary>
         /// <returns></returns>
-        public static Expression<Func<CaseLawUnitDismisal, bool>> ConfirmedDismissalsOnly() 
+        public static Expression<Func<CaseLawUnitDismisal, bool>> ConfirmedDismissalsOnly()
         {
             return x => (x.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed) == NomenclatureConstants.DismissalStates.Confirmed;
         }

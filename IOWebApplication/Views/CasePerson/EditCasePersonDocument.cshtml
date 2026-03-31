@@ -1,5 +1,8 @@
 ﻿@model CasePersonDocument
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Data.Models.Cases
+@inject IUserContext userContext
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
@@ -11,9 +14,11 @@
     {
         ViewData["Title"] = "Добавяне на документ";
     }
+
+    bool is92024 = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request9_2024);
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -40,12 +45,16 @@
                                 <div class="col-lg-8">@Html.EditorFor(x => x.DocumentNumber)</div>
                                 <a href="#" onclick="GetPersonalIdentityV2(); return false;" class="btn btn-sm btn-def" style="margin-top:23px;"><i class="fa fa-check"></i></a>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-lg-12">@Html.EditorFor(x => x.IssuerCountryCode, "GenericDropDownString")</div>
                             </div>
                             <div class="row">
                                 <div class="col-lg-12">@Html.EditorFor(x => x.PersonalDocumentTypeId, "GenericDropDownString")</div>
+                            </div>
+
+                            <div class="row" id="noteDT">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.PersonalDocumentTypeNote)</div>
                             </div>
 
                             <div class="row">
@@ -58,13 +67,13 @@
                             </div>
                         </fieldset>
                     </div>
-                    <div class="col-lg-6" id="DocumentRegix">
+                    <div class="col-lg-6" id="DocumentRegix" style="display:none">
                         <fieldset class="is-fieldset">
                             <legend class="legend_1"> Проверка документ</legend>
                             <div class="row">
                                 <div class="col-lg-12">@Html.Editor("R_DocumentValid")</div>
                             </div>
-                            <div id="DocumentRegixData">
+                            <div id="DocumentRegixData" style="display:none">
                                 <div class="row">
                                     <div class="col-lg-6">@Html.Editor("R_PersonName")</div>
                                     <div class="col-lg-6">@Html.Editor("R_PersonUic")</div>
@@ -103,9 +112,7 @@
     </div>
 </div>
 
-@section scripts{
-    <script>
-
+<script>
     $(function () {
         $("#DocumentRegix").hide();
         $("#DocumentRegixData").hide();
@@ -117,39 +124,49 @@
         $('#R_IssuerName').attr("disabled", true);
         $('#R_DocumentDateFrom').attr("disabled", true);
         $('#R_DocumentDateTo').attr("disabled", true);
+        ChangePersonalDocumentType();
     });
 
-        function GetPersonalIdentityV2() {
-            var documentNumber = $("#DocumentNumber").val();
-            var casePersonId = @Model.CasePersonId;
-            postContent('@Url.Action("GetPersonalIdentityV2", "CasePerson")'
-                , { CasePersonId: casePersonId, DocumentNumber: documentNumber }
-                , function (data) {
-                    $("#R_DocumentValid").val(data.documentRegixVM.documentValid);
-                    $("#R_PersonName").val(data.documentRegixVM.personName);
-                    $("#R_PersonUic").val(data.documentRegixVM.personUic);
-                    $("#R_DocumentType").val(data.documentRegixVM.documentType);
-                    $("#R_DocumentNumber").val(data.documentRegixVM.documentNumber);
-                    $("#R_IssuerName").val(data.documentRegixVM.issuerName);
-                    $("#R_DocumentDateFrom").val(data.documentRegixVM.documentDateFrom);
-                    $("#R_DocumentDateTo").val(data.documentRegixVM.documentDateTo);
-                    debugger;
-                    if (data.documentRegixVM.issuerName != null) {
-                        $("#DocumentRegix").show();
-                        $("#DocumentRegixData").show();
+    function GetPersonalIdentityV2() {
+        var documentNumber = $("#DocumentNumber").val();
+        var casePersonId = @Model.CasePersonId;
+        postContent('@Url.Action("GetPersonalIdentityV2", "CasePerson")'
+            , { CasePersonId: casePersonId, DocumentNumber: documentNumber }
+            , function (data) {
+                $("#R_DocumentValid").val(data.documentRegixVM.documentValid);
+                $("#R_PersonName").val(data.documentRegixVM.personName);
+                $("#R_PersonUic").val(data.documentRegixVM.personUic);
+                $("#R_DocumentType").val(data.documentRegixVM.documentType);
+                $("#R_DocumentNumber").val(data.documentRegixVM.documentNumber);
+                $("#R_IssuerName").val(data.documentRegixVM.issuerName);
+                $("#R_DocumentDateFrom").val(data.documentRegixVM.documentDateFrom);
+                $("#R_DocumentDateTo").val(data.documentRegixVM.documentDateTo);
+                if (data.documentRegixVM.issuerName != null) {
+                    $("#DocumentRegix").show();
+                    $("#DocumentRegixData").show();
 
-                        if (@Model.Id < 1) {
-                            $("#DocumentDate").val(data.documentRegixVM.documentDateFromDate);
-                            $("#DocumentDateTo").val(data.documentRegixVM.documentDateToDate);
-                            $("#IssuerName").val(data.documentRegixVM.issuerName);
-                        }
+                    if (@Model.Id <1) {
+                        $("#DocumentDate").val(data.documentRegixVM.documentDateFromDate);
+                        $("#DocumentDateTo").val(data.documentRegixVM.documentDateToDate);
+                        $("#IssuerName").val(data.documentRegixVM.issuerName);
                     }
-                    else {
-                        $("#DocumentRegix").show();
-                    }
-                });
+                }
+                else {
+                    $("#DocumentRegix").show();
+                }
+            });
+    }
+
+    function ChangePersonalDocumentType() {
+        var personalDocumentTypeCode = $('#PersonalDocumentTypeId').val();
+        $("#noteDT").hide();
+        if ((personalDocumentTypeCode == '99999') && ('@is92024' == 'True')) {
+            $("#noteDT").show();
         }
+    }
 
-    </script>
-}
+    $('#PersonalDocumentTypeId').change(function () {
+        ChangePersonalDocumentType();
+    });
+</script>
 

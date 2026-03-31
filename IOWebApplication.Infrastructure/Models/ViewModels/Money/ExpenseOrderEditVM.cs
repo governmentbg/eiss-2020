@@ -41,5 +41,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         [Display(Name = "Съдия")]
         public int LawUnitSignId { get; set; }
+
+        public string RegNumber { get; set; }
+
+        public DateTime? RegDate { get; set; }
+
     }
 }

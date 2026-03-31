@@ -1,0 +1,136 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CaseFilter
+
+@{
+    ViewData["Title"] = "Дела с идентични страни с дело номер: " + Model.RegNumber;
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("CasePreview", "Case", new { id = @Model.CaseId })">Дело @Model.RegNumber</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+@Html.HiddenFor(x => x.CaseId)
+@Html.HiddenFor(x => x.RegDate)
+@Html.HiddenFor(x => x.RegNumber)
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataExsistCaseWithSamePeople")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.caseId = $("#CaseId").val();
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case", new { id = 666 }))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.regNumber + "</a>";
+                        },
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'departmentOtdelenieText',
+                        data: 'departmentOtdelenieText',
+                        title: 'Отделение/Състав',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифри',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'processPriorityLabel',
+                        data: 'processPriorityLabel',
+                        title: 'Вид производство',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    $(document).ready(function () {
+        LoadTable();
+    });
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("CaseTimeLinePreview")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("CaseProceedings")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Ход на дело"><i class="fa fa-calendar"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>

@@ -1,0 +1,30 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model RatingVM
+
+<div class="row">
+    <div class="form-group">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="Label" type="hidden" />
+        <input asp-for="IsViewValue" type="hidden" />
+        <input asp-for="OrderNumber" type="hidden" />
+        @if (Model.IsSmall)
+        {
+            <div class="col-lg-2 text-left">
+                <label style="margin-top:8.4px">@Model.Label</label>
+            </div>
+        }
+        else
+        {
+            <div class="col-lg-10 text-left">
+                <label style="margin-top:8.4px">@Model.Label</label>
+            </div>
+        }
+        @if (Model.IsViewValue)
+        {
+            <div class="col-lg-2">
+                <input asp-for="Value" class="form-control" type="number" min="0" step="1">
+            </div>
+        }
+    </div>
+</div>
+

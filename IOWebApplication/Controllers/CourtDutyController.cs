@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace IOWebApplication.Controllers
 {
@@ -26,27 +23,35 @@ namespace IOWebApplication.Controllers
         /// <summary>
         /// Страница с дежурства
         /// </summary>
+        /// <param name="kind">Вид: null - дежурство, 1 - заместване</param>
         /// <returns></returns>
         public IActionResult Index()
         {
             SetHelpFile(HelpFileValues.Nom8);
-            return View();
+            addToAudit(AuditConstants.Operations.List, null);
+            CourtDutyFilterVM filter = new()
+            {
+                CourtId = userContext.CourtId
+            };
+
+            return View(filter);
         }
 
         /// <summary>
         /// Извличане на данните за дежурства
         /// </summary>
         /// <param name="request"></param>
+        /// <param name="filter">Филтър попълнен от потребител</param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request)
+        public IActionResult ListData(IDataTablesRequest request, CourtDutyFilterVM filter)
         {
-            var data = service.CourtDuty_Select(userContext.CourtId, request.Search?.Value);
+            var data = service.CourtDuty_Select(filter);
             return request.GetResponse(data);
         }
 
         /// <summary>
-        /// Добавяне на дежурство
+        /// Добавяне на дежурство/заместване
         /// </summary>
         /// <returns></returns>
         public IActionResult Add()
@@ -57,7 +62,7 @@ namespace IOWebApplication.Controllers
                 CheckCourtDutyLawUnits = service.FillCheckListVMs(userContext.CourtId, null).ToList()
             };
             SetHelpFile(HelpFileValues.Nom8);
-
+            addToAudit(AuditConstants.Operations.View, null);
             return View(nameof(Edit), model);
         }
 
@@ -70,7 +75,7 @@ namespace IOWebApplication.Controllers
         {
             var model = service.GetCourtDuty_ById(id);
             SetHelpFile(HelpFileValues.Nom8);
-
+            addToAudit(AuditConstants.Operations.View, model);
             return View(nameof(Edit), model);
         }
 
@@ -80,7 +85,7 @@ namespace IOWebApplication.Controllers
             {
                 return "Няма избрани съдии.";
             }
-            
+
             if (model.DateTo != null && model.DateTo < model.DateFrom)
                 return "Дата до не може да е по малка от Дата от";
 
@@ -112,9 +117,16 @@ namespace IOWebApplication.Controllers
             if (service.CourtDuty_SaveData(model))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                if (currentId == 0)
+                {
+                    addToAudit(AuditConstants.Operations.Append, model);
+                }
+                else
+                {
+                    addToAudit(AuditConstants.Operations.Update, model);
+                }
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Index));
-                //return RedirectToAction(nameof(Edit), new { id = model.Id });
+                return RedirectToAction("Index");
             }
             else
             {
@@ -150,6 +162,21 @@ namespace IOWebApplication.Controllers
 
             ViewBag.backUrl = Url.Action("Index", "CourtDuty");
             return View("CheckListViewVM", model);
+        }
+
+        void addToAudit(string operation, CourtDuty model)
+        {
+            var baseInfo = string.Empty;
+            var addInfo = string.Empty;
+            var operationType = $"Дежурство към съд";
+
+            if (model?.Id > 0)
+            {
+                baseInfo = model.Label;
+                addInfo = $"От {model.DateFrom:dd.MM.yyyy} до {model.DateTo:dd.MM.yyyy}";
+            }
+
+            AddAuditInfo(operation, baseInfo, addInfo, operationType);
         }
     }
 }

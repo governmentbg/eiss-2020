@@ -11,7 +11,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IOWebApplication.Infrastructure.Data.Models.Common
 {
     [Table("epep_user")]
-    public class EpepUser : IUserDateWRT, IExpiredInfo
+    public class EpepUser : IUserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -50,7 +50,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         public DateTime? BirthDate { get; set; }
 
         [Column("lawyer_number")]
-        [Display(Name = "Адвокат No")]
+        [Display(Name = "Адвокатски номер")]
         [IORequired]
         public string LawyerNumber { get; set; }
 

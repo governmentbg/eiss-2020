@@ -4,6 +4,7 @@
     var caseSessionActId = ViewBag.caseSessionActId ?? 0;
     var documentId = ViewBag.documentId ?? 0;
     var caseSessionId = ViewBag.caseSessionId ?? 0;
+    var assignmentDocumentId = ViewBag.assignmentDocumentId ?? 0;
     if (caseSessionActId > 0)
     {
         ViewData["Title"] = "Суми към съдебен акт";
@@ -27,6 +28,6 @@
 
 <div class="row">
     <div class="col-md-12">
-        <partial name="../Money/_Obligation.cshtml" model="@new ObligationMainDataVM { CaseSessionActId = caseSessionActId, DocumentId = documentId, CaseSessionId = caseSessionId} " />
+        <partial name="../Money/_Obligation.cshtml" model="@new ObligationMainDataVM { CaseSessionActId = caseSessionActId, DocumentId = documentId, CaseSessionId = caseSessionId, AssignmentDocumentId = assignmentDocumentId} " />
     </div>
 </div>

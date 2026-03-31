@@ -1,24 +1,32 @@
-﻿@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+﻿@using IOWebApplication.Infrastructure.Contracts
 @using Microsoft.Extensions.Configuration
 @using IOWebApplication.Infrastructure.Constants
 @inject IConfiguration configuration;
+@inject IUserContext userContext;
 @{
-    var settings = await userContext.Settings();
-
     var signToolsPath = configuration.GetValue<string>("SignToolsPath") ?? "https://sign.uslugi.io/java/stampitls-eiss.jnlp";
     var certCheckPath = configuration.GetValue<string>("StampIT:CertCheckPath") ?? "https://id.stampit.org/certno/";
     if (userContext.ClaimValue("PasswordLogin") == "true")
     {
         certCheckPath = "";
     }
-    var environmentName = configuration.GetValue<string>("Environment:Name") ?? NomenclatureConstants.Environments.Production;
-    //environmentName = "test";
+    var environmentName = "";
+    if (!string.IsNullOrEmpty(userContext.EnvironmentName))
+    {
+        environmentName = userContext.EnvironmentName;
+    }
+    else
+    {
+        environmentName = configuration.GetValue<string>("Environment:Name", NomenclatureConstants.Environments.Production);
+    }
+
     var envClass = string.Empty;
+    string dbName = string.Empty;
     if (environmentName != NomenclatureConstants.Environments.Production)
     {
         envClass = "env--show";
+        dbName = configuration.GetDbName();
     }
-    string dbName = configuration.GetDbName();
 }
 <!DOCTYPE html>
 <html>
@@ -34,7 +42,6 @@
         var rootDir = '@Url.Content("~/")';
         var signToolsPath = '@Html.Raw(signToolsPath)';
         var certCheckPath = '@Html.Raw(certCheckPath)';
-        var userSettings = JSON.parse('@Html.Raw(settings.AsText())');
         var certNo = '@userContext.CertificateNumber';
         var signOutUrl = '@Url.Action("LogOut", "Account")';
     </script>
@@ -93,11 +100,22 @@
                     .parents('li.treeview:first').addClass('menu-open')
                     .find('ul.treeview-menu').show();
             }
+
+            //$.ajaxSetup({
+            //error: function (jqXHR, exception) {
+            //if (jqXHR.status === 401) {
+            //    document.location.href = '@Url.Action("Login", "Account", new { error = "Вашата сесия е изтекла. Моля, влезте отново в ЕИСС!" })';
+            //    //alert('HTTP Error 401 Unauthorized.');
+            //} else {
+            //    alert('Uncaught Error.\n' + jqXHR.responseText);
+            //}
+            //    }
+            //});
         });
         function selectCourt() {
-                requestContent('@Url.Action("SelectCourt","Account")',null, function (htmlModal) {
-                     ShowModalDialog('Изберете съд', htmlModal);
-                });
+            requestContent('@Url.Action("SelectCourt", "Account")', null, function (htmlModal) {
+                ShowModalDialog('Изберете съд', htmlModal);
+            });
         }
     </script>
 </body>

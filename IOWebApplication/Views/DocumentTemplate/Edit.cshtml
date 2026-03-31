@@ -40,8 +40,9 @@
                     <div class="col-lg-3">@Html.EditorFor(x => x.HtmlTemplateId, "GenericDropDown")</div>
                 </div>
                 <div class="row">
-                    <div class="col-lg-6">@Html.EditorFor(x => x.AuthorId, "SelectUser")</div>
-                    <div class="col-lg-6">@Html.EditorFor(x => x.DocumentTemplateStateId, "GenericDropDown")</div>
+                    <div class="col-lg-4">@Html.EditorFor(x => x.AuthorId, "SelectUser")</div>
+                    <div class="col-lg-4">@Html.EditorFor(x => x.SignerId, "SelectUser")</div>
+                    <div class="col-lg-4">@Html.EditorFor(x => x.DocumentTemplateStateId, "GenericDropDown")</div>
                 </div>
                 <div class="row">
                     <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>

@@ -17,17 +17,20 @@ namespace IOWebApplication.Core.Services
     public class CaseSessionFastDocumentService : BaseService, ICaseSessionFastDocumentService
     {
         private readonly ICasePersonService casePersonService;
+        private readonly IMQEpepService mqService;
 
         public CaseSessionFastDocumentService(
         ILogger<CaseSessionFastDocumentService> _logger,
         IRepository _repo,
         IUserContext _userContext,
-        ICasePersonService _casePersonService)
+        ICasePersonService _casePersonService,
+        IMQEpepService _mqService)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
             casePersonService = _casePersonService;
+            mqService = _mqService;
         }
 
         /// <summary>
@@ -98,6 +101,7 @@ namespace IOWebApplication.Core.Services
 
                     repo.Update(saved);
                     repo.SaveChanges();
+                    mqService.AppendCaseSessionFastDocument(saved, EpepConstants.ServiceMethod.Update);
                 }
                 else
                 {
@@ -106,6 +110,7 @@ namespace IOWebApplication.Core.Services
                     model.UserId = userContext.UserId;
                     repo.Add<CaseSessionFastDocument>(model);
                     repo.SaveChanges();
+                    mqService.AppendCaseSessionFastDocument(model, EpepConstants.ServiceMethod.Add);
                 }
                 return true;
             }
@@ -195,7 +200,7 @@ namespace IOWebApplication.Core.Services
             {
                 var caseSession = repo.GetById<CaseSession>(model.ObjectId);
                 var caseSessionFasts = CaseSessionFastDocument_SelectForCopy(model.CourtId);
-                var casePersonLists = casePersonService.CasePerson_Select(caseSession.CaseId, caseSession.Id, true, false, false);
+                var casePersonLists = casePersonService.CasePersonFast_SelectForCasePreview(caseSession.CaseId, caseSession.Id);
 
                 foreach (var fastDocument in model.checkListVMs.Where(x => x.Checked))
                 {
@@ -219,6 +224,8 @@ namespace IOWebApplication.Core.Services
                         };
 
                         repo.Add<CaseSessionFastDocument>(caseSessionFastDocumentSave);
+                        mqService.Set_AUTOSAVECHANGES(false);
+                        mqService.AppendCaseSessionFastDocument(caseSessionFastDocumentSave,EpepConstants.ServiceMethod.Add);
                     }
                 }
                 

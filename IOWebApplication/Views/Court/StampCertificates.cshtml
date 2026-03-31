@@ -1,0 +1,130 @@
+﻿@model CourtStampCertificateFilterVM
+@{
+    ViewData["Title"] = "Електронни печати на съдилища";
+}
+@section breadcrumb {
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.CourtName)</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.ValidTo)</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.OrderMode, "GenericDropDownString")</div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ShowExpired, "bool")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            LoadTable();
+
+            $(document).on('click', 'a.add-cert', function () {
+                let courtId = $(this).data('courtid');
+                requestContent('@Url.Action("StampCertificateAdd")'
+                    , { courtId: courtId }
+                    , function (data) {
+                        ShowModalDialog('Добавяне на сертификат за електронен печат', data);
+                    });
+            });
+        });
+        function LoadTable() {
+
+            if ($.fn.dataTable.isDataTable('#mainTable')) {
+                refreshTable('#mainTable');
+            }
+            else {
+                var table = $('#mainTable').DataTable({
+                    ajax: {
+                        "url": "@Url.Action("StampCertificates_ListData")",
+                        "type": "POST",
+                        "datatype": "json",
+                        "data": function (d) {
+                            d.filter = {
+                                CourtName: $("#CourtName").val(),
+                                ValidTo: $("#ValidTo").val(),
+                                OrderMode: $("#OrderMode").val(),
+                                ShowExpired: $("#ShowExpired").is(":checked")
+                            };
+                        }
+                    },
+                    pageSize: 50,
+                    sort: false,
+                    filter: false,
+                    columns: [
+
+                        {
+                            name: 'courtName',
+                            data: 'courtName',
+                            title: 'Съд',
+                            sortable: false,
+                            searchable: false
+                        },
+                        {
+                            className: "text-right noExport",
+                            name: 'actions',
+                            data: "id",
+                            title: "",
+                            sortable: false,
+                            searchable: false,
+                            "render": function (a, b, row) {
+                                return TemplateToHtml('#templateCertificate', row);
+                            }
+                        }
+                    ]
+                });
+            }
+        }
+
+        function expireStamptCertificate(id) {
+            requestContent('@Url.Action("ExpiredInfo", "Manage")',
+                { id: id, submitUrl: '@Url.Action("StampCertificate_ExpiredInfo")' }, function (html) {
+                    ShowModalDialog('Деактивиране на сертификат за електронен печат', html);
+                })
+        }
+    </script>
+
+    <script id="templateCertificate" type="text/x-handlebars-template">
+        {{#each certificates}}
+            <div>
+            {{#if isDeactivated}}
+                <span class="text-danger">{{serialNumber}}, {{date dateFrom}} - {{date dateTo}}</span>
+                <br/>
+                <span class="text-danger">{{subject}}</span>
+            {{else}}
+                {{#if isExpiring}}
+                    <a href="#" class="text-warning" title="Сертификата изтича в рамките на 1 месец!"><i class="fa fa-exclamation-triangle"></i></a>&nbsp;
+                {{/if}}
+
+                <span >{{serialNumber}}, {{date dateFrom}} - <b>{{date dateTo}}</b></span>
+                <br/>
+                <span>{{subject}}</span>&nbsp;
+                <a href="#" onclick="expireStamptCertificate({{id}});return false;" class="btn btn-sm btn-danger" title="Премахване"><i class="fa fa-remove"></i></a>
+            {{/if}}
+            </div>
+        {{/each}}
+        {{#if certificates}}
+        <br/>
+        {{/if}}
+        <a href="#" class="btn btn-sm add-cert" data-courtid="{{courtId}}">Добави сертификат</a>
+    </script>
+}

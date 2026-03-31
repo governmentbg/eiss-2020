@@ -9,17 +9,15 @@
             <div class="col-lg-6 col-md-6 col-sm-12">
                 <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
                 @Html.HiddenFor(x => x.Id)
-                @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = true })
+                @Html.HiddenFor(x => x.PersonGid)
+                @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = true, viewLatinGender = true })
                 <div class="row">
                     <div class="col-md-6">
-                        @Html.EditorFor(x => x.PersonRoleId, "SelectPersonRole")
+                        @Html.EditorFor(x => x.PersonRoleId, "SelectPersonRole", null, new { selectedrole = Model.PersonRoleLabel, rolekind = Model.PersonRoleKind })
                     </div>
                     <div class="col-md-4" id="@(Model.GetPrefix + "_" + Model.Index + "_divPersonMaturity")">
                         @Html.EditorFor(x => x.PersonMaturityId, "DropDown", null, new { Ddl = ViewBag.PersonMaturities })
                     </div>
-                    @*<div class="col-md-2">
-                            @Html.EditorFor(x => x.IsDeceased, "bool")
-                        </div>*@
                     @if (ViewBag.MilitaryRangs != null)
                     {
                         <div class="col-md-6" id="@(Model.GetPrefix + "_" + Model.Index + "_divMilitaryRang")">
@@ -35,37 +33,13 @@
     </fieldset>
 </div>
 
-<script>
-    $(function () {
-        initPersonControl();
-        initPersonRole();
-        ChangeUicType();
-        initDatePicker();
-    });
-
-    $("input[name='" + '@Model.GetPath' + ".Uic" + "']").blur(function () {
-        var uic = $("input[name='" + '@Model.GetPath' + ".Uic" + "']").val();
-        var uicTypeId = $("select[name='" + '@Model.GetPath' + ".UicTypeId" + "']").val();
-        if (uicTypeId == '@NomenclatureConstants.UicTypes.EGN') {
-            var personMaturity = GetPersonMaturity(uic);
-            if (personMaturity != "-1") {
-                $("select[name='" + '@Model.GetPath' + ".PersonMaturityId" + "']").val(personMaturity);
-            }
-        }
-    });
-
-    $("select[name='" + '@Model.GetPath' + ".UicTypeId" + "']").change(function () {
-        ChangeUicType();
-    });
-
-    function ChangeUicType() {
-        var uicTypeId = $("select[name='" + '@Model.GetPath' + ".UicTypeId" + "']").val();
-        $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divPersonMaturity")").show();
-        $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divMilitaryRang")").show();
-        if (uicTypeId == '@NomenclatureConstants.UicTypes.Bulstat' || uicTypeId == '@NomenclatureConstants.UicTypes.EIK') {
-            $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divPersonMaturity")").hide();
-            $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divMilitaryRang")").hide();
-        }
-    }
-
-</script>
+@if (Model.NewDynamicItem)
+{
+    <text>
+        <script>
+            $(function () {
+                documentPersonInit();
+            });
+        </script>
+    </text>
+}

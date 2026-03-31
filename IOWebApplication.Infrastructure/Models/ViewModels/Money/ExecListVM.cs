@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
@@ -23,10 +24,21 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public string FullName { get; set; }
 
         [Display(Name = "Издаден в полза на")]
-        public string FullNameReceive { get; set; }
+        public string FullNameReceive 
+        { 
+            get
+            {
+                return string.Join("<bt>", FullNameReceiveArray.Distinct());
+            }
+        }
+
+        public string[] FullNameReceiveArray { get; set; }
 
         [Display(Name = "Размер")]
         public decimal Amount { get; set; }
+
+        [Display(Name = "Размер в лева")]
+        public decimal AmountBGN { get; set; }
 
         [Display(Name = "Тип")]
         public string ExecListTypeName { get; set; }
@@ -41,10 +53,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public string CaseData { get;set; }
 
         [Display(Name = "Съдебен акт")]
-        public string SessionAct { get;set; }
+        public string SessionAct { get { if (SessionActs == null) { return string.Empty; }  return string.Join(NewLine, SessionActs); } }
+
+        public string[] SessionActs { get; set; }
 
         [Display(Name = "Основание")]
-        public string MoneyTypeName { get;set; }
+        public string MoneyTypeName { get { return string.Join(NewLine, MoneyTypeNames); } }
+
+        public string[] MoneyTypeNames { get; set; }
 
         [Display(Name = "Номер на дело")]
         public string CaseNumber { get;set; }
@@ -57,6 +73,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public string CaseGroupName { get; set; }
 
         public int ExchangeDocId { get; set; }
+
+        public string NewLine { get; set; }
     }
 
     public class ExecListFilterVM

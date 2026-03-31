@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -13,9 +8,14 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -27,9 +27,11 @@ namespace IOWebApplication.Controllers
         private readonly ICourtGroupService courtGroupService;
         private readonly ICourtOrganizationService courtOrganizationService;
 
-        public CourtLawUnitController(ICourtLawUnitService _service, INomenclatureService _nomService,
-                  ICourtGroupService _courtGroupService, ICourtOrganizationService _courtOrganizationService,
-                  ICommonService _commonService)
+        public CourtLawUnitController(ICourtLawUnitService _service, 
+                                      INomenclatureService _nomService,
+                                      ICourtGroupService _courtGroupService, 
+                                      ICourtOrganizationService _courtOrganizationService,
+                                      ICommonService _commonService)
         {
             service = _service;
             nomService = _nomService;
@@ -38,7 +40,7 @@ namespace IOWebApplication.Controllers
             courtOrganizationService = _courtOrganizationService;
         }
 
-        
+
         private void SetHelpByLawUnitType(int lawUnitTypeId)
         {
             switch (lawUnitTypeId)
@@ -69,31 +71,29 @@ namespace IOWebApplication.Controllers
         /// <param name="periodType"></param>
         /// <param name="lawUnitType"></param>
         /// <returns></returns>
-        public IActionResult Index(int periodType, int lawUnitType)
+        public async Task<IActionResult> Index(int periodType, int lawUnitType)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnit(periodType, lawUnitType).DeleteOrDisableLast();
 
-            PeriodType period = service.GetById<PeriodType>(periodType);
             ViewBag.periodTypeId = periodType;
+            ViewBag.periodName = await service.GetPropByIdAsync<PeriodType, string>(x => x.Id == periodType, x => x.Label);
             ViewBag.lawUnitTypeId = lawUnitType;
-            ViewBag.lawUnitTypeName = service.GetById<LawUnitType>(lawUnitType).Description;
-            ViewBag.periodName = period.Label;
+            ViewBag.lawUnitTypeName = await service.GetPropByIdAsync<LawUnitType, string>(x => x.Id == lawUnitType, x => x.Description);
+            addToAudit(AuditConstants.Operations.List, new CourtLawUnit() { PeriodTypeId = periodType, MasterLawUnitTypeId = lawUnitType });
             SetHelpByLawUnitType(lawUnitType);
 
-            return View();
+            return View(new CourtLawUnitFilter());
         }
 
         /// <summary>
         /// Извличане на данни за служители към съд
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="periodType"></param>
-        /// <param name="lawUnitType"></param>
+        /// <param name="request"></param>       
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request, int periodType, int lawUnitType)
+        public IActionResult ListData(IDataTablesRequest request, CourtLawUnitFilter filter)
         {
-            var data = service.CourtLawUnit_Select(userContext.CourtId, periodType, lawUnitType);
+            var data = service.CourtLawUnit_Select(userContext.CourtId, filter);
 
             return request.GetResponse(data);
         }
@@ -124,6 +124,7 @@ namespace IOWebApplication.Controllers
                 MasterLawUnitTypeId = lawUnitType,
                 DateFrom = DateTime.Now
             };
+            addToAudit(AuditConstants.Operations.View, model);
             SetViewBag(model);
             return View(nameof(Edit), model);
         }
@@ -138,7 +139,7 @@ namespace IOWebApplication.Controllers
             var model = service.GetById<CourtLawUnit>(id);
             model.MasterLawUnitTypeId = service.GetById<LawUnit>(model.LawUnitId).LawUnitTypeId;
             SetBreadcrums(model.PeriodTypeId, model.MasterLawUnitTypeId, model.Id);
-
+            addToAudit(AuditConstants.Operations.View, model);
             SetViewBag(model);
             return View(nameof(Edit), model);
         }
@@ -191,6 +192,14 @@ namespace IOWebApplication.Controllers
             if (result)
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                if (currentId == 0)
+                {
+                    addToAudit(AuditConstants.Operations.Append, model);
+                }
+                else
+                {
+                    addToAudit(AuditConstants.Operations.Update, model);
+                }
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
@@ -204,6 +213,40 @@ namespace IOWebApplication.Controllers
             SetViewBag(model);
             return View(nameof(Edit), model);
         }
+
+        void addToAudit(string operation, CourtLawUnit model)
+        {
+            var periodType = commonService.GetPropById<PeriodType, string>(x => x.Id == model.PeriodTypeId, x => x.Label);
+            var lawunitType = commonService.GetPropById<LawUnitType, string>(x => x.Id == model.MasterLawUnitTypeId, x => x.Label);
+            var baseInfo = string.Empty;
+            var addInfo = string.Empty;
+            var operationType = $"{lawunitType} : {periodType}";
+            if (model.LawUnitId > 0)
+            {
+                var luName = commonService.GetPropById<LawUnit, string>(x => x.Id == model.LawUnitId, x => x.FullName);
+                baseInfo = luName;
+                addInfo = $"от {model.DateFrom:dd.MM.yyyy} до {model.DateTo:dd.MM.yyyy}";
+            }
+
+            AddAuditInfo(operation, baseInfo, addInfo, operationType);
+        }
+
+        void addToAuditSubstitution(string operation, CourtLawUnitSubstitution model)
+        {
+            var baseInfo = string.Empty;
+            var addInfo = string.Empty;
+            var operationType = $"Заместване на съдия";
+            if (model.LawUnitId > 0 && model.SubstituteLawUnitId > 0)
+            {
+                baseInfo = commonService.GetPropById<LawUnit, string>(x => x.Id == model.LawUnitId, x => x.FullName);
+                var subtName = commonService.GetPropById<LawUnit, string>(x => x.Id == model.SubstituteLawUnitId, x => x.FullName);
+
+                addInfo = $"Заместник: {subtName} от {model.DateFrom:dd.MM.yyyy} до {model.DateTo:dd.MM.yyyy}";
+            }
+
+            AddAuditInfo(operation, baseInfo, addInfo, operationType);
+        }
+
 
         [HttpPost]
         public IActionResult CourtLawUnit_ExpiredInfo(ExpiredInfoVM model)
@@ -220,6 +263,152 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        #region CourtLawUnitAssistant
+
+        /// <summary>
+        /// Извличане на данни за служители към съд
+        /// </summary>
+        /// <param name="request"></param>       
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ListDataCourtLawUnitAssistant(IDataTablesRequest request, CourtLawUnitAssistantFilterViewModel filter)
+        {
+            var data = service.CourtLawUnitAssistant_Select(filter);
+            return request.GetResponse(data);
+        }
+
+        /// <summary>
+        /// Конфигуриране на breadcrumbs за асистент/помощник/секретар
+        /// </summary>
+        /// <param name="courtLawUnitId">Идентификатор на CourtLawUnit</param>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task SetBreadcrumsCourtLawUnitAssistant(int courtLawUnitId, int id)
+        {
+            var model = await service.GetByIdAsync<CourtLawUnit>(courtLawUnitId);
+            if (id > 0)
+                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnitAssistantEdit(model.PeriodTypeId, model.LawUnitTypeId ?? 0, courtLawUnitId, id).DeleteOrDisableLast();
+            else
+                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnitAssistantAdd(model.PeriodTypeId, model.LawUnitTypeId ?? 0, courtLawUnitId).DeleteOrDisableLast();
+        }
+
+        /// <summary>
+        /// Добавяне на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="courtLawUnitId">Идентификатор на CourtLawUnit</param>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
+        public async Task<IActionResult> AddCourtLawUnitAssistant(int courtLawUnitId, int courtId)
+        {
+            CurrentContext_SetObjectInfo("Добавяне на съдебен помощник/секретар/деловодител");
+            await SetBreadcrumsCourtLawUnitAssistant(courtLawUnitId, 0);
+            var model = new CourtLawUnitAssistantEditViewModel()
+            {
+                CourtLawUnitId = courtLawUnitId,
+                CourtId = courtId
+            };
+
+            await SetViewBagCourtLawUnitAssistant();
+            return View(nameof(EditCourtLawUnitAssistant), model);
+        }
+
+        /// <summary>
+        /// Редакция на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> EditCourtLawUnitAssistant(int id)
+        {
+            CurrentContext_SetObjectInfo("Зареждане на данни за редакция на съдебен помощник/секретар/деловодител");
+            CourtLawUnitAssistantEditViewModel model = await service.GetCourtLawUnitAssistantById(id);
+            await SetBreadcrumsCourtLawUnitAssistant(model.CourtLawUnitId, id);
+            await SetViewBagCourtLawUnitAssistant();
+            return View(nameof(EditCourtLawUnitAssistant), model);
+        }
+
+        /// <summary>
+        /// Запис на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> EditCourtLawUnitAssistant(CourtLawUnitAssistantEditViewModel model)
+        {
+            await SetBreadcrumsCourtLawUnitAssistant(model.CourtLawUnitId, model.Id);
+            await SetViewBagCourtLawUnitAssistant();
+
+            if (!ModelState.IsValid)
+                return View(nameof(EditCourtLawUnitAssistant), model);
+
+            string _isvalid = await IsValidCourtLawUnitAssistant(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
+                return View(nameof(EditCourtLawUnitAssistant), model);
+            }
+
+            bool result = await service.CourtLawUnitAssistant_SaveData(model);
+            if (result)
+            {
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EditCourtLawUnitAssistant), new { id = model.Id });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(nameof(EditCourtLawUnitAssistant), model);
+        }
+
+        /// <summary>
+        /// Метод валидиращ данните за запис
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private async Task<string> IsValidCourtLawUnitAssistant(CourtLawUnitAssistantEditViewModel model)
+        {
+            if (model.LawUnitId < 1)
+                return "Изберете секретар";
+
+            if (model.JudgeRoleId < 1)
+                return "Изберете роля";
+
+            if (await service.IsExistsCourtLawUnitAssistant(model.CourtLawUnitId, model.LawUnitId, model.Id))
+                return "Този секретар е добавен";
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Зареждане на списъци за добавяне редкация на асистент/помощник/секретар
+        /// </summary>
+        /// <returns></returns>
+        private async Task SetViewBagCourtLawUnitAssistant()
+        {
+            ViewBag.JudgeRoleId_ddl = (await nomService.GetDropDownListAsync<JudgeRole>()).Where(x => NomenclatureConstants.JudgeRole.ManualRoles.Contains(int.Parse(x.Value)) || x.Value == "-1").ToList();
+        }
+
+        /// <summary>
+        /// Метод сторниращ секретар към заседание
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител за сторно на запис</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> CourtLawUnitAssistant_ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (await service.CourtLawUnitAssistantExpired(model.Id))
+            {
+                SetSuccessMessage(MessageConstant.Values.CourtLawUnitExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("Edit", "CourtLawUnit", new { id = model.OtherId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Закачване на групи към служител
         /// </summary>
@@ -231,7 +420,7 @@ namespace IOWebApplication.Controllers
 
             var model = service.GetCourtLawUnitById(id);
             SetViewbagEditCourtLawUnitGroup();
-
+            addToAudit(AuditConstants.Operations.View, model, 0);
             return View(nameof(EditCourtLawUnitGroup), model);
         }
 
@@ -242,7 +431,7 @@ namespace IOWebApplication.Controllers
         /// <param name="groupCodesJson"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCourtLawUnitGroup(CourtLawUnitGroupVM model, string groupCodesJson)
+        public async Task<IActionResult> EditCourtLawUnitGroup(CourtLawUnitGroupVM model, string groupCodesJson)
         {
             SetViewbagEditCourtLawUnitGroup();
 
@@ -251,12 +440,19 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnitGroup(model.CourtLawUnitId).DeleteOrDisableLast();
                 return View(nameof(EditCourtLawUnitGroup), model);
             }
-            List<MultiSelectTransferPercentVM> codeGroups = JsonConvert.DeserializeObject<List<MultiSelectTransferPercentVM>>(groupCodesJson);
-            if (service.CourtLawUnitGroup_SaveData(userContext.CourtId, model.LawUnitId, codeGroups))
+
+            //var serializeOptions = new JsonSerializerOptions
+            //{
+            //    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            //    WriteIndented = true
+            //};
+            List<MultiSelectTransferPercentVM> codeGroups = JsonTextSerializer.Deserialize<List<MultiSelectTransferPercentVM>>(groupCodesJson);
+            if (await service.CourtLawUnitGroup_SaveData(userContext.CourtId, model.LawUnitId, codeGroups))
             {
                 //this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, $"{userContext.CourtId}|{model.LawUnitId}");
+                addToAudit(AuditConstants.Operations.Update, model, 0);
                 return RedirectToAction(nameof(EditCourtLawUnitGroup), new { id = model.CourtLawUnitId });
             }
             else
@@ -271,6 +467,19 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             SetHelpFile(HelpFileValues.Nom1);
+        }
+
+        void addToAudit(string operation, CourtLawUnitGroupVM model, int groupCount)
+        {
+            var baseInfo = string.Empty;
+            var addInfo = string.Empty;
+            var operationType = $"Групи към съдия";
+
+            baseInfo = model.LawUnitName;
+            addInfo = $"Брой групи: {groupCount}";
+
+
+            AddAuditInfo(operation, baseInfo, addInfo, operationType);
         }
 
         /// <summary>
@@ -299,6 +508,7 @@ namespace IOWebApplication.Controllers
         /// Страница с Длъжностни лица
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexSpr()
         {
             ViewBag.PeriodTypeId_ddl = nomService.GetDropDownList<PeriodType>();
@@ -329,6 +539,8 @@ namespace IOWebApplication.Controllers
         }
 
 
+
+
         public IActionResult OrderIndex(bool actualize = false)
         {
             if (actualize)
@@ -340,7 +552,7 @@ namespace IOWebApplication.Controllers
             }
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnit(NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.LawUnitTypes.Judge);
             SetHelpFile(HelpFileValues.Nom1);
-
+            AddAuditInfo(AuditConstants.Operations.List, "Ред на старшинство", "", "Съдия : Назначаване");
             return View();
         }
 
@@ -351,12 +563,42 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        public IActionResult OrderChangeCombo(int currentRowNo)
+        {
+            var data = service.CourtLawUnitOrder_Select(userContext.CourtId);
+            var model = new CourtLawunitOrderComboVM()
+            {
+                CurrentRowNo = currentRowNo,
+                CurrentLawunit = data.Where(x => x.RowNo == currentRowNo).Select(x => $"{x.RowNo}. {x.LawUnitName}").FirstOrDefault()
+            };
+            ViewBag.NewRowNo_ddl = new SelectList(data
+                                                    .Where(x => x.RowNo != currentRowNo)
+                                                    .Select(x => new
+                                                    {
+                                                        Value = x.RowNo,
+                                                        Text = $"{x.RowNo}. {x.LawUnitName}"
+                                                    })
+                                , "Value", "Text").AddAllItem().ToList();
+            return PartialView(model);
+        }
+
+        [HttpPost]
+        public IActionResult OrderChangeCombo(CourtLawunitOrderComboVM model)
+        {
+            var result = service.CourtLawUnitOrder_ComboSave(model);
+            return Json(result);
+        }
+
         public IActionResult OrderChange(int id, bool moveUp)
         {
             var model = service.GetById<CourtLawUnitOrder>(id);
             Func<CourtLawUnitOrder, int?> orderProp = x => x.OrderNumber;
             Expression<Func<CourtLawUnitOrder, int?>> setterProp = (x) => x.OrderNumber;
             var result = service.ChangeOrder<CourtLawUnitOrder>(id, moveUp, orderProp, setterProp, x => x.CourtId == userContext.CourtId);
+
+            var fullName = service.GetPropById<LawUnit, string>(x => x.Id == model.LawUnitId, x => x.FullName);
+            var dir = (moveUp) ? "нагоре" : "надолу";
+            AddAuditInfo(AuditConstants.Operations.Update, "Ред на старшинство", $"{fullName} - {dir}", "Съдия : Назначаване");
 
             return Json(new { result = result });
         }
@@ -370,6 +612,7 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForLawUnit(NomenclatureConstants.LawUnitTypes.Judge);
             SetHelpFile(HelpFileValues.Nom1);
+            addToAuditSubstitution(AuditConstants.Operations.List, new CourtLawUnitSubstitution());
             return View();
         }
 
@@ -389,6 +632,7 @@ namespace IOWebApplication.Controllers
         {
             SubstitutionSetViewBag();
             var model = new CourtLawUnitSubstitution();
+            addToAuditSubstitution(AuditConstants.Operations.View, model);
             return View(nameof(Substitution_Edit), model);
         }
         public IActionResult Substitution_Edit(int id)
@@ -399,14 +643,15 @@ namespace IOWebApplication.Controllers
                 return Redirect_Denied();
             }
             SubstitutionSetViewBag();
+            addToAuditSubstitution(AuditConstants.Operations.View, model);
 
             return View(nameof(Substitution_Edit), model);
         }
 
         [HttpPost]
-        public IActionResult Substitution_Edit(CourtLawUnitSubstitution model)
+        public async Task<IActionResult> Substitution_Edit(CourtLawUnitSubstitution model)
         {
-            var error = service.CourtLawUnitSubstitution_Validate(model);
+            var error = await service.CourtLawUnitSubstitution_Validate(model);
             if (!string.IsNullOrEmpty(error))
             {
                 ModelState.AddModelError("", error);
@@ -418,9 +663,17 @@ namespace IOWebApplication.Controllers
             }
 
             int currentId = model.Id;
-            if (service.CourtLawUnitSubstitution_SaveData(model))
+            if (await service.CourtLawUnitSubstitution_SaveData(model))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                if (currentId == 0)
+                {
+                    addToAuditSubstitution(AuditConstants.Operations.Append, model);
+                }
+                else
+                {
+                    addToAuditSubstitution(AuditConstants.Operations.Update, model);
+                }
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Substitution_Edit), new { id = model.Id });
             }
@@ -429,5 +682,183 @@ namespace IOWebApplication.Controllers
 
             return View(nameof(Substitution_Edit), model);
         }
+
+        #region Група Централизирано разпределение ГД
+
+        /// <summary>
+        /// Зареждане на листове за преглед на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <returns></returns>
+        async Task SetViewbagIndexCentralDistributionCC()
+        {
+            ViewBag.CourtId_ddl = await commonService.GetDDL_Court(NomenclatureConstants.CourtType.RegionalCourt);
+        }
+
+        /// <summary>
+        /// Зарежда страница с данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="courtGroupKind">Kind на група</param>
+        /// <returns></returns>
+        public async Task<IActionResult> IndexCentralDistributionCC(int courtGroupKind)
+        {
+            await SetViewbagIndexCentralDistributionCC();
+            return View(courtGroupKind);
+        }
+
+        /// <summary>
+        /// Зарежда страница с данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="courtGroupKind">Kind на група</param>
+        /// <returns></returns>
+        public async Task<IActionResult> IndexCentralDistributionCCWithoutEdit(int courtGroupKind)
+        {
+            await SetViewbagIndexCentralDistributionCC();
+            return View(courtGroupKind);
+        }
+
+        /// <summary>
+        /// Извличане на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="request">IDataTablesRequest</param>
+        /// <param name="filter">Филтър</param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ListDataCentralDistribution(IDataTablesRequest request, CourtLawUnitGroupCCFilterVM filter)
+        {
+            var data = service.GetDataCentralDistributionCC(filter);
+            return request.GetResponse(data);
+        }
+
+        /// <summary>
+        /// Зареждане на листове за добавяне/редакция на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <returns></returns>
+        private async Task SetViewBagCentralDistributionCC()
+        {
+            ViewBag.CourtId_ddl = await commonService.GetDDL_Court(NomenclatureConstants.CourtType.RegionalCourt);
+        }
+
+        /// <summary>
+        /// Добавяне на служител в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="courtGroupKind">Kind на група</param>
+        /// <returns></returns>
+        public async Task<IActionResult> AddCentralDistributionCCLawUnitGroup(int courtGroupKind)
+        {
+            CurrentContext_SetObjectInfo("Добавяне на служител централизирана група");
+            var model = new CourtLawUnitGroupCCEditVM()
+            {
+                CourtId = userContext.CourtId,
+                DateFrom = DateTime.Now,
+                CourtGroupKind = courtGroupKind,
+                LoadIndex = 100,
+                LoadIndexOld = 100,
+            };
+
+            await SetViewBagCentralDistributionCC();
+            return View(nameof(EditCentralDistributionCCLawUnitGroup), model);
+        }
+
+        /// <summary>
+        /// Редакция на служител в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task<IActionResult> EditCentralDistributionCCLawUnitGroup(int id)
+        {
+            CurrentContext_SetObjectInfo("Редакция на служител централизирана група");
+            CourtLawUnitGroupCCEditVM model = await service.GetCentralDistributionCCEditById(id);
+            await SetViewBagCentralDistributionCC();
+            ViewBag.desc = System.Web.HttpUtility.UrlDecode(model.LoadIndexDescription);
+            return View(nameof(EditCentralDistributionCCLawUnitGroup), model);
+        }
+
+        /// <summary>
+        /// Валидация на данни преди запис/редакция на служител в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        private async Task<string> ValidateCentralDistributionCCLawUnitGroup(CourtLawUnitGroupCCEditVM model)
+        {
+            if (model.CourtId < 1)
+                return "Иаберете съд";
+
+            if (model.LawUnitId < 1)
+                return "Изберете служител";
+
+            if (await service.IsExistLawUnitCentralDistributionCC(model.LawUnitId, model.CourtGroupKind, model.Id < 1 ? null : model.Id))
+                return "Този служител е вече добавен";
+
+            if (model.DateTo != null)
+            {
+                if (string.IsNullOrEmpty(model.DateToDescription))
+                    return "Попълнете пояснение за дата до";
+            }
+
+            if (model.LoadIndex <= 1)
+                return "Въведете натовареност по-голяма от 0";
+
+            if (model.LoadIndex > 100)
+                return "Въведете натовареност по-малка или равна на 100";
+
+            if (model.LoadIndex != model.LoadIndexOld)
+            {
+                if (string.IsNullOrEmpty(model.LoadIndexDescription))
+                    return "Попълнете пояснение за промяна на натовареност";
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Запис на служител в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> EditCentralDistributionCCLawUnitGroup(CourtLawUnitGroupCCEditVM model)
+        {
+            await SetViewBagCentralDistributionCC();
+
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditCentralDistributionCCLawUnitGroup), model);
+            }
+
+            string _isvalid = await ValidateCentralDistributionCCLawUnitGroup(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
+                return View(nameof(EditCentralDistributionCCLawUnitGroup), model);
+            }
+
+            bool isInsert = model.Id < 1;
+            int? saveId = await service.SavelCourtLawUnitGroupCentralDistributionCC(model);
+            if (saveId != null)
+            {
+                SaveLogOperation(isInsert, saveId);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EditCentralDistributionCCLawUnitGroup), new { id = saveId });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+
+            return View(nameof(EditCentralDistributionCCLawUnitGroup), model);
+        }
+
+        /// <summary>
+        /// Метод извличащ данни за назначени служители в съд
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Служител за редакция и да се провери дали го има в списъка, ако е с конфигурирана дата до</param>
+        /// <returns></returns>
+        public async Task<IActionResult> GetDDL_CommonCourtLawUnitCentralDistributionCC(int courtId, int? lawUnitId = null)
+        {
+            return Json(await service.GetDDL_CommonCourtLawUnitCentralDistributionCC(courtId, lawUnitId));
+        }
+
+        #endregion
     }
 }

@@ -43,6 +43,11 @@
             </summary>
             <param name="id">Идентификатор на елемента за изтриване</param>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Delivery.DeliveryItemVisitMobileModel">
+            <summary>
+            Посещение отразено през мобилния призовкар
+            </summary>
+        </member>
         <member name="T:Microsoft.Extensions.DependencyInjection.IOWebApiServiceCollectionExtension">
             <summary>
             Описва услугите и контекстите на приложението

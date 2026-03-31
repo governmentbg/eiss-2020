@@ -1,5 +1,4 @@
 ﻿using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.EISPP;
@@ -7,17 +6,14 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using ZXing;
 using static IOWebApplication.Infrastructure.Constants.EISPPConstants;
 
 namespace IOWebApplication.Core.Services
@@ -107,9 +103,8 @@ namespace IOWebApplication.Core.Services
         /// Налага правилата от SBE_DESC
         /// </summary>
         /// <param name="message">XML</param>
-        /// <param name="rules">Правила от nom_eispp_rules</param>
         /// <returns></returns>
-        public async Task<string> ApplyRules(int structureId, string message, int eventType)
+        public async Task<string> ApplyRules(int structureId, string message, int eventType, bool isGeneratedNmber)
         {
             string result = "";
             XmlReaderSettings settings = new XmlReaderSettings()
@@ -137,7 +132,7 @@ namespace IOWebApplication.Core.Services
                                         if (isEmptyElement)
                                             writer.WriteEndElement();
                                         if (reader.Name == "DATA")
-                                            ApplyRulesInData(structureId, "", "DATA", reader, writer, eventType, false);
+                                            ApplyRulesInData(structureId, "", "DATA", reader, writer, eventType, false, isGeneratedNmber);
                                         break;
                                     case XmlNodeType.EndElement:
                                         writer.WriteEndElement();
@@ -167,7 +162,7 @@ namespace IOWebApplication.Core.Services
                 writer.WriteAttributeString(reader.Name, reader.Value);
             }
         }
-        private bool CopyAttributesInData(int structureId, string rulesPath, XmlReader reader, XmlWriter writer, int eventType, bool isDeleteEvent)
+        private bool CopyAttributesInData(int structureId, string rulesPath, XmlReader reader, XmlWriter writer, int eventType, bool isDeleteEvent, bool isGeneratedNumber)
         {
             // writer.WriteAttributeString("rulesPath", rulesPath);
             bool result = isDeleteEvent;
@@ -178,7 +173,7 @@ namespace IOWebApplication.Core.Services
                 {
                     isDeleteEvent = true;
                 }
-                if (!IsAttribForSkip(rulesPath, reader.Name, reader.Value, eventType, isDeleteEvent))
+                if (!IsAttribForSkip(rulesPath, reader.Name, reader.Value, eventType, isDeleteEvent, isGeneratedNumber))
                 {
                     if (!isDeleteEvent)
                       CheckAttrib(structureId, rulesPath, reader.Name, reader.Value, eventType);
@@ -187,7 +182,7 @@ namespace IOWebApplication.Core.Services
             }
             return result;
         }
-        private void ApplyRulesInData(int structureId, string rulesPath, string nodeToExit, XmlReader reader, XmlWriter writer, int eventType, bool isDeleteEvent)
+        private void ApplyRulesInData(int structureId, string rulesPath, string nodeToExit, XmlReader reader, XmlWriter writer, int eventType, bool isDeleteEvent, bool isGeneratedNumber)
         {
             if (rulesPath.Contains(".SBE.SBE"))
             {
@@ -215,7 +210,7 @@ namespace IOWebApplication.Core.Services
                                 var isEmptyElement = reader.IsEmptyElement;
                                 bool forExit = (reader.Name == nodeToExit);
                                 string nodeName = reader.Name;
-                                CopyAttributesInData(structureId, currentPath, reader, writer, eventType, isDeleteEvent);
+                                CopyAttributesInData(structureId, currentPath, reader, writer, eventType, isDeleteEvent, isGeneratedNumber);
                                 if (isEmptyElement)
                                 {
                                     writer.WriteEndElement();
@@ -224,7 +219,7 @@ namespace IOWebApplication.Core.Services
                                 }
                                 else
                                 {
-                                    ApplyRulesInData(structureId, currentPath, nodeName, reader, writer, eventType, isDeleteEvent);
+                                    ApplyRulesInData(structureId, currentPath, nodeName, reader, writer, eventType, isDeleteEvent, isGeneratedNumber);
                                 }
                             }
                         } 
@@ -272,12 +267,19 @@ namespace IOWebApplication.Core.Services
             rulesPath = rulesPath.Replace("VHD.SBE.SBE.", "", StringComparison.InvariantCultureIgnoreCase);
             return rulesPath.Replace("VHD.SBE.", "", StringComparison.InvariantCultureIgnoreCase) + "." + attrName;
         }
-        private bool IsAttribForSkip(string rulesPath, string attrName, string attrVal, int eventType, bool isDeleteEvent)
+        private bool IsAttribForSkip(string rulesPath, string attrName, string attrVal, int eventType, bool isDeleteEvent, bool isGeneratedNumber)
         {
             if (rulesPath == "VHD.SBE" && eventType < 0)
                 return (attrName != "elementType" && attrName != "sbesid");
             if (isDeleteEvent)
                 return (attrVal == "0" || string.IsNullOrEmpty(attrVal));
+            if (
+                !isGeneratedNumber && !string.IsNullOrEmpty(rulesPath) && rulesPath.EndsWith("NPR") &&
+                (attrName == "nprstr" || attrName == "nprdrj" || attrName == "nprdta")
+                )
+            {
+                return true;
+            }
 
             bool autoAdd = (rulesPath == "VHD.SBE" || rulesPath == "KST" );
             bool isPunishment = rulesPath.EndsWith("FZL.NKZ", StringComparison.InvariantCultureIgnoreCase);
@@ -334,7 +336,7 @@ namespace IOWebApplication.Core.Services
                     if (attrVal == "0" && (flags & 2) == 0)
                         return;
                     if (!ruleIDs.Contains(attrVal))
-                        throw new ArgumentException($"{rulesPath} трябва да е в {ruleIDs.Join()} a e {attrVal}");
+                        throw new ArgumentException($"{rulesPath} трябва да е в {string.Join(",", ruleIDs)} a e {attrVal}");
                 }
             }
         }
@@ -366,7 +368,7 @@ namespace IOWebApplication.Core.Services
                     if (person.Punishments != null)
                     {
                         person.Punishments = person.Punishments
-                                                   .Where(x => x.PunishmentKind < 90000 &&
+                                                   .Where(x => x.PunishmentKind != 99001 &&
                                                               x.IsSelected)
                                                    .ToArray();
                         foreach (var punishment in person.Punishments)
@@ -382,7 +384,7 @@ namespace IOWebApplication.Core.Services
                 foreach (var cpPersonCrimes in eisppEvent.CriminalProceeding.Case.CPPersonCrimes)
                 {
                     if (cpPersonCrimes.CrimeSanction?.CrimePunishments != null)
-                        cpPersonCrimes.CrimeSanction.CrimePunishments = cpPersonCrimes.CrimeSanction.CrimePunishments.Where(x => x.IsSelected && x.PunishmentKind < 90000).ToArray();
+                        cpPersonCrimes.CrimeSanction.CrimePunishments = cpPersonCrimes.CrimeSanction.CrimePunishments.Where(x => x.IsSelected && x.PunishmentKind != 99001).ToArray();
                 }
                 if (eisppEvent.CriminalProceeding.Case.Crimes != null)
                 {
@@ -424,7 +426,7 @@ namespace IOWebApplication.Core.Services
             var punishmentKindMode = GetPunishmentKindMode(punishment.PunishmentKind);
             switch (punishmentKindMode)
             {
-                case PunishmentVal.efective:
+                case PunishmentVal.effective:
                     ClearPunishmentPeriod(punishment);
                     ClearPunishmentProbationPeriod(punishment);
                     punishment.ProbationMeasure = null;
@@ -476,7 +478,6 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// От пробационни мерки прави наказания
         /// </summary>
-        /// <param name="eisppEvent">Събитие</param>
         public void CreatePunismentFromProbationMeasuares(EisppPackage model)
         {
             int sid = -20000;

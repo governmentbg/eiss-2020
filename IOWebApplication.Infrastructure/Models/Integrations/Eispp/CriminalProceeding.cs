@@ -26,6 +26,28 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         public int Id { get; set; }
 
         /// <summary>
+        /// nprstr
+        /// Структура, образувала НП
+        /// </summary>
+        [XmlAttribute("nprstr")]
+        public int StructureId { get; set; }
+
+        /// <summary>
+        /// nprdta
+        /// Дата на образуване/отказ на НП
+        /// </summary>
+        [XmlAttribute("nprdta")]
+        public DateTime DateCreate { get; set; }
+
+        /// <summary>
+        /// nprdrj
+        /// Държава, в която се провежда НП
+        /// </summary>
+        [XmlAttribute("nprdrj")]
+        public int CountryId { get; set; }
+
+    
+        /// <summary>
         /// DLO
         /// Дело за ЕИСПП пакет
         /// </summary>

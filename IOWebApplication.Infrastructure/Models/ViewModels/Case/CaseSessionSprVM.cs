@@ -19,5 +19,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public DateTime? SessionDateReturn { get; set; }
         public DateTime? SessionDateEntryIntoForce { get; set; }
         public string CasePersons { get; set; }
+        public string CasePerson { get; set; }
     }
 }

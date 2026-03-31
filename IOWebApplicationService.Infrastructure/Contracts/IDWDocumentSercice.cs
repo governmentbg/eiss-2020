@@ -4,14 +4,13 @@ using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplicationService.Infrastructure.Contracts
 {
   public interface IDWDocumentService
   {
-    bool DocumentInsertUpdate(DWDocument current, DWCourt court);
-    IEnumerable<DWDocument> SelectDocumentTransfer(int selectedRowCount, DWCourt court);
-    void DocumentTransfer(DWCourt court);
+    Task DocumentTransfer(DWCourt court);
 
     bool DocumentCaseInfoInsertUpdate(DWDocumentCaseInfo current);
     IEnumerable<DWDocumentCaseInfo> SelectDocumentCaseInfoTransfer(long documentId, DWCourt court);

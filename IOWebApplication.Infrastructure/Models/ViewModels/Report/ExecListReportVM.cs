@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
@@ -9,11 +10,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     {
         public string ExecListNumber { get; set; }
 
-        public string CaseRegNumber { get; set; }
+        public string CaseRegNumber { get { return string.Join(Environment.NewLine, CaseRegNumbers.Distinct()); } }
 
-        public string CaseSessionActData { get; set; }
+        public string[] CaseRegNumbers { get; set; }
 
-        public string PersonName { get; set; }
+        public string CaseSessionActData { get { return string.Join(Environment.NewLine, CaseSessionActDatas.Distinct()); } }
+
+        public string[] CaseSessionActDatas { get; set; }
+
+        public string PersonName { get { return string.Join(Environment.NewLine, PersonNames.Distinct()); } }
+
+        public string[] PersonNames { get; set; }
 
         public DateTime ExecListDate { get; set; }
 
@@ -50,6 +57,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string MoneyTypeName { get; set; }
 
         public decimal Amount { get; set; }
+
+        public decimal AmountBGN { get; set; }
 
         public string PaymentData { get; set; }
 

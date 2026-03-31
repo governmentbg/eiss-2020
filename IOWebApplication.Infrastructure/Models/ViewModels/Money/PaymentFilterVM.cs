@@ -33,5 +33,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         [Display(Name = "Активни плащания")]
         public bool ActivePayment { get; set; }
+
+        [Display(Name = "Номер на плащане")]
+        public string PaymentNumber { get; set; }
     }
 }

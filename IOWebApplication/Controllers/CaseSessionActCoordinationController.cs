@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -12,6 +7,7 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -32,17 +28,17 @@ namespace IOWebApplication.Controllers
             lawUnitService = _lawUnitService;
         }
 
-        public IActionResult Index(int CaseSessionActId)
+        public async Task<IActionResult> Index(int CaseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActCoordination, 0, AuditConstants.Operations.Update, CaseSessionActId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActCoordination, 0, AuditConstants.Operations.Update, CaseSessionActId))
             {
                 return Redirect_Denied();
             }
-            SetViewbagCaption(CaseSessionActId);
+            SetViewbagCoordination(CaseSessionActId);
             return View();
         }
 
-        private void SetViewbagCaption(int CaseSessionActId)
+        private void SetViewbagCoordination(int CaseSessionActId)
         {
             //var sessionAct = service.GetById<CaseSessionAct>(CaseSessionActId);
             //var actType = nomService.GetById<ActType>(sessionAct.ActTypeId);
@@ -64,16 +60,16 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request, int CaseSessionActId)
+        public IActionResult ListData(IDataTablesRequest request, int CaseSessionActId, int CoordinationType)
         {
-            var data = service.CaseSessionActCoordination_Select(CaseSessionActId);
+            var data = service.CaseSessionActCoordination_Select(CaseSessionActId, null, CoordinationType);
             return request.GetResponse(data);
         }
 
         public IActionResult Add(int CaseSessionActId)
         {
-            var sessionAct = service.GetById<CaseSessionAct>(CaseSessionActId);
-            SetViewbagCaption(CaseSessionActId);
+            var sessionAct = service.GetReadonly<CaseSessionAct>(CaseSessionActId);
+            SetViewbagCoordination(CaseSessionActId);
             var model = new CaseSessionActCoordination()
             {
                 CaseId = sessionAct.CaseId,
@@ -84,25 +80,28 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.GetById<CaseSessionActCoordination>(id);
+            var model = await service.GetByIdAsync<CaseSessionActCoordination>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас съгласуване на акт не е намерено и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас съгласуване на акт не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActCoordination, id, AuditConstants.Operations.Update, model.CaseSessionActId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActCoordination, id, AuditConstants.Operations.Update, model.CaseSessionActId))
             {
                 return Redirect_Denied();
             }
-            SetViewbagCaption(model.CaseSessionActId);
+            var actModel = await service.GetReadonlyAsync<CaseSessionAct>(model.CaseSessionActId);
+            ViewBag.canUpdate = (actModel.ActDeclaredDate == null && model.CoordinationType == NomenclatureConstants.CoordinationTypes.Act) ||
+                                (actModel.ActMotivesDeclaredDate == null && model.CoordinationType == NomenclatureConstants.CoordinationTypes.Motive);
+            SetViewbagCoordination(model.CaseSessionActId);
             return View(nameof(Edit), model);
         }
 
         [HttpPost]
         public IActionResult Edit(CaseSessionActCoordination model)
         {
-            SetViewbagCaption(model.CaseSessionActId);
+            SetViewbagCoordination(model.CaseSessionActId);
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);

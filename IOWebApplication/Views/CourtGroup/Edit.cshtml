@@ -24,6 +24,7 @@
         <form id="formEdit" asp-action="Edit" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.GroupKind)
             
             @Html.Hidden("caseTypeJson", caseTypeJson)
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -47,7 +48,7 @@
                         @Html.EditorFor(x => x.Description)
                     </div>
                 </div>
-                <div class="row">
+                <div class="row" id="divFilterCode">
                     @Html.ValidationMessage("caseCodesJson")
                     @Html.Hidden("caseCodesJson")
                     <div class="col-md-2">
@@ -73,7 +74,7 @@
 
             <div class="form-group row col-md-12">
                 <a id="submit_button" class="btn btn-success" />Запис</a>
-                <a asp-action="Index" asp-route-filterCaseGroupId="@ViewBag.filterCaseGroupId" class="btn btn-danger">Назад</a>
+                <a asp-action="Index" asp-route-filterCaseGroupId="@ViewBag.filterCaseGroupId" asp-route-groupkind="@Model.GroupKind" class="btn btn-danger">Назад</a>
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
@@ -86,6 +87,13 @@
 </div>
 @section scripts {
     <script>
+        let groupeKind = @Model.GroupKind;
+        if (groupeKind == 5)
+        {
+            $("#divFilterCode").hide();
+            $("#multiselectCode").hide();
+        }
+
         var $multiselectCode = $("#multiselectCode").multiselectiontransfer(
             {
                 ajaxLeftUrl: "@Url.Action("CourtGroupCodeLeftList")",

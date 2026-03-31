@@ -9,7 +9,7 @@ namespace IOWebApplication.Core.Contracts
 {
     public interface IEisppRulesService
     {
-        Task<string> ApplyRules(int structureId, string message, int eventType);
+        Task<string> ApplyRules(int structureId, string message, int eventType, bool isGeneratedNmber);
         void CreatePunismentFromProbationMeasuares(EisppPackage model);
         (string[], int) GetEisppRuleIds(int eventType, string propName);
         string GetEisppRuleValue(int eventType, string propName);

@@ -25,6 +25,10 @@
 </div>
 
 <div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+</div>
+
+<div class="row">
     <div class="col-md-6 text-left pb-15">
         <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
             Филтриране
@@ -56,6 +60,7 @@
                             DateTo: $("#DateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
                         };
                     }
                 },
@@ -78,9 +83,14 @@
                     {
                         name: 'caseRegNum',
                         data: 'caseRegNum',
-                        title: 'Номер/Година',
+                        title: 'Номер на дело',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
                     },
                     {
                         name: 'caseCodeLabel',
@@ -127,7 +137,7 @@
                         }
                     }
                 ]
-            });
+            }).order([[2, "asc"]]);
         }
     }
 </script>
@@ -141,6 +151,7 @@
 <script>
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
+        initLawUnit();
     });
 
     $('#CaseGroupId').change(function () {

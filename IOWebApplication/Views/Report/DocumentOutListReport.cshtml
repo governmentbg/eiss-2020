@@ -106,11 +106,14 @@
                         searchable: false,
                     },
                     {
-                        name: 'documentPersons',
-                        data: 'documentPersons',
+                        name: 'documentPersonsFirst',
+                        data: 'documentPersonsFirst',
                         title: 'Адресант',
                         sortable: true,
                         searchable: false,
+                        "render": function (item, type, row, meta) {
+                            return row.documentPersons;
+                        },
                     },
                     {
                         name: 'description',

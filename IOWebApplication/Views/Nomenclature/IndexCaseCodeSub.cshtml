@@ -1,0 +1,18 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
+
+@{
+    ViewData["Title"] = "Подшифри";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../Nomenclature/_CaseCodeSub.cshtml" model="@new CaseCodeSubFilterVM()" />
+    </div>
+</div>

@@ -17,7 +17,15 @@ namespace IOWebApplication.Core.Contracts
     public interface ICaseLoadIndexService : IBaseService
     {
         IQueryable<CaseLoadIndexVM> CaseLoadIndex_Select(int CaseId, int? CaseSessionId);
-        IQueryable<CaseLoadIndexSprVM> CaseLoadIndexSpr_Select(CaseLoadIndexFilterVM model);
+        CaseLoadIndexVM CaseLoadIndexVM_ByID(int id);
+
+        /// <summary>
+        /// Натовареност по дела: основни и допълнителни дейности
+        /// </summary>
+        /// <param name="filter">Филтър попълнен от потребител</param>
+        /// <returns></returns>
+        IQueryable<CaseLoadIndexSprVM> CaseLoadIndexSpr_Select(CaseLoadIndexFilterVM filter);
+
         bool CaseLoadIndex_SaveData(CaseLoadIndex model);
         bool CaseLoadIndexAutomationElementGroupeND_SaveData(int CaseSessionId);
         /// <summary>
@@ -29,7 +37,7 @@ namespace IOWebApplication.Core.Contracts
         /// <summary>
         /// Автоматичен запис на натоварване при образуване на дело
         /// </summary>
-        /// <param name="CaseSessionId"></param>
+        /// <param name="CaseId"></param>
         /// <returns></returns>
         bool CaseLoadIndexAutomationElementGroupe_CC_SaveData(int CaseId);
         bool IsExistCaseLoadActivity(int ModelId, int CaseId, bool isMainActivity, int JudgeRepLawUnitId, int? caseLoadElementTypeId, int? caseLoadAddActivityId);
@@ -38,6 +46,7 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_CaseLoadElementType_Replace(int CurrentId, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_CaseLoadAddActivity(int CaseId, bool addDefaultElement = true, bool addAllElement = false);
         IQueryable<CaseLoadElementGroupVM> CaseLoadElementGroup_Select();
+        CaseLoadElementGroupVM CaseLoadElementGroupVM_ById(int id);
         bool CaseLoadElementGroup_SaveData(CaseLoadElementGroup model);
         IQueryable<CaseLoadElementTypeVM> CaseLoadElementType_Select(int CaseLoadElementGroupId);
         bool CaseLoadElementType_SaveData(CaseLoadElementType model);
@@ -54,12 +63,32 @@ namespace IOWebApplication.Core.Contracts
         bool JudgeLoadActivity_SaveData(JudgeLoadActivity model);
         IQueryable<JudgeLoadActivityIndexVM> JudgeLoadActivityIndex_Select(int JudgeLoadActivityId);
         bool JudgeLoadActivityIndex_SaveData(JudgeLoadActivityIndex model);
-        IQueryable<CourtLawUnitActivityVM> CourtLawUnitActivity_Select(int CourtId);
+        IQueryable<CourtLawUnitActivityVM> CourtLawUnitActivity_Select(int CourtId, CaseLoadIndexFilterVM model);
         bool CourtLawUnitActivity_SaveData(CourtLawUnitActivity model);
         bool IsExistCourtLawUnitActivity(int LawUnitId, int JudgeLoadActivityId, int ModelId, DateTime ActivityDate);
         bool IsExistCourtLawUnitActivityNew(int LawUnitId, int JudgeLoadActivityId, int ModelId, DateTime ActivityDate, DateTime DateTo);
-        IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId, int JudgeLoadActivityId);
-        IQueryable<LawUnitLoadSprVM> LawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId);
+
+        /// <summary>
+        /// Натоварване на съдии извън дело
+        /// </summary>
+        /// <param name="dateFrom">От дата</param>
+        /// <param name="dateTo">До дата</param>
+        /// <param name="lawUnitId">Идентификатор на лице</param>
+        /// <param name="judgeLoadActivityId">Идентификатор на judgeLoadActivity</param>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
+        IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime dateFrom, DateTime dateTo, int? lawUnitId, int judgeLoadActivityId, int? courtId);
+
+        /// <summary>
+        /// Натовареност - извън и в дело
+        /// </summary>
+        /// <param name="dateFrom">От дата</param>
+        /// <param name="dateTo">До дате</param>
+        /// <param name="lawUnitId">Идентификатор на лице</param>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
+        IQueryable<LawUnitLoadSprVM> LawUnitActivitySpr_Select(DateTime dateFrom, DateTime dateTo, int? lawUnitId, int? courtId);
+
         bool ElementTypeRule_Expired(ExpiredInfoVM model);
         bool ElementTypeStop_Expired(ExpiredInfoVM model);
         bool CaseLoadIndexRecalcBaseIndex(int CaseId);
@@ -71,5 +100,8 @@ namespace IOWebApplication.Core.Contracts
         bool EditActAndRecalcCase(int CaseId, int ActId);
         bool EditSessionResultAndRecalcCase(int CaseId, int ResultId);
         bool CaseLoadIndex_ExpiredInfo(ExpiredInfoVM model);
+        bool CaseLoadIndexAutomationElementGroupeAdditional_SRA_SaveData(int CaseSessionId, List<CaseLoadElementGroup> loadElementGroups = null);
+        IQueryable<CaseLoadIndexNewVM> CaseLoadIndexNew_Select(int CaseId, int? CaseSessionId);
+        IQueryable<CaseLoadIndexCourtGroupSprVM> CaseLoadIndexCourtGroupSpr_Select(CaseLoadIndexFilterVM model);
     }
 }

@@ -1,0 +1,6 @@
+﻿@model DateTime?
+@using IOWebApplication.Infrastructure.Extensions
+<div class="input-group date">
+    <input asp-for="@Model" class="form-control date-picker" type="text" autocomplete="off" value="@(Model.HasValue && Model.Value > DateTime.MinValue ? Model.Value.ToString("dd.MM.yyyy") : String.Empty)" />
+</div>
+

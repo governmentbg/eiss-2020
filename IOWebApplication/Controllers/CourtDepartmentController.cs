@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -11,6 +7,9 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -25,6 +24,7 @@ namespace IOWebApplication.Controllers
             nomService = _nomService;
         }
 
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult Index()
         {
             SetHelpFile(HelpFileValues.Nom11);
@@ -47,6 +47,7 @@ namespace IOWebApplication.Controllers
         /// Добавяне на елемент в CourtDepartment
         /// </summary>
         /// <returns></returns>
+        [DisableAudit]
         public IActionResult Add()
         {
             var model = new CourtDepartment()
@@ -67,8 +68,9 @@ namespace IOWebApplication.Controllers
         {
             var model = service.GetById<CourtDepartment>(id);
             model.ParentId = model.ParentId ?? 0;
-            model.DateFrom = (model.DateFrom < new DateTime(2000, 1, 1)) ? DateTime.Now.AddYears(-1) : model.DateFrom;
+            //model.DateFrom = (model.DateFrom < new DateTime(2000, 1, 1)) ? DateTime.Now.AddYears(-1) : model.DateFrom;
             SetViewbag();
+            auditInfo(AuditConstants.Operations.View, model);
             return View(nameof(Edit), model);
         }
 
@@ -101,7 +103,6 @@ namespace IOWebApplication.Controllers
                         //    return "За направление горното ниво трябва да е текущият съд";
                         //}
                     }
-                    break;
                 case NomenclatureConstants.DepartmentType.Kolegia:
                     {
                         if (model.ParentId == null)
@@ -140,6 +141,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
+        [DisableAudit]
         [HttpPost]
         public IActionResult Edit(CourtDepartment model)
         {
@@ -166,6 +168,14 @@ namespace IOWebApplication.Controllers
             if (service.CourtDepartment_SaveData(model))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                if (currentId == 0)
+                {
+                    auditInfo(AuditConstants.Operations.Append, model);
+                }
+                else
+                {
+                    auditInfo(AuditConstants.Operations.Update, model);
+                }
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
@@ -177,6 +187,15 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
+        void auditInfo(string operation, CourtDepartment model, string add = "")
+        {
+            if (model != null)
+            {
+                var depType = service.GetPropById<DepartmentType, string>(x => x.Id == model.DepartmentTypeId, x => x.Label);
+
+                AddAuditInfo(operation, $"{model.Label} ({depType})", add, "Съдебна структура");
+            }
+        }
         /// <summary>
         /// Попълване на данните за комбо боксовете
         /// </summary>
@@ -189,7 +208,7 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseInstanceId_ddl = selectListItems;
             SetHelpFile(HelpFileValues.Nom11);
         }
-
+        [DisableAudit]
         public IActionResult AddLawUnits(int id)
         {
             var department = service.GetById<CourtDepartment>(id);
@@ -210,6 +229,8 @@ namespace IOWebApplication.Controllers
             var department = service.GetById<CourtDepartment>(id);
             ViewBag.courtDepartmentId = id;
             ViewBag.DepName = department.Label;
+
+            auditInfo(AuditConstants.Operations.View, department, "Преглед на съдии");
             return View();
         }
 
@@ -230,7 +251,8 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.backUrl = Url.Action("Index", "CourtDepartment");
             SetHelpFile(HelpFileValues.Nom11);
-
+            var department = service.GetById<CourtDepartment>(id);
+            auditInfo(AuditConstants.Operations.View, department, "Избор на  съдии");
             return View("CheckListViewVM", service.CheckListViewVM_Fill(userContext.CourtId, id));
         }
 
@@ -240,11 +262,16 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
+        [DisableAudit]
         public IActionResult LawUnits(CheckListViewVM model)
         {
 
             if (service.CourtDepartmentLawUnit_SaveData(model))
+            {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                var department = service.GetById<CourtDepartment>(model.ObjectId);
+                auditInfo(AuditConstants.Operations.Update, department, "Избор на съдии");
+            }
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
@@ -262,6 +289,7 @@ namespace IOWebApplication.Controllers
             SetHelpFile(HelpFileValues.Nom11);
         }
 
+        [DisableAudit]
         public IActionResult AddLawUnit(int CourtDepartmentId)
         {
             var model = new CourtDepartmentLawUnit()
@@ -277,6 +305,10 @@ namespace IOWebApplication.Controllers
         {
             var model = service.GetById<CourtDepartmentLawUnit>(id);
             SetViewbagLawUnit(model.CourtDepartmentId);
+
+            var department = service.GetById<CourtDepartment>(model.CourtDepartmentId);
+            var lawUnit = service.GetPropById<LawUnit, string>(x => x.Id == model.LawUnitId, x => x.FullName);
+            auditInfo(AuditConstants.Operations.View, department, lawUnit);
             return View(nameof(EditLawUnit), model);
         }
 
@@ -286,6 +318,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
+        [DisableAudit]
         public IActionResult EditLawUnit(CourtDepartmentLawUnit model)
         {
             SetViewbagLawUnit(model.CourtDepartmentId);
@@ -305,6 +338,11 @@ namespace IOWebApplication.Controllers
             if (service.CourtDepartmentLawUnit_SaveData(model))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                var department = service.GetById<CourtDepartment>(model.CourtDepartmentId);
+                var lawUnit = service.GetPropById<LawUnit, string>(x => x.Id == model.LawUnitId, x => x.FullName);
+                auditInfo((currentId == 0) ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, department, lawUnit);
+
+
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditLawUnit), new { id = model.Id });
             }
@@ -345,9 +383,39 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
+        [DisableAudit]
         public JsonResult StornoLawUnit(int LawUnitId)
         {
-            return Json(new { result = service.StornoCourtDepartment(LawUnitId) });
+            bool result = service.StornoCourtDepartment(LawUnitId);
+            if (result)
+            {
+                var cdLawunit = service.GetById<CourtDepartmentLawUnit>(LawUnitId);
+                var department = service.GetById<CourtDepartment>(cdLawunit.CourtDepartmentId);
+                var luName = service.GetPropById<LawUnit, string>(x => x.Id == cdLawunit.LawUnitId, x => x.FullName);
+                auditInfo(AuditConstants.Operations.Delete, department, $"Премахнат съдия: {luName}");
+            }
+            return Json(new { result = result });
+        }
+
+        /// <summary>
+        /// Зареждане на съдебна структура за падащ списък
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
+        public async Task<IActionResult> GetCourtDepartmentCentralDistributionCCDDL(int courtId)
+        {
+            return Json(await service.Department_SelectDDLAsync(courtId, NomenclatureConstants.DepartmentType.Systav, null, NomenclatureConstants.CaseGroups.GrajdanskoDelo));
+        }
+
+        /// <summary>
+        /// Зареждане на съдебна структура за падащ списък
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Идентификатор на лице</param>
+        /// <returns></returns>
+        public async Task<IActionResult> GetDDL_DepartmentByLawUnit(int courtId, int lawUnitId)
+        {
+            return Json(await service.GetDDL_DepartmentByLawUnit(courtId, lawUnitId, NomenclatureConstants.DepartmentType.Systav));
         }
     }
 }

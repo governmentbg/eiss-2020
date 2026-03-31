@@ -1,0 +1,245 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseLoadIndexFilterVM
+
+@{
+    ViewData["Title"] = "Натовареност по дела: основни и допълнителни дейности";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentOtdelenieId, "GenericDropDown")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.SessionResultId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.ActTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtId, "GenericSelect2")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="ValidateData()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpr")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            LawUnitId: $("#LawUnitId").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            RegNumber: $("#RegNumber").val(),
+                            CourtDepartmentId: $("#CourtDepartmentId").val(),
+                            CourtDepartmentOtdelenieId: $("#CourtDepartmentOtdelenieId").val(),
+                            SessionResultId: $("#SessionResultId").val(),
+                            SessionTypeId: $("#SessionTypeId").val(),
+                            ActTypeId: $("#ActTypeId").val(),
+                            CourtId: $("#CourtId").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'courtLabel',
+                        data: 'courtLabel',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseName',
+                        data: 'caseName',
+                        title: 'Дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseTypeCodeLabel',
+                        data: 'caseTypeCodeLabel',
+                        title: 'Точен вид дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseRegDate',
+                        data: 'caseRegDate',
+                        title: 'Дата на образуване',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'baseIndexCase',
+                        data: 'baseIndexCase',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Базов коефициент',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'correctionLoadIndex',
+                        data: 'correctionLoadIndex',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Коригиращи коефициенти по делото',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'baseIndexMain',
+                        data: 'baseIndexMain',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Индекс осн. дейност',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'baseIndexNotMain',
+                        data: 'baseIndexNotMain',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Индекс доп. дейност',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'calcValue',
+                        data: 'calcValue',
+                        render: $.fn.dataTable.render.number('', '.', 2),
+                        title: 'Натоварване',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    let createTbl = true;
+    function ValidateData() {
+        var datefrom = $("#DateFrom").val();
+        var dateto = $("#DateTo").val();
+        postContent('@Url.Action("IsValidateDateMonth", "Report")'
+            , { dateFrom: datefrom, dateTo: dateto }
+            , function (data) {
+                if (!data.result)
+                {
+                    if (createTbl) {
+                        LoadTable();
+                        createTbl = false;
+                    } else {
+                        $('#mainTable').DataTable().ajax.reload(
+                            function () {
+                        });
+                    }
+                }
+                else
+                {
+                    return messageHelper.ShowErrorMessage('Периодът е по-голям от месец.', messageContainer);
+                }
+            });
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview", "Case")/{{id}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(function () {
+        initLawUnit();
+        $('#CaseCodeIds').select2({ language: "bg" });
+        $('#CourtId').select2({ language: "bg" });
+    });
+</script>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#CaseGroupId').trigger('change');
+        });
+
+        $('#CaseGroupId').change(function () {
+            requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+        });
+
+        $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+    </script>
+}

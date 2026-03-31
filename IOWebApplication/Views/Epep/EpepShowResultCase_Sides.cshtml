@@ -1,0 +1,67 @@
+﻿@using Integration.Epep;
+@model SummaryCase
+@{
+    var dataTimeformat = "dd.MM.yyyy HH:mm";
+}
+
+<div class="row">
+    <div class="col-lg-4">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Страни</legend>
+
+            <table class="table table-hover table-striped simple-dt">
+                <tr>
+                    <th>Име/Наименование</th>
+                    <th>ЕГН/ЕИК</th>
+                    <th>Качество</th>
+                </tr>
+                @foreach (var side in Model.Sides)
+                {
+                    <tr>
+                        <td>@IOWebApplication.Infrastructure.Utils.EpepHelper.GetName(side.Person,side.Entity)</td>
+                        <td>@IOWebApplication.Infrastructure.Utils.EpepHelper.GetUIC(side.Person,side.Entity)</td>
+                        <td>@side.SideInvolvementKindName</td>
+                    </tr>
+                }
+            </table>
+
+
+        </fieldset>
+    </div>
+    <div class="col-lg-8">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Призовки</legend>
+
+            <table class="table table-hover table-striped simple-dt">
+                <tr>
+                    <th>Тип</th>
+                    <th>Вид</th>
+                    <th>Призовано лице</th>
+                    <th>Дата на връчване</th>
+                    <th>Прикачени документи</th>
+                </tr>
+                @foreach (var summon in Model.Summons)
+                {
+                    <tr>
+                        <td>@summon.SummonTypeName</td>
+                        <td>@summon.SummonKind</td>
+                        <td>@summon.Addressee</td>
+                        @if (summon.DateServed.HasValue)
+                        {
+                            <td>@summon.DateServed.Value.ToString(dataTimeformat)</td>
+                        }
+                        else
+                        {
+                            <td>n/a</td>
+                        }
+                        <td>
+                            <partial name="_SummaryFiles" model="@summon.Files" />
+                        </td>
+                    </tr>
+                }
+            </table>
+
+
+        </fieldset>
+    </div>
+</div>

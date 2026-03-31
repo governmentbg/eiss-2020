@@ -1,5 +1,8 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels;
 @model IEnumerable<CaseMovementVM>
+@{
+    int maxTasks = 5;
+}
 @if (Model.Count() > 0)
 {
     <div class="box">
@@ -13,15 +16,14 @@
                     <div class="worktask-item">
                         <div class="row">
                             <div class="col-lg-4">
-                                <b>Дело: @movementVM.CaseName</b>
+                                <b>@movementVM.CaseName</b>
                                 @if (!string.IsNullOrEmpty(movementVM.Description))
                                 {
                                     <br />
                                     <span class="remark">
                                         @movementVM.Description
                                     </span>
-                                }
-                                <br />
+                                }                               
                             </div>
                             <div class="col-lg-5">
                                 Изпратено от: @movementVM.UserLawUnitName
@@ -36,9 +38,17 @@
                                 }
                             </div>
                             <div class="col-lg-3">
-                                <a href="@movementVM.ViewUrl" class="btn btn-sm btn-primary" ><i class="fa fa-map-marker"></i> Преглед</a>                                
+                                <a href="@Url.Action("Index", "CaseMovement", new { CaseId = movementVM.CaseId })" class="btn btn-sm btn-primary"><i class="fa fa-map-marker"></i> Преглед</a>
                             </div>
                         </div>
+                    </div>
+                }
+                @if (Model.Count() > maxTasks)
+                {
+                    int restTasks = Model.Count() - maxTasks;
+                    <div class="pull-left">
+                        Показани <b>@maxTasks</b> от <b>@Model.Count()</b> неприети движения.
+                        <a asp-action="MyMovement" asp-controller="CaseMovement" asp-route-userMode="1">Преглед на неприетите движения</a>
                     </div>
                 }
             </div>

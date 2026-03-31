@@ -1,11 +1,7 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Base;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels
 {
@@ -54,6 +50,22 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Дата на пререгистрация в АВ")]
         public DateTime? ReRegisterDate { get; set; }
+
+        public string PersonGid { get; set; }
+
+        public string RepresentsGid { get; set; }
+
+        /// <summary>
+        /// За РНФЛ - Акт за назначаване на синдик
+        /// </summary>
+        [Display(Name = "Свързан акт")]
+        public int? RelatedActId { get; set; }
+
+        [Display(Name = "Назначен от дата")]
+        public DateTime? AppointDateFrom { get; set; }
+
+        [Display(Name = "До дата")]
+        public DateTime? AppointDateTo { get; set; }
 
         public RegixRequestReasonVM RegixRequestReason { get; set; }
 

@@ -1,0 +1,42 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Common
+@model InterestRate
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Добавяне на лихвен процент" : "Редакция на лихвен процент";
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("InterestRate", "Tools", new { interestType = Model.InterestType })"><i class="fa fa-book"></i> Лихвени проценти</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-4">
+        <form asp-action="InterestRateEdit" method="post">
+
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.InterestType)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="form-group">
+                    @Html.EditorFor(model => model.Date, "DateTime")
+                    @Html.EditorFor(model => model.Rate, "Decimal")
+                    @Html.EditorFor(model => model.IsActive, "Boolean")
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                &nbsp;
+                <a asp-action="InterestRate" asp-route-interestType="@Model.InterestType" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>

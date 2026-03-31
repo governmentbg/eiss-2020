@@ -1,5 +1,8 @@
-﻿@{
-    ViewData["Title"] = "Дежурства към съд";
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation
+@model CourtDutyFilterVM
+
+@{
+    ViewData["Title"] = Model.Kind == null ? "Дежурства към съд" : "Замествания към съд";
 }
 
 @section breadcrumb{
@@ -7,6 +10,9 @@
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
     </ol>
 }
+
+@Html.HiddenFor(x => x.Kind)
+@Html.HiddenFor(x => x.CourtId)
 
 <div class="row">
     <div class="col-md-12 text-right pb-15">
@@ -16,6 +22,7 @@
         </a>
     </div>
 </div>
+
 <div class="row">
     <div class="col-md-12">
         <table id="mainTable" class="table table-hover table-striped"></table>
@@ -29,7 +36,12 @@
                 ajax: {
                     "url": "@Url.Action("ListData")",
                     "type": "POST",
-                    "datatype": "json"
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            CourtId: $("#CourtId").val()
+                        };
+                    }
                 },
                 columns: [
                     {

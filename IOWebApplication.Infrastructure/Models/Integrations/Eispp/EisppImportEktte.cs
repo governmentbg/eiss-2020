@@ -8,7 +8,7 @@ using System.Text;
 namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 {
     // Област Община  тип н.м.Населено място Район   Системен идентификатор  Системно име    ЕКАТЕ Вид От дата До дата
-    public class EisppImportEktte
+    public class EisppEktte
     {
         /// <summary>
         /// Номер на ред от ексела

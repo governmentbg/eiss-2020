@@ -6060,7 +6060,7 @@ namespace IOWebApplication.Infrastructure.Models.Eispp.ActualData
         {
             if ((endpointConfiguration == EndpointConfiguration.TSAKTSTSWebServicePortSoap11))
             {
-                return new System.ServiceModel.EndpointAddress("https://127.0.0.1/service/TSAKTSTSWebService");
+                return new System.ServiceModel.EndpointAddress("$$SECRET$$");
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
         }

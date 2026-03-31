@@ -1,0 +1,145 @@
+﻿@model CaseSelectionProtokolVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    ViewData["Title"] = "Ново разпределяне на заместване";
+ 
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-10  col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseGroupId)
+            @Html.HiddenFor(x => x.CaseCodeId)
+            @Html.HiddenFor(x => x.JudgeRoleId)
+            @Html.HiddenFor(x => x.SelectionModeId)
+            @Html.ValidationSummary()
+
+
+       
+            <div id="lawUnitData">
+                <div class="row">
+
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")</div>
+                   <div class="col-lg-3">@Html.EditorFor(x => x.SubstitudedJudgeId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+
+                    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.DescriptionSubstitution, "String")</div>
+                  </div>
+                
+                            <div id="dataJudge">
+        
+                                <a href="#" id="btnloadUnitsByGroup" onclick="loadUnitsByGroup(); return false;" class="btn btn-primary">Зареди списък</a>
+                           
+
+                            </div>
+                        
+            
+
+
+                <fieldset class="is-fieldset" id="lawUnitListFieldset">
+                    <legend class="legend_1">Участници при разпределение</legend>
+                    <div class="dynamic-form">
+                   
+                        <div id="lawUnitList">
+                            @if (Model.LawUnits.Count() > 0)
+                            {
+                                <partial name="_LoadedLawUnits" model="@Model.LawUnits" />
+                            }
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <br />
+            <br />
+            <br />
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Разпредели" class="btn btn-success single-click-submit" />
+                <a asp-controller="CaseSelectionProtokolSubstitution" asp-action="Index" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var oldJudgeRoleId = 0;
+
+         $(function () {
+           
+                initActLawBaseAutoComplete();
+                initLawUnit();
+            
+
+            
+        });
+
+        
+
+
+        function GetLawUnitsIds()
+        {
+            var ids = "";
+            $('div[class="lawunit item-template"]').each(function (index, item) {
+                if (ids != "")
+                    ids = ids + ",";
+                ids = ids + $(item).data('index');
+            });
+            return ids;
+        }
+
+        
+
+     
+        function loadUnitsByGroup() {
+            var cgId = parseInt($('#CourtGroupId').val(), 10);
+            if (isNaN(cgId) || cgId < 1) { alert('Моля изберете група съд.'); return; }
+
+            $.ajax({
+                url: '@Url.Action("LawUnits_LoadByGroup")',
+                type: 'POST',
+                data: { courtGroupId: cgId,substitutedLawUnitId:$('#SubstitudedJudgeId').val() },
+                success: showLoadedUnits
+            });
+        }
+      
+        function showLoadedUnits(data) {
+                $('#lawUnitList').html(data);
+                var loadedUnitsIndex = $('#lawUnitList').find('.lawunit.item-template').length;
+            ManageButtonLawUnitByCaseGroup();
+        }
+
+        function appendLoadedUnits(data) {
+            $("#lawUnitList").append(data);
+            var loadedUnitsIndex = $('#lawUnitList').find('.lawunit.item-template').length;
+            ManageButtonLawUnitByCaseGroup();
+        }
+    
+      
+
+
+
+    </script>
+    <style>
+        span.list-lawunit-name.disabled {
+            color: #d53c3c;
+            font-style: italic;
+        }
+    </style>
+}

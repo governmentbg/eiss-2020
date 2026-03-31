@@ -25,7 +25,7 @@
     </div>
     @if (!string.IsNullOrEmpty(Model.DescriptionCreated))
     {
-        @Html.DisplayFor(x => x.DescriptionCreated)
+        @Html.DisplayFor(x => x.DescriptionCreated, "obj")
     }
     @Html.EditorFor(x => x.DescriptionRedirect, "textarea")
     @Html.EditorFor(x => x.DateEnd, "DateTime")

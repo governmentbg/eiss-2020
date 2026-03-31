@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -57,6 +58,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         public virtual CourtOrganization ParentOrganization { get; set; }
 
         [ForeignKey(nameof(OrganizationLevelId))]
-        public virtual OrganizationLevel OrganizationLevel { get; set; }        
+        public virtual OrganizationLevel OrganizationLevel { get; set; }
+
+        public virtual ICollection<CourtOrganizationCaseGroup> CaseGroups { get; set; }
     }
 }

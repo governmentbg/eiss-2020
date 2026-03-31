@@ -60,6 +60,16 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
 
+        [Column("date_create")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateCreate { get; set; }
+
+        [Column("reg_number_value")]
+        public int? RegNumberValue { get; set; }
+
+        [Column("reg_number")]
+        public string RegNumber { get; set; }
+
         [ForeignKey(nameof(CaseId))]
         public virtual Case Case { get; set; }
 

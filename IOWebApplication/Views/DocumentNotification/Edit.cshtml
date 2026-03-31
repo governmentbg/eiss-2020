@@ -26,8 +26,7 @@
     var ToCourtId = Model.ToCourtId ?? 0;
     var isPrinted = (Model.DatePrint != null).ToString().ToLower();
     var hideDropDown = (DeliveryItem.IsNotificationStateForOperOnly(Model.NotificationStateId) &&
-                        Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.WithCourier &&
-                        Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.WithCityHall &&
+                        !@NomenclatureConstants.NotificationDeliveryGroup.WithCourierLike(Model.NotificationDeliveryGroupId) &&
                         Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnEMail
                         ).ToString().ToLower();
 
@@ -94,27 +93,25 @@
                                             <div class="col-lg-6">@Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")</div>
                                             <div class="col-lg-6 html-template">@Html.EditorFor(x => x.HtmlTemplateId, "GenericDropDown")</div>
                                         </div>
-                                        <div class="row rajon-add">
-                                            <div class="col-lg-3 text-left pb-15 rajon-add btn-rajon">
-                                                <div class="form-group">
-                                                    <br />
-                                                    <a onclick="getToCourtAndType()" class="btn btn-success col-lg-12">
+                                        <div class="rajon-add">
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-12 col-xs-12 text-left pb-15 rajon-add btn-rajon">
+                                                    <a onclick="getToCourtAndType()" class="btn btn-success col-xs-12">
                                                         <i class="fa fa-address-book"></i>
                                                         Райониране
                                                     </a>
                                                 </div>
-                                            </div>
-                                            <div class="col-lg-3 text-left pb-15 rajon-add btn-rajon">
-                                                <div class="form-group">
-                                                    <br />
-                                                    <a onclick="clearToCourtAndType()" class="btn btn-warning col-lg-12">
+                                                <div class="col-md-6 col-sm-12 col-xs-12 text-left pb-15 rajon-add btn-rajon">
+                                                    <a onclick="clearToCourtAndType()" class="btn btn-warning col-xs-12">
                                                         <i class="fa fa-close"></i>
                                                         Ръчно райониране
                                                     </a>
                                                 </div>
                                             </div>
 
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.ToCourtId, "GenericDropDown")</div>
+                                            <div class="row">
+                                                <div class="col-md-12">@Html.EditorFor(x => x.ToCourtId, "GenericDropDown")</div>
+                                            </div>
                                         </div>
                                         <div class="row rajon-add">
                                             <div class="col-lg-6">@Html.EditorFor(x => x.DeliveryAreaId, "GenericDropDown")</div>
@@ -159,7 +156,7 @@
                                                 }
                                                 else
                                                 {
-                                                    <a onclick="printNotificationRaw(@Model.Id)" class="btn btn-dropbox" title="Печат"><i class="fa fa-print"></i> Печат<span class="hidden-sm hidden-xs"></span></a>
+                                                    <a onclick="printNotificationDocumentRaw(@Model.Id)" class="btn btn-dropbox" title="Печат"><i class="fa fa-print"></i> Печат<span class="hidden-sm hidden-xs"></span></a>
                                                 }
                                             }
 
@@ -212,13 +209,12 @@
                                                 {
                                                     <a asp-controller="DeliveryItemOper" asp-action="IndexDocument" asp-route-notificationId="@Model.Id" class="btn btn-def">Посещения</a>
                                                 }
-                                                @if (DeliveryItem.IsNotificationStateForReturn(Model.NotificationStateId) && (
+                                                @if (DeliveryItem.IsNotificationStateForReturnSection(Model.NotificationStateId) && (
                                                                         Model.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons ||
-                                                                        Model.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithCourier ||
-                                                                        Model.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithCityHall
+                                                                        @NomenclatureConstants.NotificationDeliveryGroup.WithCourierLike(Model.NotificationDeliveryGroupId)
                                                                         ))
                                                 {
-                                                    <a asp-controller="DeliveryItem" asp-action="NotificatiionEditReturnDocument" asp-route-notificationId="@Model.Id" class="btn btn-def">Върнат отрязък</a>
+                                                    <a asp-controller="DeliveryItem" asp-action="NotificationEditReturnDocument" asp-route-notificationId="@Model.Id" class="btn btn-def">Върнат отрязък</a>
                                                 }
                                             </div>
                                         </div>
@@ -261,7 +257,7 @@
             }
         }
         function setReadOnlyAllDatePrint() {
-            $('#editCaseNotification select,#editCaseNotification textarea').each(function (index, value) {
+            $('#editDocumentNotification select,#editDocumentNotification textarea').each(function (index, value) {
                 let isForDisable = (this.id != 'NotificationStateId');
                 if (@isFromEmail) {
                     $rajonContainerThis = $(this).parents('.rajon-add:first');
@@ -320,11 +316,14 @@
             let notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
             let notificationStateId = $("#NotificationStateId").val();
             if (notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ||
-                notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCourier ) {
+                notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCourier  ||
+                notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithRegistry  ||
+                notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithSecurity ) {
+                    // notificationStateId == @NomenclatureConstants.NotificationState.Delivered47 ||
+                    // notificationStateId == @NomenclatureConstants.NotificationState.Delivered50 ||
+                    // notificationStateId == @NomenclatureConstants.NotificationState.Delivered51 ||
+
                 if (notificationStateId == @NomenclatureConstants.NotificationState.Delivered ||
-                    notificationStateId == @NomenclatureConstants.NotificationState.Delivered47 ||
-                    notificationStateId == @NomenclatureConstants.NotificationState.Delivered50 ||
-                    notificationStateId == @NomenclatureConstants.NotificationState.Delivered51 ||
                     notificationStateId == @NomenclatureConstants.NotificationState.UnDelivered) {
                     isAdd = true;
                 }
@@ -496,20 +495,21 @@
         }
 
 
-        function printNotificationRaw(id) {
-            window.open('@Url.Action("PrintPdf", "DocumentNotification")/' + id, '_blank');
-        }
 
         function getToCourtAndType() {
-            var casePersonAddressId = $("#CasePersonAddressId").val();
+            var documentPersonAddressId = $("#DocumentPersonAddressId").val();
             var notificationPersonType = $("#NotificationPersonType").val();
             var lawUnitAddressId = $("#LawUnitAddressId").val();
             $.ajax({
                 type: "POST",
-                url: "@Url.Action("GetDeliveryAreaAndCourt", "DeliveryItem")",
+                url: "@Url.Action("GetDeliveryAreaAndCourtDocument", "DeliveryItem")",
                 dataType: "json",
                 cache: false,
-                data: { notificationPersonType: notificationPersonType, casePersonAddressId: casePersonAddressId, lawUnitAddressId : lawUnitAddressId },
+                data: { 
+                    notificationPersonType, 
+                    documentPersonAddressId, 
+                    lawUnitAddressId 
+                },
                 success: function (response) {
                     $('#ToCourtId').empty().trigger("change");
                     if (response.toCourtDDL2 && response.toCourtDDL2 != null) {
@@ -721,6 +721,7 @@
         $(function () {
             var table = $('#documentPersonLinks').DataTable({
                 data: dataSet,
+                processing: false,
                 serverSide: false,
                 'order': [[1, 'asc']],
                 "paging": false,
@@ -747,7 +748,7 @@
                     {
                         name: 'linkLabel',
                         data: 'linkLabel',
-                        title: 'Представлявание',
+                        title: 'Представлявани лица',
                         sortable: true,
                         searchable: false
                     }
@@ -784,7 +785,7 @@
         $('#editDocumentNotification').submit(function () {
             $('#documentPersonLinksJson').val(JSON.stringify(dataSet));
         });
-        
+
     </script>
 }
 <partial name="_CdnScript" />

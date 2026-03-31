@@ -5,7 +5,7 @@
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 }
 
-@section breadcrumb{
+@section breadcrumb {
     <partial name="Breadcrumbs" model="@ViewBag.breadcrumbs" />
 }
 
@@ -23,10 +23,23 @@
                 Обединяване
             </a>
             &nbsp;&nbsp;
+            <a asp-action="MergerCasesFastProcess" asp-controller="Case" asp-route-caseId="@(ViewBag.caseId)" class="btn btn-warning btn-sm">
+                <i class="fa fa-link"></i>
+                Свързване 
+            </a>
+            &nbsp;&nbsp;
             <a asp-action="AcceptToUse" asp-route-caseId="@(ViewBag.caseId)" class="btn btn-warning btn-sm">
                 <i class="fa fa-check"></i>
                 Приемане
             </a>
+            @if (ViewBag.initMigration == true)
+            {
+                <text>&nbsp; &nbsp;</text>
+                <a asp-action="ConnectWithPriorCase" asp-route-caseId="@(ViewBag.caseId)" class="btn btn-primary btn-sm">
+                    <i class="fa fa-check"></i>
+                    Свържи с предходно дело
+                </a>
+            }
         </div>
     </div>
 }
@@ -48,6 +61,7 @@
                         d.caseId = @((int)ViewBag.caseId);
                     }
                 },
+                "stateSave": false,
                 sortable: false,
                 searchable: false,
                 columns: [
@@ -93,6 +107,13 @@
                         searchable: false
                     },
                     {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание/Резултат',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
                         name: 'caseSessionAct',
                         data: 'caseSessionAct',
                         title: 'Акт',
@@ -105,7 +126,7 @@
                         title: 'Изпратено от',
                         sortable: false,
                         searchable: false,
-                         render: function (a, b, item, d) {
+                        render: function (a, b, item, d) {
                             if (item.migrationDirection == @(NomenclatureConstants.CaseMigrationDirections.Incoming) && !item.sendToCortId) {
                                 return item.sentToName;
                             } else {
@@ -145,25 +166,29 @@
                         searchable: false,
                         className: "text-center noExport",
                         "render": function (a, b, item, d) {
+                            let result = '';
                             if (item.canAccept) {
-                                return TemplateToHtml('#templateAccept', item.id);
+                                result += TemplateToHtml('#templateAccept', item);
                             }
                             if (item.canEdit) {
-                                return TemplateToHtml('#templateEdit', item.id);
+                                result += TemplateToHtml('#templateEdit', item.id);
                             }
-                            return "";
+                            if (item.canPreviewOutCase) {
+                                result += TemplateToHtml('#templateOutCase', item);
+                            }
+                            return result;
                         }
                     }
                 ]
             });
         });
 
-        function acceptMigration(id) {
+        function acceptMigration(id, isNewInterval) {
             swalConfirm('Потвърдете приемането на делото в рамките на текущото производство!', function () {
                 postContent('@Url.Action("AcceptMigration")'
-                    , { id: id, caseId: @((int)ViewBag.caseId) }, function () {
+                    , { id: id, caseId: @((int)ViewBag.caseId), isNewInterval: isNewInterval }, function () {
                         document.location.href = document.location.href;
-                })
+                    })
             });
         }
     </script>
@@ -171,14 +196,20 @@
     <script id="templateEdit" type="text/x-handlebars-template">
         @if (access.CanChange)
         {
-            <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+                                <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
         }
         else
         {
-            <a href="@Url.Action("Edit")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+                                <a href="@Url.Action("Edit")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
         }
     </script>
     <script id="templateAccept" type="text/x-handlebars-template">
-        <a onclick="acceptMigration({{this}}); return false;" class="btn btn-def btn-sm"><i class="fa fa-check"></i>Приеми</a>
+        <a onclick="acceptMigration('{{id}}'); return false;" class="btn btn-def btn-sm"><i class="fa fa-check"></i>Приеми</a>
+        {{#if hasAcceptWithInterval}}
+            <a onclick="acceptMigration('{{id}}', true); return false;" class="btn btn-def btn-sm"><i class="fa fa-check"></i>Приеми + нов интервал</a>
+        {{/if}}
+    </script>
+    <script id="templateOutCase" type="text/x-handlebars-template">
+        <a href="@Url.Action("EpepShowResultCase", "Epep")?inMigrationId={{id}}" class="btn btn-def btn-sm"><i class="fa fa-output"></i>Свързано дело</a>
     </script>
 }

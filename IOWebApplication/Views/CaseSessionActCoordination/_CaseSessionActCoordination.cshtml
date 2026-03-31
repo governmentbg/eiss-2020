@@ -1,71 +1,93 @@
 ﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Models.ViewModels
-
+@inject IUserContext userContext
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool hasActCoordinations = ViewBag.hasActCoordinations ?? false;
+    bool hasMotiveCoordinations = ViewBag.hasMotiveCoordinations ?? false;
 }
 
 <div class="row">
     <div class="col-md-12">
-        <table id="caseSessionActCoordinationMainTable" class="table table-hover table-striped"></table>
+        @if (hasActCoordinations)
+        {
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Съдебен акт</legend>
+                <table id="dtActCoordination" class="table table-hover table-striped"></table>
+            </fieldset>
+        }
+        @if (hasMotiveCoordinations && userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+        {
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Мотиви</legend>
+                <table id="dtMotiveCoordination" class="table table-hover table-striped"></table>
+            </fieldset>
+        }
     </div>
 </div>
 
 <script>
-        $(function () {
-            var table = $('#caseSessionActCoordinationMainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("ListData", "CaseSessionActCoordination")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.CaseSessionActId = @Model.CaseSessionActId;
-                    }
+    $(function () {
+    @if (hasActCoordinations)
+    {
+        <text>
+                    initCoordinationTables('#dtActCoordination', @(NomenclatureConstants.CoordinationTypes.Act));
+        </text>
+    }
+
+    @if (hasMotiveCoordinations && userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+    {
+        <text>initCoordinationTables('#dtMotiveCoordination', @(NomenclatureConstants.CoordinationTypes.Motive));</text>
+    }
+                        });
+    function initCoordinationTables(tableContainer, coordinationType) {
+        var table = $(tableContainer).DataTable({
+            ajax: {
+                "url": "@Url.Action("ListData", "CaseSessionActCoordination")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.CaseSessionActId = @(Model.CaseSessionActId);
+                    d.CoordinationType = coordinationType;
+                }
+            },
+            columns: [
+                {
+                    name: 'caseLawUnitName',
+                    data: 'caseLawUnitName',
+                    title: 'Съдия',
+                    sortable: true,
+                    searchable: true
                 },
-                columns: [
-                    {
-                        name: 'caseLawUnitName',
-                        data: 'caseLawUnitName',
-                        title: 'Съдия',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'judgeRoleLabel',
-                        data: 'judgeRoleLabel',
-                        title: 'Роля',
-                        sortable: true,
-                        searchable: true
-                    },
-                    //{
-                    //    name: 'content',
-                    //    data: 'content',
-                    //    title: 'Особено мнение',
-                    //    sortable: true,
-                    //    searchable: true
-                    //},
-                    {
-                        name: 'actCoordinationTypeLabel',
-                        data: 'actCoordinationTypeLabel',
-                        title: 'Статус',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'actions',
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (a, b, item, d) {
-                            return TemplateToHtml('#caseSessionActCoordinationTemplateEdit', item);
-                        }
+                {
+                    name: 'judgeRoleLabel',
+                    data: 'judgeRoleLabel',
+                    title: 'Роля',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'actCoordinationTypeLabel',
+                    data: 'actCoordinationTypeLabel',
+                    title: 'Статус',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'actions',
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (a, b, item, d) {
+                        return TemplateToHtml('#caseSessionActCoordinationTemplateEdit', item);
                     }
-                ]
-            });
-
-
+                }
+            ]
         });
+    }
 </script>
 
 <script id="caseSessionActCoordinationTemplateEdit" type="text/x-handlebars-template">

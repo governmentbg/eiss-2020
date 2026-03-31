@@ -19,6 +19,9 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants;
 using IOWebApplication.Infrastructure.Constants;
 using System.Linq.Expressions;
+using IOWebApplication.Core.Extensions;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
+using NPOI.Util;
 
 namespace IOWebApplication.Core.Services
 {
@@ -37,9 +40,26 @@ namespace IOWebApplication.Core.Services
         {
             return c => (c.TVM ?? "") + " " + (c.Name ?? "");
         }
+        public IQueryable<SelectListItem> GetEkktteSobrQuery()
+        {
+            return repo.AllReadonly<EkEkatte>()
+                             .Select(x => new SelectListItem
+                             {
+                                 Value = x.Ekatte,
+                                 Text = (x.TVM ?? "") + " " + (x.Name ?? "")
+                             })
+                             .Union(
+                         repo.AllReadonly<EkSobr>()
+                             .Select(x => new SelectListItem
+                             {
+                                 Value = x.Ekatte,
+                                 Text = x.Name
+                             })
+                );
+        }
         public IQueryable<DeliveryAreaAddressVM> DeliveryAreaAddressSelect(DeliveryAreaAddressFilterVM filter)
         {
-            var cities = repo.AllReadonly<EkEkatte>().AsQueryable();
+            var cities = GetEkktteSobrQuery();
             var streets = repo.AllReadonly<EkStreet>().AsQueryable();
             var numberTypes = repo.AllReadonly<DeliveryNumberType>().AsQueryable();
             var result = repo.AllReadonly<DeliveryAreaAddress>()
@@ -55,7 +75,7 @@ namespace IOWebApplication.Core.Services
                 .Select(x => new DeliveryAreaAddressVM()
                 {
                     Id = x.Id,
-                    City = cities.Where(c => c.Ekatte == x.CityCode).Select(EkatteCityName()).FirstOrDefault(),
+                    City = cities.Where(c => c.Value == x.CityCode).Select(x => x.Text).FirstOrDefault(),
                     Street = streets.Where(s => s.Code == x.StreetCode && s.Ekatte == x.CityCode).Select(c => c.Name).FirstOrDefault(),
                     ResidentionArea = streets.Where(s => s.Code == x.ResidentionAreaCode && s.Ekatte == x.CityCode).Select(c => c.Name).FirstOrDefault(),
                     NumberType = numberTypes.Where(n => n.Id == x.NumberType).Select(c => c.Label).FirstOrDefault(),
@@ -67,6 +87,7 @@ namespace IOWebApplication.Core.Services
                     DateExpired = x.DateExpired
                 })
                 .AsQueryable();
+            //var sss = result.ToSql();
             return result;
         }
         public bool DeliveryAreaAddressSaveData(DeliveryAreaAddress model)
@@ -112,7 +133,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на адреси към райони за разнос към съд Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на адреси към райони за разнос към съд Id={model.Id}");
                 return false;
             }
         }
@@ -151,8 +172,21 @@ namespace IOWebApplication.Core.Services
                 .Select(x => new SelectListItem()
                 {
                     Value = x.e.Ekatte.ToString(),
-                    Text = (x.e.TVM ?? "") + " " + (x.e.Name ?? "") + " общ. " + (x.e.Munincipality.Name ?? "")
+                    Text = (x.e.TVM ?? "") + " " + (x.e.Name ?? "") + " общ. " + (x.e.Munincipality.Name ?? ""),
                 }).ToList();
+
+            var sobrs = repo.AllReadonly<EkSobr>().ToList();
+            var municipalitiesList = municipalities.ToList();
+            sobrs = sobrs.Where(x => result.Any(r => x.Area1.Contains(r.Value)) ||
+                                     municipalitiesList.Any(r => x.Area1.Contains(r.Municipality)))
+                         .ToList();
+            var sobr = sobrs.Select(s => new SelectListItem
+            {
+                Value = s.Ekatte,
+                Text = s.Name,
+            });
+            result.AddRange(sobr);
+            result = result.OrderBy(x => x.Text).ToList();
             result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
             return result;
         }
@@ -192,11 +226,35 @@ namespace IOWebApplication.Core.Services
         {
             List<DeliveryAreaAddress> deliveryAddressesListSpecial = null;
             int? courtDelivererId = null;
-            if (!string.IsNullOrEmpty(address?.CityCode)) {
+            if (!string.IsNullOrEmpty(address?.CityCode))
+            {
                 var munincipality = repo.AllReadonly<EkEkatte>()
                                .Where(c => c.Ekatte == address.CityCode)
                                .Select(x => x.Munincipality.Municipality)
                                .FirstOrDefault();
+                if (string.IsNullOrEmpty(munincipality))
+                {
+                    var sobr = repo.AllReadonly<EkSobr>()
+                                   .Where(c => c.Ekatte == address.CityCode)
+                                   .FirstOrDefault();
+                    if (sobr != null)
+                    {
+                        var from = sobr.Area1.IndexOf("(");
+                        var to = sobr.Area1.IndexOf(")");
+                        var code = sobr.Area1.Substring(from + 1, to - from - 1);
+                        if (int.TryParse(code, out _))
+                        {
+                            munincipality = repo.AllReadonly<EkEkatte>()
+                               .Where(c => c.Ekatte == code)
+                               .Select(x => x.Munincipality.Municipality)
+                               .FirstOrDefault();
+                        }
+                        else
+                        {
+                            munincipality = code;
+                        }
+                    }
+                }
                 if (!string.IsNullOrEmpty(munincipality))
                 {
                     var courtDeliverer = repo.AllReadonly<CourtDeliverer>()
@@ -206,7 +264,7 @@ namespace IOWebApplication.Core.Services
                     courtDelivererId = courtDeliverer?.DeivererCourtId;
                     if (courtDelivererId != null)
                     {
-                        deliveryAddressesListSpecial = deliveryAddressesList.Where(x => x.DeliveryArea.CourtId == courtDelivererId).ToList(); 
+                        deliveryAddressesListSpecial = deliveryAddressesList.Where(x => x.DeliveryArea.CourtId == courtDelivererId).ToList();
                     }
                 }
             }
@@ -292,16 +350,26 @@ namespace IOWebApplication.Core.Services
                        (x.DeliveryArea.DateTo ?? DateTime.MaxValue) >= DateTime.Now.Date;
         }
 
-        private DeliveryAreaFindVM DeliveryAreaAddressBlockNameFind(Address address, bool equalStreet,int courtId)
+        private DeliveryAreaFindVM DeliveryAreaAddressBlockNameFind(Address address, bool equalStreet, int courtId)
         {
+            //var deliveryAddresses = repo.AllReadonly<DeliveryAreaAddress>()
+            //                        .Include(x => x.DeliveryArea)
+            //                        .Where(isActiveNow())
+            //                        .Where(x => x.CityCode == address.CityCode &&
+            //                                    x.NumberType == DeliveryAddressNumberType.BlockName &&
+            //                                    CyrillicVisualName(x.BlockName) == CyrillicVisualName(address.SubBlock));
             var deliveryAddresses = repo.AllReadonly<DeliveryAreaAddress>()
                                     .Include(x => x.DeliveryArea)
                                     .Where(isActiveNow())
                                     .Where(x => x.CityCode == address.CityCode &&
-                                                x.NumberType == DeliveryAddressNumberType.BlockName &&
-                                                CyrillicVisualName(x.BlockName) == CyrillicVisualName(address.SubBlock));
+                                                x.NumberType == DeliveryAddressNumberType.BlockName)
+                                    .Where(expressionCyrillicVisualName(address.SubBlock));
             if (!string.IsNullOrEmpty(address.ResidentionAreaCode))
+            {
                 deliveryAddresses = deliveryAddresses.Where(x => x.ResidentionAreaCode == address.ResidentionAreaCode);
+            }
+            if (!string.IsNullOrEmpty(address.StreetCode) && string.IsNullOrEmpty(address.ResidentionAreaCode) && ((address.StreetNumber ?? 0) == 0))
+                deliveryAddresses = deliveryAddresses.Where(x => x.StreetCode == address.StreetCode);
             if ((address.Block ?? 0) == 0)
             {
                 deliveryAddresses = deliveryAddresses.Where(x => x.NumberFrom == 0 || x.NumberFrom == null);
@@ -319,13 +387,23 @@ namespace IOWebApplication.Core.Services
 
         private DeliveryAreaFindVM DeliveryAreaAddressNumberNameFind(Address address, bool equalResidentionArea, int courtId)
         {
+            //var deliveryAddresses = repo.AllReadonly<DeliveryAreaAddress>()
+            //                        .Include(x => x.DeliveryArea)
+            //                        .Where(isActiveNow())
+            //                        .Where(x => x.CityCode == address.CityCode &&
+            //                                    x.NumberType == DeliveryAddressNumberType.NumberName &&
+            //                                    x.NumberFrom == address.StreetNumber &&
+            //                                    CyrillicVisualName(x.BlockName) == CyrillicVisualName(address.SubNumber));
+
             var deliveryAddresses = repo.AllReadonly<DeliveryAreaAddress>()
                                     .Include(x => x.DeliveryArea)
                                     .Where(isActiveNow())
                                     .Where(x => x.CityCode == address.CityCode &&
                                                 x.NumberType == DeliveryAddressNumberType.NumberName &&
-                                                x.NumberFrom == address.StreetNumber &&
-                                                CyrillicVisualName(x.BlockName) == CyrillicVisualName(address.SubNumber));
+                                                x.NumberFrom == address.StreetNumber)
+                                    .Where(expressionCyrillicVisualName(address.SubNumber));
+
+
             if (equalResidentionArea && !string.IsNullOrEmpty(address.ResidentionAreaCode))
                 deliveryAddresses = deliveryAddresses.Where(x => x.ResidentionAreaCode == address.ResidentionAreaCode);
             if (!string.IsNullOrEmpty(address.StreetCode))
@@ -365,6 +443,41 @@ namespace IOWebApplication.Core.Services
                 deliveryAddresses = deliveryAddresses.Where(x => x.ResidentionAreaCode == address.ResidentionAreaCode);
 
             if (equalStreet && !string.IsNullOrEmpty(address.StreetCode))
+                deliveryAddresses = deliveryAddresses.Where(x => x.StreetCode == address.StreetCode);
+            var deliveryAddressesList = deliveryAddresses
+                                           .OrderBy(x => (x.NumberTo ?? maxNum) - (x.NumberFrom ?? 0))
+                                           .ToList();
+            return DeliveryAreaAddressOnlyOneFromList(deliveryAddressesList, courtId, address);
+        }
+
+        // Адреси с улица и блок така са във Варна
+        private DeliveryAreaFindVM DeliveryAreaAddressResidentionAreaFind_Varna(Address address, int courtId)
+        {
+            int block = (address.Block ?? 0);
+            if (block <= 0 && string.IsNullOrEmpty(address.SubBlock))
+                return DeliveryAreaAddressOnlyOneFromList(new List<DeliveryAreaAddress>(), courtId, address);
+            if (!string.IsNullOrEmpty(address.SubBlock))
+            {
+                var blockResult = DeliveryAreaAddressBlockNameFind(address, true, courtId);
+                if (blockResult.DeliveryAreaAddressList.Any() || (address.Block ?? 0) == 0)
+                    return blockResult;
+            }
+            int maxNum = 99999;
+            int typeNum = 0;
+            if (block % 2 == 0)
+                typeNum = DeliveryAddressNumberType.BlockEven;
+            else
+                typeNum = DeliveryAddressNumberType.BlockOdd;
+
+            var deliveryAddresses = repo.AllReadonly<DeliveryAreaAddress>()
+                                    .Include(x => x.DeliveryArea)
+                                    .Where(isActiveNow())
+                                    .Where(x => x.CityCode == address.CityCode &&
+                                                string.IsNullOrEmpty(x.BlockName) &&
+                                                (x.NumberType == typeNum || x.NumberType == DeliveryAddressNumberType.Block) &&
+                                                (x.NumberFrom ?? 0) <= block &&
+                                                block <= (x.NumberTo ?? maxNum));
+            if (!string.IsNullOrEmpty(address.StreetCode))
                 deliveryAddresses = deliveryAddresses.Where(x => x.StreetCode == address.StreetCode);
             var deliveryAddressesList = deliveryAddresses
                                            .OrderBy(x => (x.NumberTo ?? maxNum) - (x.NumberFrom ?? 0))
@@ -416,12 +529,25 @@ namespace IOWebApplication.Core.Services
             if (address == null)
                 return null;
             // Търсене по квартал улица и блок
-            if (!string.IsNullOrEmpty(address.StreetCode) || !string.IsNullOrEmpty(address.ResidentionAreaCode))
+            if (!string.IsNullOrEmpty(address.StreetCode) && !string.IsNullOrEmpty(address.ResidentionAreaCode))
             {
                 var deliveryAreaFind = DeliveryAreaAddressResidentionAreaFind(address, true, courtId);
                 if (deliveryAreaFind.IsFoundArea())
                     return deliveryAreaFind;
             }
+            // Търсене по улица/булевард и блок Варна
+            if (!string.IsNullOrEmpty(address.StreetCode) &&
+                string.IsNullOrEmpty(address.ResidentionAreaCode) &&
+                ((address.StreetNumber ?? 0) == 0) &&
+                ((address.Block ?? 0) != 0)
+               )
+            {
+                var deliveryAreaFind = DeliveryAreaAddressResidentionAreaFind_Varna(address, courtId);
+                if (deliveryAreaFind.IsFoundArea())
+                    return deliveryAreaFind;
+            }
+
+
             // Търсене по квартал и блок
             if (!string.IsNullOrEmpty(address.ResidentionAreaCode))
             {
@@ -468,7 +594,20 @@ namespace IOWebApplication.Core.Services
 
             return DeliveryAreaAddressFind(address, courtId);
         }
-        public DeliveryAreaFindVM DeliveryAreaAddressIdFind(int AddressId, int courtId)
+        public DeliveryAreaFindVM DeliveryAreaDocumentPersonAddressIdFind(int documentPersonAddressId, int courtId)
+        {
+            if (documentPersonAddressId <= 0)
+                return DeliveryAreaAddressOnlyOneFromList(new List<DeliveryAreaAddress>(), courtId, null);
+            Address address = repo.AllReadonly<DocumentPersonAddress>()
+                                    .Where(x => x.Id == documentPersonAddressId)
+                                    .Include(x => x.Address)
+                                    .Select(x => x.Address)
+                                    .FirstOrDefault();
+
+            return DeliveryAreaAddressFind(address, courtId);
+        }
+
+        public DeliveryAreaFindVM DeliveryAreaAddressIdFind(long AddressId, int courtId)
         {
             if (AddressId <= 0)
                 return null;
@@ -489,7 +628,7 @@ namespace IOWebApplication.Core.Services
                                     .Where(x => x.Id == lawUnitId)
                                     .Select(x => x.FullName)
                                     .FirstOrDefault();
-            model.City = repo.AllReadonly<EkEkatte>().Where(c => c.Ekatte == deliveryAddr.CityCode).Select(EkatteCityName()).FirstOrDefault();
+            model.City = GetEkktteSobrQuery().Where(c => c.Value == deliveryAddr.CityCode).Select(x => x.Text).FirstOrDefault();
             model.Street = repo.AllReadonly<EkStreet>().Where(s => s.Code == deliveryAddr.StreetCode && s.Ekatte == deliveryAddr.CityCode).Select(c => c.Name).FirstOrDefault();
             model.ResidentionArea = repo.AllReadonly<EkStreet>().Where(s => s.Code == deliveryAddr.ResidentionAreaCode && s.Ekatte == deliveryAddr.CityCode).Select(c => c.Name).FirstOrDefault();
             model.NumberType = repo.AllReadonly<DeliveryNumberType>().Where(n => n.Id == deliveryAddr.NumberType).Select(c => c.Label).FirstOrDefault();
@@ -536,7 +675,9 @@ namespace IOWebApplication.Core.Services
                                   deliveryAddr.NumberType == DeliveryAddressNumberType.EvenNumber ||
                                   deliveryAddr.NumberType == DeliveryAddressNumberType.OddNumber ||
                                   deliveryAddr.NumberType == DeliveryAddressNumberType.OddEvenNumber ||
-                                  x.ResidentionAreaCode == deliveryAddr.ResidentionAreaCode
+                                  (x.ResidentionAreaCode == deliveryAddr.ResidentionAreaCode &&
+                                   (!string.IsNullOrEmpty(x.ResidentionAreaCode) || x.StreetCode == deliveryAddr.StreetCode)
+                                  )
                                 ) &&
                                 (
                                  ((x.NumberFrom ?? 0) <= (deliveryAddr.NumberFrom ?? 0) && (deliveryAddr.NumberFrom ?? 0) <= (x.NumberTo ?? maxNum)) ||
@@ -564,14 +705,14 @@ namespace IOWebApplication.Core.Services
                 }
             }
             deliveryAddress2 = deliveryAddress2.OrderBy(x => x.CityCode).ThenBy(x => x.ResidentionAreaCode ?? "").ThenBy(x => x.StreetCode ?? "").ThenBy(x => x.NumberFrom ?? 0).ToList();
-            var cities = repo.AllReadonly<EkEkatte>().AsQueryable();
+            var cities = GetEkktteSobrQuery(); 
             var streets = repo.AllReadonly<EkStreet>().AsQueryable();
             var numberTypes = repo.AllReadonly<DeliveryNumberType>().AsQueryable();
             return deliveryAddress2.Select(x => new DeliveryAreaAddressVM()
             {
                 Id = x.Id,
                 AreaName = x.DeliveryArea.Description,
-                City = cities.Where(c => c.Ekatte == x.CityCode).Select(EkatteCityName()).FirstOrDefault(),
+                City = cities.Where(c => c.Value == x.CityCode).Select(c => c.Text).FirstOrDefault(),
                 ResidentionArea = streets.Where(s => s.Code == x.ResidentionAreaCode && s.Ekatte == x.CityCode).Select(c => c.Name).FirstOrDefault(),
                 Street = streets.Where(s => s.Code == x.StreetCode && s.Ekatte == x.CityCode).Select(c => c.Name).FirstOrDefault(),
                 NumberType = numberTypes.Where(n => n.Id == x.NumberType).Select(c => c.Label).FirstOrDefault(),
@@ -639,6 +780,13 @@ namespace IOWebApplication.Core.Services
                 logger.LogError(ex, $"Грешка при запис на улици към райони");
                 return false;
             }
+        }
+        private Expression<Func<DeliveryAreaAddress, bool>> expressionCyrillicVisualName(string blockName)
+        {
+            var cyrillicBlockName = string.Join("", blockName.ToUpper().ToCharArray().Select(x => VisualLetterEnBg.ContainsKey(x) ? VisualLetterEnBg[x] : x));
+            var latinBlockName = string.Join("", blockName.ToUpper().ToCharArray().Select(x => VisualLetterEnBgGetLatin(x)));
+            Expression<Func<DeliveryAreaAddress, bool>> sameCyrillic = x => EF.Functions.ILike(x.BlockName, cyrillicBlockName) || EF.Functions.ILike(x.BlockName, latinBlockName);
+            return sameCyrillic;
         }
         private string CyrillicVisualName(string blockName)
         {

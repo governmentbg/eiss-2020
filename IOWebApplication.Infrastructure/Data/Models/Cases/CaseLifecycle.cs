@@ -71,6 +71,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
 
+        [Column("parent_id")]
+        public int? ParentId { get; set; }
+
+        [Column("case_migration_id")]
+        public int? CaseMigrationId { get; set; }
+
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
 
@@ -88,5 +94,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CaseSessionResultId))]
         public virtual CaseSessionResult CaseSessionResult { get; set; }
+
+        [ForeignKey(nameof(ParentId))]
+        public virtual CaseLifecycle ParentCaseLifecycle { get; set; }
+
+        [ForeignKey(nameof(CaseMigrationId))]
+        public virtual CaseMigration CaseMigration { get; set; }
     }
 }

@@ -156,8 +156,8 @@
                         sortable: false,
                         searchable: false,
                         className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#casePersonTemplateEdit', value);
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#casePersonTemplateEdit', row);
                         }
                     }
                 ]
@@ -167,5 +167,5 @@
 </script>
 
 <script id="casePersonTemplateEdit" type="text/x-handlebars-template">
-    <a href="@Url.Action("CasePreview", "Case")?id={{this}}" target="_blank" class="btn btn-dropbox btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    <a href="@Url.Action("CasePreview", "Case")?id={{caseId}}" target="_blank" class="btn btn-dropbox btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
 </script>

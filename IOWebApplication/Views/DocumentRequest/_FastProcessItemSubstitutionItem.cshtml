@@ -1,0 +1,38 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessItemSubstitutionClaimVM
+@{
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+
+<tr data-index="@Model.Index" class="item-template">
+    <td class="item-number" data-gid="@Model.Gid">
+        @(Model.Index + 1)
+    </td>
+    <td>
+        <input class="form-control" asp-for="@Model.TypeName" type="text" />
+        <span class="text-danger" asp-validation-for="TypeName"></span>
+    </td>
+    <td>
+        <input class="form-control" asp-for="@Model.QuantityText" type="text" />
+    </td>
+
+    <td>
+        @if (isInEuro)
+        {
+            @Html.EditorFor(x => x.TotalAmountEUR, "DecimalInline")
+        }
+        else
+        {
+            @Html.EditorFor(x => x.TotalAmountBGN, "DecimalInline")
+        }
+
+
+    </td>
+    <td>
+    </td>
+    <td>
+        <a class="btn remove-item" aria-label="Премахни" title="Премахни паричното вземане" data-alert="Потвърди премахване на вземането за предаване на заместими вещи!"><i class="fa fa-remove"></i></a>
+        @Html.HiddenFor(x => x.Gid)
+        <input type="hidden" class="item-index" name="@(nameof(FastProcessRequestVM.ItemSubstitutionClaims)).Index" value="@Model.Index" />
+    </td>
+</tr>

@@ -1,0 +1,108 @@
+﻿@model FilterTemplatesSpecializedReportEditVM
+
+@{
+    ViewData["Title"] = "Добавяне/редакция на шаблон";
+}
+
+@section breadcrumb{
+<ol class="breadcrumb">
+    <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    <li><a href="@Url.Action("IndexFilterTemplatesSpecializedReport","Common")">Шаблони за филтър на справки</a></li>
+</ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditFilterTemplatesSpecializedReport" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.FilterTemplateTypeId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.Label)</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.CourtId, "GenericSelect2")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.InstanceId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.CaseClassificationIds, "GenericDropDownMultipleArray")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.ActComplainResultId, "GenericSelect2")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.CaseStateId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.CaseGroupIds, "GenericDropDownMultipleArray")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.CaseTypeIds, "GenericDropDownMultipleArray")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SpecializedReportFilter.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.SpecializedReportFilter.DateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.SpecializedReportFilter.DateTo, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.SpecializedReportFilter.ActInforcedDateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.SpecializedReportFilter.ActInforcedDateTo, "DateTime")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="Common" asp-action="IndexFilterTemplatesSpecializedReport" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#SpecializedReportFilter_CaseGroupIds').select2({ language: "bg" });
+            $('#SpecializedReportFilter_CaseTypeIds').select2({ language: "bg" });
+            $('#SpecializedReportFilter_CaseCodeIds').select2({ language: "bg" });
+            $('#SpecializedReportFilter_CourtId').select2({ language: "bg" });
+            $('#SpecializedReportFilter_CaseClassificationIds').select2({ language: "bg" });
+            $('#SpecializedReportFilter_ActComplainResultId').select2({ language: "bg" });
+
+            cgStr = '@Model.SpecializedReportFilter.StringCaseGroupIds';
+            var cgSelectedValues = cgStr.split(",");
+            $('#SpecializedReportFilter_CaseGroupIds').val(cgSelectedValues).trigger('change');
+           
+            cStr = '@Model.SpecializedReportFilter.StringCaseClassificationIds';
+            var cSelectedValues = cStr.split(",");
+            $('#SpecializedReportFilter_CaseClassificationIds').val(cSelectedValues).trigger('change');
+        });
+
+        $('#SpecializedReportFilter_CaseGroupIds').change(function () {
+            CaseGroupChange();
+        });
+
+        function CaseGroupChange() {
+            var str = '';
+            if ($('#SpecializedReportFilter_CaseGroupIds').val() !== null && $('#SpecializedReportFilter_CaseGroupIds').val().length > 0) {
+                str = $('#SpecializedReportFilter_CaseGroupIds').val().join(',');
+            }
+            requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#SpecializedReportFilter_CaseTypeIds', '@(Model.SpecializedReportFilter.StringCaseTypeIds)', function () { $('#SpecializedReportFilter_CaseTypeIds').trigger('change') });
+        }
+
+        $('#SpecializedReportFilter_CaseTypeIds').change(function () {
+            CaseTypeChange();
+        });
+
+        function CaseTypeChange() {
+            var str = '';
+            if ($('#SpecializedReportFilter_CaseTypeIds').val() !== null && $('#SpecializedReportFilter_CaseTypeIds').val().length > 0) {
+                str = $('#SpecializedReportFilter_CaseTypeIds').val().join(',');
+            }
+            requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: str }, '#SpecializedReportFilter_CaseCodeIds', '@(Model.SpecializedReportFilter.StringCaseCodeIds)', function () { $('#SpecializedReportFilter_CaseCodeIds').trigger('change') });
+        }
+    </script>
+}

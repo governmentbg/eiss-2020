@@ -87,7 +87,7 @@
         <div class="timeline-item">
             <span class="time"><i class="fa fa-user"></i> @Model.CaseSessionNotificationLists.Count()бр.</span>
 
-            <h3 class="timeline-header"><a href="#">Списък на призованите/уведомените/съобщените лица</a></h3>
+            <h3 class="timeline-header"><a href="#">Списък на призованите/уведомените лица</a></h3>
             <div class="timeline-body hidden">
                 @if (Model.CaseSessionNotificationLists.Any(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList || x.NotificationListTypeId == null))
                 {
@@ -278,7 +278,7 @@
                 {
                     <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
                         @{
-                            var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + " (Дата на постановяване: " + (caseSessionAct.ActDeclaredDate ?? DateTime.Now).ToString("dd.MM.yyyy") + ")";
+                            var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + " (Дата на постановяване: " + (caseSessionAct.ActDeclaredDate ?? DateTime.Now).ToString("dd.MM.yyyy") + ")" + (!string.IsNullOrEmpty(caseSessionAct.ActCoordinationLabel) ? " с " + caseSessionAct.ActCoordinationLabel : string.Empty);
                         }
                         <div>
                             @Html.Raw("<i class='fa fa-file-text'></i> " + row)

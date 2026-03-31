@@ -7,6 +7,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 {
     public class CaseFirstInstanceReportVM
     {
+        public int CaseId { get; set; }
+
+        public long DocumentId { get; set; }
+
+        public int CourtId { get; set; }
+
         public int CaseLifecycleMonths { get; set; }
 
         public int CaseTypeId { get; set; }
@@ -52,6 +58,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Резултат от делото")]
         public string Result { get; set; }
+
+        public string ResultSentence { get; set; }
 
         [Display(Name = "е изпратено на др. инстанция ")]
         public string SendOtherInstance { get; set; }
@@ -108,7 +116,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
             get
             {
                 string result = "";
-                if (IsNewNumber)
+                if (AcceptedCh80 == true) //Ако има прието такова движение не може да влезе в никое от другите условия
+                    return "Постъпили дела по чл. 80, ал.10 ПАС";
+                else if (IsNewNumber)
                     result = "върнато за ново разглеждане под нов номер";
                 else if (AcceptJurisdiction)
                     result = "по подсъдност";
@@ -120,6 +130,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
                 return result;
             }
         }
+
+        public bool IsNewCaseNewNumber { get; set; }
+
+        public bool AcceptedCh80 { get; set; }
     }
 
     public class CaseFirstInstanceFilterReportVM

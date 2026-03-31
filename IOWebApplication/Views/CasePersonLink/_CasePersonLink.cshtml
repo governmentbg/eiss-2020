@@ -1,7 +1,6 @@
 ﻿@model CaseMainDataVM
+@using IOWebApplication.Core.Contracts
 @using IOWebApplication.Infrastructure.Models.ViewModels
-@inject IViewLocalizer Localizer
-
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 }
@@ -30,104 +29,104 @@
 
 
 <script>
-        $(function () {
-            var table = $('#casePersonLinkMainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("ListData", "CasePersonLink")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.caseId = @Model.Id;
+    $(function () {
+        var table = $('#casePersonLinkMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListData", "CasePersonLink")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseId = @Model.Id;
+                }
+            },
+            columns: [
+                {
+                    name: 'casePersonName',
+                    data: 'casePersonName',
+                    title: 'Страна',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'linkDirectionName',
+                    data: 'linkDirectionName',
+                    title: 'Ред на представляване',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'casePersonRelName',
+                    data: 'casePersonRelName',
+                    title: 'Упълномощено лице',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'linkDirectionSecondName',
+                    data: 'linkDirectionSecondName',
+                    title: 'Ред на представляване',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'casePersonSecondRelName',
+                    data: 'casePersonSecondRelName',
+                    title: 'Втори представляващ',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-1',
+                    name: 'dateFrom',
+                    data: 'dateFrom',
+                    title: 'От дата',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
                     }
                 },
-                columns: [
-                    {
-                        name: 'casePersonName',
-                        data: 'casePersonName',
-                        title: 'Страна',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'linkDirectionName',
-                        data: 'linkDirectionName',
-                        title: 'Ред на представляване',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'casePersonRelName',
-                        data: 'casePersonRelName',
-                        title: 'Упълномощено лице',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'linkDirectionSecondName',
-                        data: 'linkDirectionSecondName',
-                        title: 'Ред на представляване',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'casePersonSecondRelName',
-                        data: 'casePersonSecondRelName',
-                        title: 'Втори представляващ',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'dateFrom',
-                        data: 'dateFrom',
-                        title: 'От дата',
-                        sortable: true,
-                        searchable: false,
-                        "render": function (value) {
-                            if (value)
-                                return moment(value).format("DD.MM.YYYY");
-                            else
-                                return "";
-                        }
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'dateTo',
-                        data: 'dateTo',
-                        title: 'До дата',
-                        sortable: true,
-                        searchable: false,
-                        "render": function (value) {
-                            if (value)
-                                return moment(value).format("DD.MM.YYYY");
-                            else
-                                return "";
-                        }
-                    },
-                    {
-                        name: 'actions',
-                        data: "id",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#casePersonLinkTemplateEdit', value);
-                        }
+                {
+                    className: 'col-md-1',
+                    name: 'dateTo',
+                    data: 'dateTo',
+                    title: 'До дата',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
                     }
-                ]
-            });
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#casePersonLinkTemplateEdit', value);
+                    }
+                }
+            ]
         });
+    });
 </script>
 
 <script id="casePersonLinkTemplateEdit" type="text/x-handlebars-template">
     @if (access.CanChange)
     {
-        <a href="@Url.Action("Edit", "CasePersonLink")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+            <a href="@Url.Action("Edit", "CasePersonLink")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
     }
     else
     {
-        <a href="@Url.Action("Edit", "CasePersonLink")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+            <a href="@Url.Action("Edit", "CasePersonLink")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
     }
 </script>
 

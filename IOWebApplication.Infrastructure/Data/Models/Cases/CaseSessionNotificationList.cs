@@ -13,7 +13,7 @@ using System.Text;
 namespace IOWebApplication.Infrastructure.Data.Models.Cases
 {
     [Table("case_session_notification_list")]
-    public class CaseSessionNotificationList : UserDateWRT, IExpiredInfo
+    public class CaseSessionNotificationList : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -68,10 +68,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("description_expired")]
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
-        
+
         [Column("vks_notification_header_id")]
         public int? VksNotificationHeaderId { get; set; }
-        
+
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
 

@@ -1,0 +1,11 @@
+﻿@model int?
+
+@{
+    var displayName = ViewData["DisplayName"]?.ToString();
+    var displayClass = ViewData["DisplayClass"]?.ToString() ?? string.Empty;
+}
+<div class="form-group">
+    <label asp-for="@Model" class="control-label"></label>
+    <input class="form-control @displayClass" value="@displayName" disabled />
+    @Html.HiddenFor(x => x)
+</div>

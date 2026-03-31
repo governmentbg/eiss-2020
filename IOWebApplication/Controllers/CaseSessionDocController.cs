@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -12,6 +8,7 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -88,14 +85,14 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult CaseSessionDoc_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseSessionDoc_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionDoc, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionDoc, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
 
-            var expireObject = service.GetById<CaseSessionDoc>(model.Id);
+            var expireObject = await service.GetByIdAsync<CaseSessionDoc>(model.Id);
 
             if (expireObject.SessionDocStateId != NomenclatureConstants.SessionDocState.Presented)
             {
@@ -115,9 +112,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult AddCaseSessionDoc(int CeaseSessionId)
+        public async Task<IActionResult> AddCaseSessionDoc(int CeaseSessionId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionDoc, null, AuditConstants.Operations.ChoiceByList, CeaseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionDoc, null, AuditConstants.Operations.ChoiceByList, CeaseSessionId))
             {
                 return Redirect_Denied();
             }
@@ -137,11 +134,11 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddCaseSessionDoc(CheckListViewVM model)
+        public async Task<IActionResult> AddCaseSessionDoc(CheckListViewVM model)
         {
             if (service.CaseSessionDoc_SaveDataAdd(model))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionDoc, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionDoc, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
                 CheckListViewVM checkListView = service.CheckListViewVM_Fill(model.ObjectId);
                 if (checkListView.checkListVMs.Count < 1)
                 {

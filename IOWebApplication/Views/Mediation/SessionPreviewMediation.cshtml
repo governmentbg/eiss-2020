@@ -1,0 +1,196 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationSessionPreviewVM
+
+@{
+    ViewData["Title"] = "Среща за медиация";
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("IndexCaseMediation", "Mediation")">Съдебни дела подлежащи на медиация</a></li>
+        <li><a href="@Url.Action("CasePreviewMediation", "Mediation", new { id = Model.CaseId } )">Съдебно дело - медиация @Model.CaseLabel</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <form method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="nav-tabs-custom">
+
+                <ul class="nav nav-tabs" id="sessionTab">
+                    <li class="active"><a href="#tabSessionData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+                    <li class=""><a href="#tabPeople" data-toggle="tab"><i class="fa fa-users"></i> Лица</a></li>
+                    <li class=""><a href="#tabDocs" data-toggle="tab"><i class="fa fa-book"></i> Документи</a></li>
+                    <li class=""><a href="#tabNotification" data-toggle="tab"><i class="fa fa-bell"></i> Уведомления</a></li>
+                    <li class=""><a href="#tabAppraisal" data-toggle="tab"><i class="fa fa-list-ol"></i> Оценки</a></li>
+                    <li class=""><a href="#tabMoney" data-toggle="tab"><i class="fa fa-money"></i> Суми за медиатори</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="tabSessionData">
+                        <div class="row">
+                            <div class="col-lg-5">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-database"></i> Данни</legend>
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.MediationTypeLabel)</div>
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.MediationLocationLabel)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.MediationLocationDescription)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.SessionDateText)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.MediationStateLabel)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.Mediators, "Textarea")</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.LinkCases, "Textarea")</div>
+                                    </div>
+
+                                    @if (Model.IsEdit)
+                                    {
+                                        <a href="@Url.Action("EditMediationCaseSession", "Mediation")?id=@Model.Id" class="btn btn-warning btn-sm" title="Корекция на основни данни"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Корекция на основни данни</span></a>
+                                    }
+                                </fieldset>
+                            </div>
+
+                            <div class="col-lg-7">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-eject"></i> Резултати</legend>
+                                    <div class="tab-pane1" id="tabResult">
+                                        <partial name="../Mediation/_Results.cshtml" model="@new MediationCaseNavigationVM { MediationCaseSessionId = Model.Id, CaseId = Model.CaseId } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane dt-lazy-loading" id="tabPeople">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-users"></i> Лица</legend>
+                                    <div class="tab-pane1" id="tabPeople">
+                                        <partial name="../Mediation/_People.cshtml" model="@new MediationCaseNavigationVM { MediationCaseSessionId = Model.Id, CaseId = Model.CaseId } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane dt-lazy-loading" id="tabDocs">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-book" aria-hidden="true"></i> Документи</legend>
+                                    <div class="tab-pane1" id="tabDocs">
+                                        <partial name="../Mediation/_Documents.cshtml" model="@new MediationCaseNavigationVM { MediationCaseSessionId = Model.Id, CaseId = Model.CaseId } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane dt-lazy-loading" id="tabNotification">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-bell"></i> Уведомления</legend>
+                                    <partial name="../MediationNotification/_NotificationList.cshtml" model="@new MediationCaseNavigationVM { MediationCaseSessionId = Model.Id, CaseId = Model.CaseId }" />
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane dt-lazy-loading" id="tabAppraisal">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-list-ol"></i> Оценки</legend>
+                                    <div class="tab-pane1" id="tabAppraisal">
+                                        <partial name="../Mediation/_Appraisals.cshtml" model="@new MediationCaseNavigationVM { MediationCaseSessionId = Model.Id, CaseId = Model.CaseId } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane dt-lazy-loading" id="tabMoney">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-money"></i> Суми</legend>
+                                    <div class="tab-pane1" id="tabAppraisal">
+                                        <partial name="../Mediation/_Obligation.cshtml" model="@new MediationCaseNavigationVM { MediationCaseSessionId = Model.Id, CaseId = Model.CaseId } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#MediationTypeLabel').attr("disabled", true);
+        $('#MediationLocationLabel').attr("disabled", true);
+        $('#MediationLocationDescription').attr("disabled", true);
+        $('#SessionDateText').attr("disabled", true);
+        $('#MediationStateLabel').attr("disabled", true);
+        $('#Mediators').attr("disabled", true);
+        $('#LinkCases').attr("disabled", true);
+
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabMediationSession', $(e.target).attr('href'));
+        });
+
+        var activeTab = localStorage.getItem('activeTabMediationSession');
+        if (activeTab) {
+            $('#sessionTab a[href="' + activeTab + '"]').tab('show');
+            ChangeUserGuide($('#sessionTab a[href="' + activeTab + '"]'));
+        }
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+            ChangeUserGuide($('.nav-tabs a[href="#' + url.split('#')[1] + '"]'));
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+            window.location.hash = e.target.hash;
+        })
+    });
+
+    $(function () {
+        $('.nav-tabs li a').click(function (e) {
+            ChangeUserGuide($(this));
+        });
+    });
+
+    function ChangeUserGuide(tab) {
+        var fileName = tab.data('filename');
+        if (fileName != undefined) {
+            var newurl = '@Url.Content($"~/userguide/")' + fileName + ".htm";
+            $("#horizontalUserguideId").attr('href', newurl);
+        }
+    }
+</script>

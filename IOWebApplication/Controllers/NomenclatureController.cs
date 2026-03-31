@@ -4,11 +4,13 @@ using IO.LogOperation.Models;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
+using IOWebApplication.Core.Services;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation;
 using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
 using IOWebApplication.ModelBinders;
 using Microsoft.AspNetCore.Authorization;
@@ -21,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -46,7 +49,6 @@ namespace IOWebApplication.Controllers
         /// <summary>
         /// Инжектиране на зависимости
         /// </summary>
-        /// <param name="_nomenclatureRepo"></param>
         /// <param name="_localizer"></param>
         public NomenclatureController(
             INomenclatureService _nomenclatureService,
@@ -131,7 +133,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Edit([ModelBinder(typeof(NomenclatureModelBinder))]object model)
+        public IActionResult Edit([ModelBinder(typeof(NomenclatureModelBinder))] object model)
         {
             var method = nomenclatureService.GetType().GetMethod("SaveItem");
             var generic = method.MakeGenericMethod(nomenclatureType);
@@ -160,7 +162,6 @@ namespace IOWebApplication.Controllers
         /// <summary>
         /// Промяна на подредбата на елементите
         /// </summary>
-        /// <param name="orderArray"></param>
         /// <returns></returns>
         [HttpPost]
         public IActionResult ChangeOrder(ChangeOrderModel model)
@@ -277,7 +278,7 @@ namespace IOWebApplication.Controllers
             if (string.IsNullOrEmpty(model.Name))
                 return "Въведете име";
 
-            if (model.DateFrom == null)
+            if (model.DateFrom.Year < 1900)
                 return "Въведете дата";
 
             if (model.StreetType < 1)
@@ -392,12 +393,7 @@ namespace IOWebApplication.Controllers
                 return "Въведете етикет";
             }
 
-            if (model.DateStart == null)
-            {
-                return "Изберете начална дата";
-            }
-
-            if (nomenclatureService.IsExistsNameLawBase(model.Label))
+            if (nomenclatureService.IsExistsNameLawBase(model.Label, model.CaseId ?? 0))
             {
                 return "Вече има такава стойност";
             }
@@ -434,5 +430,121 @@ namespace IOWebApplication.Controllers
             }
             return View(nameof(EditLawBase), model);
         }
+
+        #region Подкодове на шифри
+
+        /// <summary>
+        /// Зареждане на страница с данни за подкодове на шифри
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> IndexCaseCodeSub()
+        {
+            await SetViewBagEditCaseCodeSub();
+            return View();
+        }
+
+        /// <summary>
+        /// извличане на данни за подкодове на шифри
+        /// </summary>
+        /// <param name="request">IDataTablesRequest</param>
+        /// <param name="filter">Филтър</param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ListDataCaseCodeSub(IDataTablesRequest request, CaseCodeSubFilterVM filter)
+        {
+            IQueryable<CaseCodeSubListDataVM> data = nomenclatureService.GetCaseCodeSubs(filter);
+            return request.GetResponse(data);
+        }
+
+        /// <summary>
+        /// Зареждане на списъци за добавяне/редактиране на подкодове на шифри
+        /// </summary>
+        /// <returns></returns>
+        private async Task SetViewBagEditCaseCodeSub()
+        {
+            ViewBag.CaseCodeId_ddl = await nomenclatureService.GetDDL_CaseCode();
+        }
+
+        /// <summary>
+        /// Валидация на подкодове на шифри преди запис
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        private string ValidateCaseCodeSub(CaseCodeSubVM model)
+        {
+            if (string.IsNullOrEmpty(model.Code))
+                return "Въведете код на подшифър";
+
+            if (string.IsNullOrEmpty(model.Label))
+                return "Въведете подшифър";
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Добавяне на подкодове на шифри
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> AddCaseCodeSub()
+        {
+            CaseCodeSubVM model = new()
+            {
+                DateFrom = DateTime.Now,
+                IsActive = true
+            };
+
+            await SetViewBagEditCaseCodeSub();
+            return View(nameof(EditCaseCodeSub), model);
+        }
+
+        /// <summary>
+        /// Редакция на подкодове на шифри
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task<IActionResult> EditCaseCodeSub(int id)
+        {
+            CaseCodeSubVM model = await nomenclatureService.GetCaseCodeSubEditById(id);
+            await SetViewBagEditCaseCodeSub();
+            return View(nameof(EditCaseCodeSub), model);
+        }
+
+        /// <summary>
+        /// Запис на подкодове на шифри
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> EditCaseCodeSub(CaseCodeSubVM model)
+        {
+            await SetViewBagEditCaseCodeSub();
+
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditCaseCodeSub), model);
+            }
+
+            string _isvalid = ValidateCaseCodeSub(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
+                return View(nameof(EditCaseCodeSub), model);
+            }
+
+            bool isAdd = model.Id == 0;
+            int? saveId = await nomenclatureService.SaveCaseCodeSub(model);
+            if (saveId != null)
+            {
+                SaveLogOperation(isAdd, saveId);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EditCaseCodeSub), new { id = saveId });
+            }
+            else
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+
+            return View(nameof(EditCaseCodeSub), model);
+        }
+
+        #endregion
     }
 }

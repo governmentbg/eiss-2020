@@ -29,6 +29,15 @@
                 Добави съобщение
             </a>
             <a asp-controller="DocumentNotification"
+               asp-action="NotificationGroup"
+               asp-route-documentId="@documentId"
+               asp-route-documentResolutionId="@documentResolutionId"
+               asp-route-notificationTypeId="@NomenclatureConstants.NotificationType.Message"
+               class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-plus"></i>
+                Добави групово съобщение
+            </a>
+            <a asp-controller="DocumentNotification"
                asp-action="Add"
                asp-route-documentId="@documentId"
                asp-route-documentResolutionId="@documentResolutionId"
@@ -36,6 +45,15 @@
                class="btn btn-success btn-sm m-b-5">
                 <i class="fa fa-plus"></i>
                 Добави уведомление
+            </a>
+            <a asp-controller="DocumentNotification"
+                asp-action="NotificationGroup"
+                asp-route-documentId="@documentId"
+                asp-route-documentResolutionId="@documentResolutionId"
+                asp-route-notificationTypeId="@NomenclatureConstants.NotificationType.Notification"
+                class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-plus"></i>
+                Добави групово уведомление
             </a>
         </div>
     </div>
@@ -124,9 +142,7 @@
 
 
         });
-         function printNotificationRaw(id) {
-             window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
-         }
+
 </script>
 
 <script id="documentNotificationTemplateEdit" type="text/x-handlebars-template">

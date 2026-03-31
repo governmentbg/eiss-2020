@@ -1,0 +1,61 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@model CourtLawunitOrderComboVM
+<form id="frmOrderCombo" action="@Url.Action("OrderChangeCombo")" method="post">
+    @Html.HiddenFor(x => x.CurrentLawunit)
+    @Html.HiddenFor(x => x.CurrentRowNo)
+    @Html.EditorFor(x => x.NewRowNo, "GenericDropDown")
+    <div class="text-muted">
+        Забележка: Изберете съдията, на мястото на когото искате да преместите<br />
+        <b>@Html.Raw(Model.CurrentLawunit)</b>
+    </div>
+    <br />
+    <div class="form-group">
+        <input type="submit" id="btnChangeOrderComboSubmit" value="Премести" class="btn btn-warning submit" />
+    </div>
+</form>
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(function () {
+
+        let frm = $('#frmOrderCombo');
+        frm.submit(function (evt) {
+            let validateText = validationCheck();
+            if (validateText) {
+                swal({
+                    title: 'Грешка',
+                    text: validateText,
+                    icon: "warning"
+                });
+                evt.preventDefault();
+                return false;
+            }
+
+        });
+
+        attachAjaxForm('#frmOrderCombo', function (data) {
+            if (data.responseJSON.result == true) {
+                $('#mainTable').DataTable().ajax.reload();
+                HideModal();
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+                $('#btnChangeOrderComboSubmit').removeAttr('disabled');
+            }
+        }, function (error) {
+            //console.log(error);
+            $('#modalMessageContainer').html('Проблем при запис.');
+            $('#btnChangeOrderComboSubmit').removeAttr('disabled');
+        }, function () {
+            $('#modalMessageContainer').html('');
+        });
+
+
+    })
+    function validationCheck() {
+        if ($('#NewRowNo').val() == "-1") {
+            return 'Моля, изберете Нова позиция в старшинството';
+        }
+
+        return null;
+    }
+</script>

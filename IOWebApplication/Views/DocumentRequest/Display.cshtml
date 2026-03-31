@@ -1,0 +1,464 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+
+@using System.Collections.Generic
+@model BaseBlankRequestVM
+@{
+    Layout = "_BlankLayoutVert";
+    FastProcessRequestVM Data = (FastProcessRequestVM)Model.Data;
+    bool is417 = Data.RequestTypeCode == FastProcessRequestVM.FastProcess417;
+}
+
+
+
+<h1>@Model.Data.RequestFullTitle</h1>
+
+
+@foreach (var person in Data.LeftSide)
+{
+    <h3>1. Заявител</h3>
+    <div>
+        @person.FullName, @person.Identifier
+    </div>
+
+    foreach (var addr in person.Addresses)
+    {
+        <div class="sm">@addr.AddressTypeName: @addr.FullAddress</div>
+    }
+    <div class="pad-left">
+        @if (person.Representatives != null && person.Representatives.Length > 0)
+        {
+            <h4>Представител</h4>
+
+            foreach (var rep in person.Representatives)
+            {
+                <div>
+                    @rep.FullName, @rep.RoleName
+                </div>
+
+
+                if (rep.Addresses != null)
+                    foreach (var addr in rep.Addresses)
+                    {
+                        <div class="sm">@addr.AddressTypeName: @addr.FullAddress</div>
+                    }
+            }
+        }
+    </div>
+}
+@if (Data.LeftSide.Length > 1)
+{
+    <div>
+        <strong>Активна солидарност</strong>
+    </div>
+}
+
+@foreach (var person in Data.RightSide)
+{
+    <h3>2. Длъжник</h3>
+    <div>
+        @person.FullName, @person.Identifier
+    </div>
+
+    foreach (var addr in person.Addresses)
+    {
+        <div class="sm">@addr.AddressTypeName: @addr.FullAddress</div>
+    }
+    <div class="pad-left">
+        @if (person.Representatives != null && person.Representatives.Length > 0)
+        {
+            <h4>Представител</h4>
+
+            foreach (var rep in person.Representatives)
+            {
+                <div>
+                    @rep.FullName, @rep.RoleName
+                </div>
+
+
+                if (rep.Addresses != null)
+                    foreach (var addr in rep.Addresses)
+                    {
+                        <div class="sm">@addr.AddressTypeName: @addr.FullAddress</div>
+                    }
+            }
+        }
+    </div>
+}
+
+@if (is417 && Data.CompetencyBase417.ForCompetencyBase)
+{
+    <h4>Основание за компетентност на съда:&nbsp;@Model.getNomenclature(NomenclatureConstants.FPaliases.FP_CompetencyBases, Data.CompetencyBase417.CompetencyBaseCode)</h4>
+}
+
+<h3>2. Описание на вземането</h3>
+<div>@Data.ClaimDescription</div>
+
+<h3>3.1 Предмет на вземането:</h3>
+@if (Data.ClaimTypes.MoneyClaim)
+{
+    <div>Парично вземане</div>
+}
+@if (Data.ClaimTypes.ItemSubstitutionClaim)
+{
+    <div>Вземане за предаване на заместими вещи</div>
+}
+@if (Data.ClaimTypes.ItemClaim)
+{
+    <div>Вземане за предаване на движима вещ</div>
+}
+@if (Data.ClaimTypes.PropertyClaim)
+{
+    <div>Вземане за предаване на недвижим имот</div>
+}
+
+@if (Data.ClaimTypes.MoneyClaim && Data.MoneyClaims.Length > 0)
+{
+
+    <h4>Парично вземане:</h4>
+
+    <table class="grid w100">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Вид</th>
+                <th>Размер</th>
+                <th>Валута</th>
+                @if (Model.IsInEuro)
+                {
+                    <th>Сума, евро</th>
+                }
+                else
+                {
+                    <th>Сума, лв</th>
+                }
+                <th>Дата от</th>
+                <th>Дата до</th>
+            </tr>
+        </thead>
+        @{
+            var idx = 0;
+        }
+        @foreach (var claim in Data.MoneyClaims)
+        {
+            idx++;
+            <tr>
+                <td>@idx</td>
+                <td>@Model.getNomenclature(NomenclatureConstants.FPaliases.FP_MoneyClaimTypes, claim.MoneyClaimTypeCode)</td>
+                <td>@Model.formatMoney(claim.Amount)</td>
+                <td>@claim.CurrencyCode</td>
+                @if (Model.IsInEuro)
+                {
+                    <td>@Model.formatMoney(claim.TotalAmountEUR)</td>
+                }
+                else
+                {
+                    <td>@Model.formatMoney(claim.TotalAmountBGN)</td>
+                }
+                <td>@Model.formatDate(claim.DateFrom)</td>
+                <td>@Model.formatDate(claim.DateTo)</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td colspan="6" class="sm">@claim.Description</td>
+            </tr>
+            if (claim.HasStatutoryinterest)
+            {
+                <tr>
+                    <td></td>
+                    <td colspan="6" class="sm">@($"Законна лихва: {Model.formatDate(claim.StatutoryinterestDate)}")</td>
+                </tr>
+            }
+        }
+    </table>
+}
+
+@if (Data.ClaimTypes.ItemSubstitutionClaim && Data.ItemSubstitutionClaims.Length > 0)
+{
+
+    <h4>Вземане за предаване на заместими вещи</h4>
+
+    <table class="grid w100">
+        <thead>
+            <tr>
+                <th>Вид/Качество</th>
+                <th>Количество</th>
+                @if (Model.IsInEuro)
+                {
+                    <th>Сума, EUR</th>
+                }
+                else
+                {
+                    <th>Сума, лв</th>
+                }
+            </tr>
+        </thead>
+        @foreach (var claim in Data.ItemSubstitutionClaims)
+        {
+            <tr>
+                <td>@claim.TypeName</td>
+                <td>@claim.QuantityText</td>
+                @if (Model.IsInEuro)
+                {
+                    <td>@Model.formatMoney(claim.TotalAmountEUR)</td>
+                }
+                else
+                {
+                    <td>@Model.formatMoney(claim.TotalAmountBGN)</td>
+                }
+            </tr>
+        }
+    </table>
+
+}
+@if ((Data.ClaimTypes.ItemClaim || Data.ClaimTypes.PropertyClaim) && Data.ItemClaim != null)
+{
+
+    <h4>Вземане за предаване на движима вещ</h4>
+
+    <table class="grid w100">
+        <thead>
+            <tr>
+                <th>Описание на вещта</th>
+                <th>От какво произтича задължението</th>
+                @if (Model.IsInEuro)
+                {
+                    <th>Сума, EUR</th>
+                }
+                else
+                {
+                    <th>Сума, лв</th>
+                }
+            </tr>
+        </thead>
+        <tr>
+            <td class="sm">@Data.ItemClaim.Description</td>
+            <td>
+                @if (Data.ItemClaim.ClaimedByDebtorWithReturn)
+                {
+                    <div>Получена от длъжника със задължение за връщане</div>
+                }
+                @if (Data.ItemClaim.ItemWithPledge)
+                {
+                    <div>Движима вещ, която е обременена със залог</div>
+                }
+                @if (Data.ItemClaim.ItemClaimedWithReturn)
+                {
+                    <div>Движима вещ, която е прехвърлена от длъжника със задължение да предаде владението</div>
+                }
+                @if (Data.ItemClaim.Contract)
+                {
+                    <div>Договор</div>
+                }
+            </td>
+            @if (Model.IsInEuro)
+            {
+                <td>@Model.formatMoney(Data.ItemClaim.TotalAmountEUR)</td>
+            }
+            else
+            {
+                <td>@Model.formatMoney(Data.ItemClaim.TotalAmountBGN)</td>
+            }
+        </tr>
+    </table>
+}
+
+<h3>3.2. Обстоятелства, от които произтича вземането</h3>
+<table class="grid w100">
+    <thead>
+        <tr>
+            <th>Обстоятелство</th>
+            <th>Номер</th>
+            <th>Дата</th>
+        </tr>
+    </thead>
+    <tr>
+        <td>@Model.getNomenclature(NomenclatureConstants.FPaliases.FP_ClaimCircumstances, Data.ClaimCircumstances.ClaimCircumstancesCode)</td>
+        <td>@Data.ClaimCircumstances.Number</td>
+        <td>@Model.formatDate(Data.ClaimCircumstances.Date)</td>
+    </tr>
+    <tr class="sm">
+        <td colspan="3">
+            @Data.ClaimCircumstances.Description
+        </td>
+    </tr>
+</table>
+
+<h4>Вземането е цедирано на заявителя: @Model.formatIntBool(Data.CededClaim)</h4>
+@if (!string.IsNullOrEmpty(Data.CededClaimDescription))
+{
+    <div>@Data.CededClaimDescription</div>
+}
+
+@if (Data.RightSide.Length > 1)
+{
+    <h3>3.3 Разпределение на отговорността при повече от един длъжник</h3>
+    switch (Data.JoinedDestributionTypeId)
+    {
+        case 1:
+            <div>Солидарна отговорност</div>
+            break;
+        case 2:
+            <div>Разделна отговорност</div>
+            break;
+    }
+    if (Data.DebtDistributions.Length > 0)
+    {
+        <table class="grid w100">
+            <thead>
+                <tr>
+                    <th>Длъжник</th>
+                    <th>Вид задължение</th>
+                    <th>Дял</th>
+                    <th>Размер</th>
+                    <th>Валута</th>
+                    @if (Model.IsInEuro)
+                    {
+                        <th>Сума, евро</th>
+                    }
+                    else
+                    {
+                        <th>Сума, лв</th>
+                    }
+                </tr>
+            </thead>
+            @foreach (var debt in Data.DebtDistributions)
+            {
+                var personName = Data.RightSide.Where(p => p.PersonGid == debt.PersonCode).Select(p => p.FullName).FirstOrDefault();
+                var obligationInfo = Model.getNomenclature(NomenclatureConstants.FPaliases.FP_DebtList, debt.ClaimCode);
+                <tr>
+                    <td>@personName</td>
+                    <td>@obligationInfo</td>
+                    <td>@Model.formatMoney(debt.ShareProcent)</td>
+                    <td>@Model.formatMoney(debt.Amount)</td>
+                    <td>@debt.CurrencyCode</td>
+                    @if (Model.IsInEuro)
+                    {
+                        <td>@Model.formatMoney(debt.TotalAmountEUR)</td>
+                    }
+                    else
+                    {
+                        <td>@Model.formatMoney(debt.TotalAmountBGN)</td>
+                    }
+                </tr>
+            }
+        </table>
+    }
+}
+
+<h4>Данни за доброволно плащане</h4>
+<h3>4.1 Плащане по банкова сметка</h3>
+<table class="grid w100">
+    <thead>
+        <tr>
+            <th>Притежател на сметката</th>
+            <th>Име на банката (BIC) или друг подходящ банков код</th>
+        </tr>
+    </thead>
+    <tr>
+        <td>@Data.BankAccount.OwnerNames</td>
+        <td>@Data.BankAccount.BankName</td>
+    </tr>
+    <thead>
+        <tr>
+            <th>Международен номер на банковата сметка (IBAN)</th>
+            <th>Валута на сметката</th>
+        </tr>
+    </thead>
+    <tr>
+        <td>@Data.BankAccount.IBAN</td>
+        <td>
+            @if (Data.BankAccount.CurrencyCode != NomenclatureConstants.NullText)
+            {
+                <text>@Data.BankAccount.CurrencyCode</text>
+            }
+        </td>
+    </tr>
+</table>
+@if (!string.IsNullOrEmpty(Data.BankAccount.OtherPaymentDescription))
+{
+    <h4>4.2 Плащане по друг начин – описание</h4>
+    <div>@Data.BankAccount.OtherPaymentDescription</div>
+}
+@if (!string.IsNullOrEmpty(Data.OtherInfo))
+{
+    <h4>5. Допълнителни изявления и допълнителна информация (при необходимост)</h4>
+    <div class="sm">@Data.OtherInfo</div>
+}
+
+
+
+@if (Data.Expenses.Length > 0)
+{
+    <h3>6. Разноски</h3>
+    <table class="grid w100">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Вид</th>
+                <th>Уточнения</th>
+                @if (Model.IsInEuro)
+                {
+                    <th>Сума, евро</th>
+                }
+                else
+                {
+                    <th>Сума, лв</th>
+                }
+            </tr>
+        </thead>
+        @foreach (var expence in Data.Expenses)
+        {
+            <tr>
+                <td>@(expence.Index + 1)</td>
+                <td>@Model.getNomenclature(NomenclatureConstants.FPaliases.FP_ExpenseTypes, expence.ExpenseTypeCode)</td>
+                <td>@expence.Description</td>
+                @if (Model.IsInEuro)
+                {
+                    <td>@Model.formatMoney(expence.TotalAmountEUR)</td>
+                }
+                else
+                {
+                    <td>@Model.formatMoney(expence.TotalAmountBGN)</td>
+                }
+
+            </tr>
+        }
+    </table>
+}
+@if (Model.Files != null && Model.Files.Length > 0)
+{
+    <h3>7. Прикачени документи</h3>
+    <table class="grid w100">
+        <thead>
+            <tr>
+                <th>Вид</th>
+                <th>Име на документ</th>
+            </tr>
+        </thead>
+        @foreach (var file in Model.Files)
+        {
+            <tr>
+                <td>@file.FileTypeName</td>
+                <td>@file.FileName</td>
+            </tr>
+        }
+    </table>
+}
+<br />
+<br />
+
+<b>С настоящото моля съда:</b>
+<br />
+   -да издаде заповед за @(is417 ? "незабавно " : "")изпълнение,
+<br />
+@if (is417)
+{
+    <text>
+        - да издаде разпореждане за незабавно изпълнение,
+        <br />
+    </text>
+}
+-да издаде изпълнителен лист.
+<br />
+    Декларирам, че доколкото ми е известно, предоставената информация е вярна.

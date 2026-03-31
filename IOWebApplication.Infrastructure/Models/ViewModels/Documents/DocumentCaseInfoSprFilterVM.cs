@@ -30,5 +30,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
 
         [Display(Name = "Предмет на дело")]
         public int CaseCodeId { get; set; }
+
+        /// <summary>
+        /// Шифър
+        /// </summary>
+        [Display(Name = "Предмет на дело")]
+        public string[] CaseCodeIds { get; set; }
     }
 }

@@ -1,89 +1,415 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
-    <!--<TargetFramework>netstandard2.0</TargetFramework>-->
-    <ApplicationIcon />
-    <OutputType>Library</OutputType>
-    <StartupObject />
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <CodeAnalysisRuleSet>IOWebApplication.Infrastructure.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <CodeAnalysisRuleSet>IOWebApplication.Infrastructure.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>IOWebApplication.Infrastructure.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Data\Migrations\**" />
-    <EmbeddedResource Remove="Data\Migrations\**" />
-    <None Remove="Data\Migrations\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Audit.EntityFramework" Version="14.2.1" />
-    <PackageReference Include="Audit.NET.PostgreSql" Version="14.2.1" />
-    <PackageReference Include="AutoMapper" Version="8.1.1" />
-    <PackageReference Include="IO.LogOperation" Version="1.0.5" />
-    <PackageReference Include="IO.SignTools" Version="1.0.29" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="3.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.Design" Version="1.1.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.2.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MongoDB.Driver.Core" Version="2.10.4" />
-    <PackageReference Include="MongoDB.Driver.GridFS" Version="2.10.4" />
-    <PackageReference Include="NEST" Version="7.13.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.1" />
-    <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
-    <PackageReference Include="System.ServiceModel.Duplex" Version="4.4.*" />
-    <PackageReference Include="System.ServiceModel.Http" Version="4.4.*" />
-    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.4.*" />
-    <PackageReference Include="System.ServiceModel.Security" Version="4.4.*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\InitialData\Users\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.ServiceModel">
-      <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ServiceModel.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resources\Resource.Designer.cs">
-      <DependentUpon>Resource.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\Resource.en.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Resource.resx">
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-      <Generator>PublicResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services" />
-  </ItemGroup>
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
+		<EnableNETAnalyzers>false</EnableNETAnalyzers>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<CodeAnalysisRuleSet>IOWebApplication.Infrastructure.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<CodeAnalysisRuleSet>IOWebApplication.Infrastructure.ruleset</CodeAnalysisRuleSet>
+		<DocumentationFile>IOWebApplication.Infrastructure.xml</DocumentationFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Remove="Data\Migrations\**" />
+		<EmbeddedResource Remove="Data\Migrations\**" />
+		<None Remove="Data\Migrations\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="Migrations\20220114105819_InitBlancMigration.cs" />
+	  <Compile Remove="Migrations\20220114105819_InitBlancMigration.Designer.cs" />
+	  <Compile Remove="Migrations\20220127091456_ExcelCaseTypeSismaIndex.cs" />
+	  <Compile Remove="Migrations\20220127091456_ExcelCaseTypeSismaIndex.Designer.cs" />
+	  <Compile Remove="Migrations\20220128091601_SismaIndexRecap.cs" />
+	  <Compile Remove="Migrations\20220128091601_SismaIndexRecap.Designer.cs" />
+	  <Compile Remove="Migrations\20220128103515_SismaIndexRecapContains.cs" />
+	  <Compile Remove="Migrations\20220128103515_SismaIndexRecapContains.Designer.cs" />
+	  <Compile Remove="Migrations\20220128122538_SismaIndexRecapOrder.cs" />
+	  <Compile Remove="Migrations\20220128122538_SismaIndexRecapOrder.Designer.cs" />
+	  <Compile Remove="Migrations\20220131082707_ExcelReportComplainResultSismaIndex.cs" />
+	  <Compile Remove="Migrations\20220131082707_ExcelReportComplainResultSismaIndex.Designer.cs" />
+	  <Compile Remove="Migrations\20220202124700_CaseIsRenewCase.cs" />
+	  <Compile Remove="Migrations\20220202124700_CaseIsRenewCase.Designer.cs" />
+	  <Compile Remove="Migrations\20220208125541_DeliveryVisitMobile.DateTimeOffset.cs" />
+	  <Compile Remove="Migrations\20220208125541_DeliveryVisitMobile.DateTimeOffset.Designer.cs" />
+	  <Compile Remove="Migrations\20220221092701_ExcelCaseCodeRowCodeLabel.cs" />
+	  <Compile Remove="Migrations\20220221092701_ExcelCaseCodeRowCodeLabel.Designer.cs" />
+	  <Compile Remove="Migrations\20220222131154_ExcelSismaMapping1.cs" />
+	  <Compile Remove="Migrations\20220222131154_ExcelSismaMapping1.Designer.cs" />
+	  <Compile Remove="Migrations\20220316094500_MandateDateTo.cs" />
+	  <Compile Remove="Migrations\20220316094500_MandateDateTo.Designer.cs" />
+	  <Compile Remove="Migrations\20220317093222_EesppTablesAdded.cs" />
+	  <Compile Remove="Migrations\20220317093222_EesppTablesAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20220317112833_EesppTablesAltered.cs" />
+	  <Compile Remove="Migrations\20220317112833_EesppTablesAltered.Designer.cs" />
+	  <Compile Remove="Migrations\20220325075635_MoneyExpired.cs" />
+	  <Compile Remove="Migrations\20220325075635_MoneyExpired.Designer.cs" />
+	  <Compile Remove="Migrations\20220405073227_AddLawyerStateDateInAssignedLawyer.cs" />
+	  <Compile Remove="Migrations\20220405073227_AddLawyerStateDateInAssignedLawyer.Designer.cs" />
+	  <Compile Remove="Migrations\20220429112157_WorkingDay_UserDateWRT.cs" />
+	  <Compile Remove="Migrations\20220429112157_WorkingDay_UserDateWRT.Designer.cs" />
+	  <Compile Remove="Migrations\20220509104545_ExcludeColExcelCaseCodeRow.cs" />
+	  <Compile Remove="Migrations\20220509104545_ExcludeColExcelCaseCodeRow.Designer.cs" />
+	  <Compile Remove="Migrations\20220509111706_DeliveryItemOperLog.cs" />
+	  <Compile Remove="Migrations\20220509111706_DeliveryItemOperLog.Designer.cs" />
+	  <Compile Remove="Migrations\20220509122132_AddParentIdCaseLifecycle.cs" />
+	  <Compile Remove="Migrations\20220509122132_AddParentIdCaseLifecycle.Designer.cs" />
+	  <Compile Remove="Migrations\20220704095613_AddFieldForLawyerHelpInPersonRole.cs" />
+	  <Compile Remove="Migrations\20220704095613_AddFieldForLawyerHelpInPersonRole.Designer.cs" />
+	  <Compile Remove="Migrations\20220726110417_CourtRestrictionsAdded.cs" />
+	  <Compile Remove="Migrations\20220726110417_CourtRestrictionsAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20220909132945_MqEpepLastDateError.cs" />
+	  <Compile Remove="Migrations\20220909132945_MqEpepLastDateError.Designer.cs" />
+	  <Compile Remove="Migrations\20220929074204_CoordinationDepersonalizationData.cs" />
+	  <Compile Remove="Migrations\20220929074204_CoordinationDepersonalizationData.Designer.cs" />
+	  <Compile Remove="Migrations\20220930071947_CoordinationDeclaredDate.cs" />
+	  <Compile Remove="Migrations\20220930071947_CoordinationDeclaredDate.Designer.cs" />
+	  <Compile Remove="Migrations\20221010072003_DepersonalizeMotiveEndDateAdded.cs" />
+	  <Compile Remove="Migrations\20221010072003_DepersonalizeMotiveEndDateAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20221012112947_AddFKCaseEvidenceMovement.cs" />
+	  <Compile Remove="Migrations\20221012112947_AddFKCaseEvidenceMovement.Designer.cs" />
+	  <Compile Remove="Migrations\20230203152151_ElectronicDocumentMainTransaction.cs" />
+	  <Compile Remove="Migrations\20230203152151_ElectronicDocumentMainTransaction.Designer.cs" />
+	  <Compile Remove="Migrations\20230208143323_ElDocumentAlter.cs" />
+	  <Compile Remove="Migrations\20230208143323_ElDocumentAlter.Designer.cs" />
+	  <Compile Remove="Migrations\20230208163507_MainGroupCourtAdded.cs" />
+	  <Compile Remove="Migrations\20230208163507_MainGroupCourtAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20230212083935_CaseSessionVideoUrl.cs" />
+	  <Compile Remove="Migrations\20230212083935_CaseSessionVideoUrl.Designer.cs" />
+	  <Compile Remove="Migrations\20230511103727_CaseSessionActDirectionAdded.cs" />
+	  <Compile Remove="Migrations\20230511103727_CaseSessionActDirectionAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20230523074034_CourtGroupKindAdded.cs" />
+	  <Compile Remove="Migrations\20230523074034_CourtGroupKindAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20230605083943_ElectionGroupAdded.cs" />
+	  <Compile Remove="Migrations\20230605083943_ElectionGroupAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20230613080803_ElectionAltered.cs" />
+	  <Compile Remove="Migrations\20230613080803_ElectionAltered.Designer.cs" />
+	  <Compile Remove="Migrations\20230616105528_LogElectionAddCol.cs" />
+	  <Compile Remove="Migrations\20230616105528_LogElectionAddCol.Designer.cs" />
+	  <Compile Remove="Migrations\20230630132807_SessionResultDateStartEnd.cs" />
+	  <Compile Remove="Migrations\20230630132807_SessionResultDateStartEnd.Designer.cs" />
+	  <Compile Remove="Migrations\20230809120439_SessionResultBaseRuleAdded.cs" />
+	  <Compile Remove="Migrations\20230809120439_SessionResultBaseRuleAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20230811145105_CaseMigrationAltered.cs" />
+	  <Compile Remove="Migrations\20230811145105_CaseMigrationAltered.Designer.cs" />
+	  <Compile Remove="Migrations\20230907060429_AddDocumentTypeIdsCaseLoadElementGroup.cs" />
+	  <Compile Remove="Migrations\20230907060429_AddDocumentTypeIdsCaseLoadElementGroup.Designer.cs" />
+	  <Compile Remove="Migrations\20231016163409_ActComplainIndexCourtTypeCaseGroupDatesAdded.cs" />
+	  <Compile Remove="Migrations\20231016163409_ActComplainIndexCourtTypeCaseGroupDatesAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20231024063817_ExcelReportindexSheetIndex.cs" />
+	  <Compile Remove="Migrations\20231024063817_ExcelReportindexSheetIndex.Designer.cs" />
+	  <Compile Remove="Migrations\20231103134234_CaseSessionActHHistoryType.cs" />
+	  <Compile Remove="Migrations\20231103134234_CaseSessionActHHistoryType.Designer.cs" />
+	  <Compile Remove="Migrations\20231120094524_AddFieldForReports.cs" />
+	  <Compile Remove="Migrations\20231120094524_AddFieldForReports.Designer.cs" />
+	  <Compile Remove="Migrations\20231128092620_FixToNowDays.cs" />
+	  <Compile Remove="Migrations\20231128092620_FixToNowDays.Designer.cs" />
+	  <Compile Remove="Migrations\20240217103924_CaseFeaturesAdd.cs" />
+	  <Compile Remove="Migrations\20240217103924_CaseFeaturesAdd.Designer.cs" />
+	  <Compile Remove="Migrations\20240226083817_OfflinePos.cs" />
+	  <Compile Remove="Migrations\20240226083817_OfflinePos.Designer.cs" />
+	  <Compile Remove="Migrations\20240314075032_AddFilterTemplates.cs" />
+	  <Compile Remove="Migrations\20240314075032_AddFilterTemplates.Designer.cs" />
+	  <Compile Remove="Migrations\20240315094507_AddFieldsUserRols.cs" />
+	  <Compile Remove="Migrations\20240315094507_AddFieldsUserRols.Designer.cs" />
+	  <Compile Remove="Migrations\20240318081124_delivery_item_session.cs" />
+	  <Compile Remove="Migrations\20240318081124_delivery_item_session.Designer.cs" />
+	  <Compile Remove="Migrations\20240617120315_ExcelCaseTypeColProcessPriority.cs" />
+	  <Compile Remove="Migrations\20240617120315_ExcelCaseTypeColProcessPriority.Designer.cs" />
+	  <Compile Remove="Migrations\20240724075236_ExcelCaseTypeRowPriority.cs" />
+	  <Compile Remove="Migrations\20240724075236_ExcelCaseTypeRowPriority.Designer.cs" />
+	  <Compile Remove="Migrations\20240808111804_DataProtectionKeysAdded.cs" />
+	  <Compile Remove="Migrations\20240808111804_DataProtectionKeysAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20240903102712_AddGenderPersonName.cs" />
+	  <Compile Remove="Migrations\20240903102712_AddGenderPersonName.Designer.cs" />
+	  <Compile Remove="Migrations\20240904114326_AddPersonalDocumentTypeNote.cs" />
+	  <Compile Remove="Migrations\20240904114326_AddPersonalDocumentTypeNote.Designer.cs" />
+	  <Compile Remove="Migrations\20240905104015_AddMeasureFields.cs" />
+	  <Compile Remove="Migrations\20240905104015_AddMeasureFields.Designer.cs" />
+	  <Compile Remove="Migrations\20240907074559_AddPunishmentGeneralCategory.cs" />
+	  <Compile Remove="Migrations\20240907074559_AddPunishmentGeneralCategory.Designer.cs" />
+	  <Compile Remove="Migrations\20240908054238_AddPreliminaryDetentionFields.cs" />
+	  <Compile Remove="Migrations\20240908054238_AddPreliminaryDetentionFields.Designer.cs" />
+	  <Compile Remove="Migrations\20240916112701_AddFieldsCaseCrime.cs" />
+	  <Compile Remove="Migrations\20240916112701_AddFieldsCaseCrime.Designer.cs" />
+	  <Compile Remove="Migrations\20240924110340_EditCasePersonSentenceBulletin.cs" />
+	  <Compile Remove="Migrations\20240924110340_EditCasePersonSentenceBulletin.Designer.cs" />
+	  <Compile Remove="Migrations\20241001125120_CasePersonPrevName.cs" />
+	  <Compile Remove="Migrations\20241001125120_CasePersonPrevName.Designer.cs" />
+	  <Compile Remove="Migrations\20241004125553_BuletinRegNumberCourtUic.cs" />
+	  <Compile Remove="Migrations\20241004125553_BuletinRegNumberCourtUic.Designer.cs" />
+	  <Compile Remove="Migrations\20241007120924_BuletinExports.cs" />
+	  <Compile Remove="Migrations\20241007120924_BuletinExports.Designer.cs" />
+	  <Compile Remove="Migrations\20241010095410_BulletinFileDateSignedAdded.cs" />
+	  <Compile Remove="Migrations\20241010095410_BulletinFileDateSignedAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20241011081246_MeasureQuantityRemoved.cs" />
+	  <Compile Remove="Migrations\20241011081246_MeasureQuantityRemoved.Designer.cs" />
+	  <Compile Remove="Migrations\20241011081725_MeasureQuantityAddedAsInt.cs" />
+	  <Compile Remove="Migrations\20241011081725_MeasureQuantityAddedAsInt.Designer.cs" />
+	  <Compile Remove="Migrations\20241015103530_AddFCaseCrime.cs" />
+	  <Compile Remove="Migrations\20241015103530_AddFCaseCrime.Designer.cs" />
+	  <Compile Remove="Migrations\20241015122547_BuletinExportsRenamed.cs" />
+	  <Compile Remove="Migrations\20241015122547_BuletinExportsRenamed.Designer.cs" />
+	  <Compile Remove="Migrations\20241021081836_AddFieldsB.cs" />
+	  <Compile Remove="Migrations\20241021081836_AddFieldsB.Designer.cs" />
+	  <Compile Remove="Migrations\20241023070936_ForVksAsLeftOrRightSide.cs" />
+	  <Compile Remove="Migrations\20241023070936_ForVksAsLeftOrRightSide.Designer.cs" />
+	  <Compile Remove="Migrations\20241025132315_ApiKeyAdded.cs" />
+	  <Compile Remove="Migrations\20241025132315_ApiKeyAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20241128150559_CourtStampCertificateAdded.cs" />
+	  <Compile Remove="Migrations\20241128150559_CourtStampCertificateAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20241203124052_CoordinationTypeSavedOrderAdded.cs" />
+	  <Compile Remove="Migrations\20241203124052_CoordinationTypeSavedOrderAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20241205113841_CaseSessionActLawunitsAdded.cs" />
+	  <Compile Remove="Migrations\20241205113841_CaseSessionActLawunitsAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20241212131610_ActISPNReasonGrouping.cs" />
+	  <Compile Remove="Migrations\20241212131610_ActISPNReasonGrouping.Designer.cs" />
+	  <Compile Remove="Migrations\20241213112450_CaseDebtorsCount.cs" />
+	  <Compile Remove="Migrations\20241213112450_CaseDebtorsCount.Designer.cs" />
+	  <Compile Remove="Migrations\20241216084350_AddFieldsTimeMeasure.cs" />
+	  <Compile Remove="Migrations\20241216084350_AddFieldsTimeMeasure.Designer.cs" />
+	  <Compile Remove="Migrations\20250225161413_ElectronicDocumentAlter.cs" />
+	  <Compile Remove="Migrations\20250225161413_ElectronicDocumentAlter.Designer.cs" />
+	  <Compile Remove="Migrations\20250302070347_AmoneyBGN.cs" />
+	  <Compile Remove="Migrations\20250302070347_AmoneyBGN.Designer.cs" />
+	  <Compile Remove="Migrations\20250304072851_CourtJuryFeeEUR.cs" />
+	  <Compile Remove="Migrations\20250304072851_CourtJuryFeeEUR.Designer.cs" />
+	  <Compile Remove="Migrations\20250314144807_PersonCitizenship.cs" />
+	  <Compile Remove="Migrations\20250314144807_PersonCitizenship.Designer.cs" />
+	  <Compile Remove="Migrations\20250318080651_FastProcessNomenclatures.cs" />
+	  <Compile Remove="Migrations\20250318080651_FastProcessNomenclatures.Designer.cs" />
+	  <Compile Remove="Migrations\20250318103349_FastProcessNomenclaturesCase.cs" />
+	  <Compile Remove="Migrations\20250318103349_FastProcessNomenclaturesCase.Designer.cs" />
+	  <Compile Remove="Migrations\20250319111135_DocumentRequestTypeIdAdded.cs" />
+	  <Compile Remove="Migrations\20250319111135_DocumentRequestTypeIdAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250319124220_DocumentCasePersonGid.cs" />
+	  <Compile Remove="Migrations\20250319124220_DocumentCasePersonGid.Designer.cs" />
+	  <Compile Remove="Migrations\20250410124652_FastProcessSelectionCourt.cs" />
+	  <Compile Remove="Migrations\20250410124652_FastProcessSelectionCourt.Designer.cs" />
+	  <Compile Remove="Migrations\20250430081751_BankFile.cs" />
+	  <Compile Remove="Migrations\20250430081751_BankFile.Designer.cs" />
+	  <Compile Remove="Migrations\20250502061924_BankFileDirectory.cs" />
+	  <Compile Remove="Migrations\20250502061924_BankFileDirectory.Designer.cs" />
+	  <Compile Remove="Migrations\20250502104904_BankFile1.cs" />
+	  <Compile Remove="Migrations\20250502104904_BankFile1.Designer.cs" />
+	  <Compile Remove="Migrations\20250503072313_BankFile2.cs" />
+	  <Compile Remove="Migrations\20250503072313_BankFile2.Designer.cs" />
+	  <Compile Remove="Migrations\20250507144506_DaysToPresenceSecretaryAdded.cs" />
+	  <Compile Remove="Migrations\20250507144506_DaysToPresenceSecretaryAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250509061659_AddFieldShowNotificationBeforEndDeadlineDays.cs" />
+	  <Compile Remove="Migrations\20250509061659_AddFieldShowNotificationBeforEndDeadlineDays.Designer.cs" />
+	  <Compile Remove="Migrations\20250512120012_CaseAddFlagFastProcess.cs" />
+	  <Compile Remove="Migrations\20250512120012_CaseAddFlagFastProcess.Designer.cs" />
+	  <Compile Remove="Migrations\20250512135414_GenerateExecProcessAdded.cs" />
+	  <Compile Remove="Migrations\20250512135414_GenerateExecProcessAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250514064632_JudgeCount.cs" />
+	  <Compile Remove="Migrations\20250514064632_JudgeCount.Designer.cs" />
+	  <Compile Remove="Migrations\20250514065851_JudgeCountFix.cs" />
+	  <Compile Remove="Migrations\20250514065851_JudgeCountFix.Designer.cs" />
+	  <Compile Remove="Migrations\20250515052239_AddCaseIdInWorkNotification.cs" />
+	  <Compile Remove="Migrations\20250515052239_AddCaseIdInWorkNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20250518054251_AddAppealNotificationStartFastProcessInAct.cs" />
+	  <Compile Remove="Migrations\20250518054251_AddAppealNotificationStartFastProcessInAct.Designer.cs" />
+	  <Compile Remove="Migrations\20250520070326_BankFileBankAccount.cs" />
+	  <Compile Remove="Migrations\20250520070326_BankFileBankAccount.Designer.cs" />
+	  <Compile Remove="Migrations\20250520130221_DocumentRequestTypeAltered.cs" />
+	  <Compile Remove="Migrations\20250520130221_DocumentRequestTypeAltered.Designer.cs" />
+	  <Compile Remove="Migrations\20250520145845_DocumentRequestTypeInitCodeAltered.cs" />
+	  <Compile Remove="Migrations\20250520145845_DocumentRequestTypeInitCodeAltered.Designer.cs" />
+	  <Compile Remove="Migrations\20250521070218_BankFilePaymentType.cs" />
+	  <Compile Remove="Migrations\20250521070218_BankFilePaymentType.Designer.cs" />
+	  <Compile Remove="Migrations\20250523081528_CorrectedActAdded.cs" />
+	  <Compile Remove="Migrations\20250523081528_CorrectedActAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250523102740_FastProcessSelectionCourtKoef.cs" />
+	  <Compile Remove="Migrations\20250523102740_FastProcessSelectionCourtKoef.Designer.cs" />
+	  <Compile Remove="Migrations\20250527111435_ActAppealNotificationDWM.cs" />
+	  <Compile Remove="Migrations\20250527111435_ActAppealNotificationDWM.Designer.cs" />
+	  <Compile Remove="Migrations\20250602101829_AddIsFPInActKind.cs" />
+	  <Compile Remove="Migrations\20250602101829_AddIsFPInActKind.Designer.cs" />
+	  <Compile Remove="Migrations\20250604070933_AddCourtLawUnitAssistant.cs" />
+	  <Compile Remove="Migrations\20250604070933_AddCourtLawUnitAssistant.Designer.cs" />
+	  <Compile Remove="Migrations\20250604083755_ExecListCaseAdded.cs" />
+	  <Compile Remove="Migrations\20250604083755_ExecListCaseAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250605100239_AddIsFastProcessWorkNotificationType.cs" />
+	  <Compile Remove="Migrations\20250605100239_AddIsFastProcessWorkNotificationType.Designer.cs" />
+	  <Compile Remove="Migrations\20250611075839_BankFileEncoding.cs" />
+	  <Compile Remove="Migrations\20250611075839_BankFileEncoding.Designer.cs" />
+	  <Compile Remove="Migrations\20250613072141_DocumentRequestInfoAdded.cs" />
+	  <Compile Remove="Migrations\20250613072141_DocumentRequestInfoAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250619075104_AddFieldsInCourtLawUnitGroup.cs" />
+	  <Compile Remove="Migrations\20250619075104_AddFieldsInCourtLawUnitGroup.Designer.cs" />
+	  <Compile Remove="Migrations\20250623083114_CaseNotificationDocument.cs" />
+	  <Compile Remove="Migrations\20250623083114_CaseNotificationDocument.Designer.cs" />
+	  <Compile Remove="Migrations\20250623123306_CaseNotificationDocument2.cs" />
+	  <Compile Remove="Migrations\20250623123306_CaseNotificationDocument2.Designer.cs" />
+	  <Compile Remove="Migrations\20250624064314_AddDepartmentInNotification.cs" />
+	  <Compile Remove="Migrations\20250624064314_AddDepartmentInNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20250625065001_AddCalendarColorNotificationType.cs" />
+	  <Compile Remove="Migrations\20250625065001_AddCalendarColorNotificationType.Designer.cs" />
+	  <Compile Remove="Migrations\20250703075438_DocumentRequestInfoForCompetencyAdded.cs" />
+	  <Compile Remove="Migrations\20250703075438_DocumentRequestInfoForCompetencyAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250717050830_AddFNotification.cs" />
+	  <Compile Remove="Migrations\20250717050830_AddFNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20250718044851_AddFKCaseNotification.cs" />
+	  <Compile Remove="Migrations\20250718044851_AddFKCaseNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20250728062539_AddTurnOffWorkNotification.cs" />
+	  <Compile Remove="Migrations\20250728062539_AddTurnOffWorkNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20250729072237_BankFilePaymentExpire.cs" />
+	  <Compile Remove="Migrations\20250729072237_BankFilePaymentExpire.Designer.cs" />
+	  <Compile Remove="Migrations\20250729205928_AddPersonLoadForNotification.cs" />
+	  <Compile Remove="Migrations\20250729205928_AddPersonLoadForNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20250731080401_AddLoadIndexDescription.cs" />
+	  <Compile Remove="Migrations\20250731080401_AddLoadIndexDescription.Designer.cs" />
+	  <Compile Remove="Migrations\20250806121623_CaseNotificationActs.cs" />
+	  <Compile Remove="Migrations\20250806121623_CaseNotificationActs.Designer.cs" />
+	  <Compile Remove="Migrations\20250813083952_WorkNotificationParent.cs" />
+	  <Compile Remove="Migrations\20250813083952_WorkNotificationParent.Designer.cs" />
+	  <Compile Remove="Migrations\20250826111421_CounterCheckAdded.cs" />
+	  <Compile Remove="Migrations\20250826111421_CounterCheckAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20250916081723_CrimeSceneAddress.cs" />
+	  <Compile Remove="Migrations\20250916081723_CrimeSceneAddress.Designer.cs" />
+	  <Compile Remove="Migrations\20250919074153_AddMediation.cs" />
+	  <Compile Remove="Migrations\20250919074153_AddMediation.Designer.cs" />
+	  <Compile Remove="Migrations\20250919095627_AddMediationPersonSessionState.cs" />
+	  <Compile Remove="Migrations\20250919095627_AddMediationPersonSessionState.Designer.cs" />
+	  <Compile Remove="Migrations\20250919100716_EditMediationPointMediatorAppraisal.cs" />
+	  <Compile Remove="Migrations\20250919100716_EditMediationPointMediatorAppraisal.Designer.cs" />
+	  <Compile Remove="Migrations\20250924074020_AddDateFromMediationMediator.cs" />
+	  <Compile Remove="Migrations\20250924074020_AddDateFromMediationMediator.Designer.cs" />
+	  <Compile Remove="Migrations\20250929073105_mediation-notification.cs" />
+	  <Compile Remove="Migrations\20250929073105_mediation-notification.Designer.cs" />
+	  <Compile Remove="Migrations\20250930060150_AddDateEntryMediationMediator.cs" />
+	  <Compile Remove="Migrations\20250930060150_AddDateEntryMediationMediator.Designer.cs" />
+	  <Compile Remove="Migrations\20250930105201_EditMediationSession.cs" />
+	  <Compile Remove="Migrations\20250930105201_EditMediationSession.Designer.cs" />
+	  <Compile Remove="Migrations\20250930110449_EditMediationCasePerson.cs" />
+	  <Compile Remove="Migrations\20250930110449_EditMediationCasePerson.Designer.cs" />
+	  <Compile Remove="Migrations\20250930121127_EditMediationLocationId.cs" />
+	  <Compile Remove="Migrations\20250930121127_EditMediationLocationId.Designer.cs" />
+	  <Compile Remove="Migrations\20251002061041_AddCommentMediation.cs" />
+	  <Compile Remove="Migrations\20251002061041_AddCommentMediation.Designer.cs" />
+	  <Compile Remove="Migrations\20251002102536_AddMediationCaseSessionDocument.cs" />
+	  <Compile Remove="Migrations\20251002102536_AddMediationCaseSessionDocument.Designer.cs" />
+	  <Compile Remove="Migrations\20251003074300_EditAppraisals.cs" />
+	  <Compile Remove="Migrations\20251003074300_EditAppraisals.Designer.cs" />
+	  <Compile Remove="Migrations\20251006141947_EpepCasePersonIdAdded.cs" />
+	  <Compile Remove="Migrations\20251006141947_EpepCasePersonIdAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251007054602_AddMediationFeeAndSubCode.cs" />
+	  <Compile Remove="Migrations\20251007054602_AddMediationFeeAndSubCode.Designer.cs" />
+	  <Compile Remove="Migrations\20251007100755_EditMediatorFee.cs" />
+	  <Compile Remove="Migrations\20251007100755_EditMediatorFee.Designer.cs" />
+	  <Compile Remove="Migrations\20251009061525_AddMediationInObligation.cs" />
+	  <Compile Remove="Migrations\20251009061525_AddMediationInObligation.Designer.cs" />
+	  <Compile Remove="Migrations\20251009132403_MediationNotificationLink.cs" />
+	  <Compile Remove="Migrations\20251009132403_MediationNotificationLink.Designer.cs" />
+	  <Compile Remove="Migrations\20251013072454_CaseSessionActSelectionN.cs" />
+	  <Compile Remove="Migrations\20251013072454_CaseSessionActSelectionN.Designer.cs" />
+	  <Compile Remove="Migrations\20251013113222_CaseSessionActCorrectionAdded.cs" />
+	  <Compile Remove="Migrations\20251013113222_CaseSessionActCorrectionAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251013120120_MeditationNotificationLink.cs" />
+	  <Compile Remove="Migrations\20251013120120_MeditationNotificationLink.Designer.cs" />
+	  <Compile Remove="Migrations\20251015070257_AddStartMediationDate.cs" />
+	  <Compile Remove="Migrations\20251015070257_AddStartMediationDate.Designer.cs" />
+	  <Compile Remove="Migrations\20251015115747_EditMediationPointMediatorAppraisalWithType.cs" />
+	  <Compile Remove="Migrations\20251015115747_EditMediationPointMediatorAppraisalWithType.Designer.cs" />
+	  <Compile Remove="Migrations\20251015121820_MediationCaseMediatorAppraisalAddType.cs" />
+	  <Compile Remove="Migrations\20251015121820_MediationCaseMediatorAppraisalAddType.Designer.cs" />
+	  <Compile Remove="Migrations\20251020065736_AddMediationProcedure.cs" />
+	  <Compile Remove="Migrations\20251020065736_AddMediationProcedure.Designer.cs" />
+	  <Compile Remove="Migrations\20251020074754_CaseRowVersonAdded.cs" />
+	  <Compile Remove="Migrations\20251020074754_CaseRowVersonAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251020075730_EditCaseCodeSubCaseCodeIsNull.cs" />
+	  <Compile Remove="Migrations\20251020075730_EditCaseCodeSubCaseCodeIsNull.Designer.cs" />
+	  <Compile Remove="Migrations\20251021070547_EditLabelCordinator.cs" />
+	  <Compile Remove="Migrations\20251021070547_EditLabelCordinator.Designer.cs" />
+	  <Compile Remove="Migrations\20251022113929_AddAmmentCourtDuty.cs" />
+	  <Compile Remove="Migrations\20251022113929_AddAmmentCourtDuty.Designer.cs" />
+	  <Compile Remove="Migrations\20251023145157_SelectionProtocolSubstitutionAdded.cs" />
+	  <Compile Remove="Migrations\20251023145157_SelectionProtocolSubstitutionAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251027080456_AddMediationTypeChoiceMediator.cs" />
+	  <Compile Remove="Migrations\20251027080456_AddMediationTypeChoiceMediator.Designer.cs" />
+	  <Compile Remove="Migrations\20251028091615_AddCenterInMediationSession.cs" />
+	  <Compile Remove="Migrations\20251028091615_AddCenterInMediationSession.Designer.cs" />
+	  <Compile Remove="Migrations\20251029093500_CaseSelectionSubstritutionAdded.cs" />
+	  <Compile Remove="Migrations\20251029093500_CaseSelectionSubstritutionAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251029121752_EditCaseSelectionProtokolSubstitutionIdCaseLawUnit.cs" />
+	  <Compile Remove="Migrations\20251029121752_EditCaseSelectionProtokolSubstitutionIdCaseLawUnit.Designer.cs" />
+	  <Compile Remove="Migrations\20251104091540_AddIsUserSubstitution.cs" />
+	  <Compile Remove="Migrations\20251104091540_AddIsUserSubstitution.Designer.cs" />
+	  <Compile Remove="Migrations\20251114063715_StatisticsDuration.cs" />
+	  <Compile Remove="Migrations\20251114063715_StatisticsDuration.Designer.cs" />
+	  <Compile Remove="Migrations\20251125080356_AddPersonCaseMediatorAppraisal.cs" />
+	  <Compile Remove="Migrations\20251125080356_AddPersonCaseMediatorAppraisal.Designer.cs" />
+	  <Compile Remove="Migrations\20251201122436_EisppEktteCode.cs" />
+	  <Compile Remove="Migrations\20251201122436_EisppEktteCode.Designer.cs" />
+	  <Compile Remove="Migrations\20251202083546_AddMediationCaseSessionLinkCase.cs" />
+	  <Compile Remove="Migrations\20251202083546_AddMediationCaseSessionLinkCase.Designer.cs" />
+	  <Compile Remove="Migrations\20251202111353_AddCrimeSceneCityEispp.cs" />
+	  <Compile Remove="Migrations\20251202111353_AddCrimeSceneCityEispp.Designer.cs" />
+	  <Compile Remove="Migrations\20251203073319_AddBGNCasePersonSentencePunishment.cs" />
+	  <Compile Remove="Migrations\20251203073319_AddBGNCasePersonSentencePunishment.Designer.cs" />
+	  <Compile Remove="Migrations\20251209090721_LawUnitTemplateAdded.cs" />
+	  <Compile Remove="Migrations\20251209090721_LawUnitTemplateAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251210125159_InterestRateAdded.cs" />
+	  <Compile Remove="Migrations\20251210125159_InterestRateAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20251217080105_AddCaseSessionActPeriodNotification.cs" />
+	  <Compile Remove="Migrations\20251217080105_AddCaseSessionActPeriodNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20251217082025_AddDescCaseSessionActPeriodNotification.cs" />
+	  <Compile Remove="Migrations\20251217082025_AddDescCaseSessionActPeriodNotification.Designer.cs" />
+	  <Compile Remove="Migrations\20251230160447_BankPaymentOldAmount.cs" />
+	  <Compile Remove="Migrations\20251230160447_BankPaymentOldAmount.Designer.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="IO.LogOperation" Version="1.0.5" />
+		<PackageReference Include="IO.SignTools" Version="8.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="8.0.7" />
+		<!--<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.3" />-->
+		<!--<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />-->
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
+		<PackageReference Include="MongoDB.Driver.Core" Version="2.10.4" />
+		<PackageReference Include="MongoDB.Driver.GridFS" Version="2.10.4" />
+		<PackageReference Include="NEST" Version="7.13.2" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+		<PackageReference Include="System.ServiceModel.Duplex" Version="4.8.*" />
+		<PackageReference Include="System.ServiceModel.Federation" Version="4.8.*" />
+		<PackageReference Include="System.ServiceModel.Http" Version="4.8.*" />
+		<PackageReference Include="System.ServiceModel.NetTcp" Version="4.8.*" />
+		<PackageReference Include="System.ServiceModel.Security" Version="4.8.*" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.7" />
+		<!--<PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="8.0.7" />-->
+		<!--<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7" />-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
+		<!--<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7" />-->
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.3.9" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.ServiceModel">
+			<!--<HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ServiceModel.dll</HintPath>-->
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Resources\Resource.Designer.cs">
+			<DependentUpon>Resource.resx</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\Resource.en.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Resource.resx">
+			<LastGenOutput>Resource.Designer.cs</LastGenOutput>
+			<Generator>PublicResXFileCodeGenerator</Generator>
+		</EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
+		<WCFMetadata Include="Connected Services" />
+	</ItemGroup>
 </Project>

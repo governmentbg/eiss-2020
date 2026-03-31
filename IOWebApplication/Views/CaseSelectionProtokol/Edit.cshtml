@@ -4,6 +4,10 @@
 
 @{
     ViewData["Title"] = "Ново разпределяне по дело";
+    string tabManualClass = "";
+    if (ViewBag.IsFastProcess) {
+        tabManualClass = "active";
+    }
 }
 
 @section breadcrumb{
@@ -35,11 +39,17 @@
             <div id="lawUnitData">
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs" id="caseProtocolTab">
-                        <li class="active"><a id="tabbtnSelectByGroup" href="#tabSelectByGroup" data-id="@NomenclatureConstants.SelectionMode.SelectByGroups" data-toggle="tab"><i class="fa fa-random"></i> Автоматично разпределение</a></li>
-                        <li class=""><a id="tabbtnManualSelect" href="#tabManualSelect" data-id="@NomenclatureConstants.SelectionMode.ManualSelect" data-toggle="tab"><i class="fa fa-user-o"></i> Ръчно разпределение</a></li>
-                        <li class=""><a id="tabProtocolSelectByDuty" href="#tabSelectByDuty" data-id="@NomenclatureConstants.SelectionMode.SelectByDuty" data-toggle="tab"><i class="fa fa-clock-o"></i> Разпределение по дежурство</a></li>
+                        @if(!ViewBag.IsFastProcess)
+                        {<li class="active"><a id="tabbtnSelectByGroup" href="#tabSelectByGroup" data-id="@NomenclatureConstants.SelectionMode.SelectByGroups" data-toggle="tab"><i class="fa fa-random"></i> Автоматично разпределение</a></li>}
+                        
+                        <li class="@tabManualClass"><a id="tabbtnManualSelect" href="#tabManualSelect" data-id="@NomenclatureConstants.SelectionMode.ManualSelect" data-toggle="tab"><i class="fa fa-user-o"></i> Ръчно разпределение</a></li>
+                       
+                        @if (!ViewBag.IsFastProcess){
+                            <li class=""><a id="tabProtocolSelectByDuty" href="#tabSelectByDuty" data-id="@NomenclatureConstants.SelectionMode.SelectByDuty" data-toggle="tab"><i class="fa fa-clock-o"></i> Разпределение по дежурство</a></li>
+                        }
                     </ul>
                     <div class="tab-content">
+                        @if (!ViewBag.IsFastProcess){
                         <div class="tab-pane active" id="tabSelectByGroup">
                             <div id="dataJury">
                                 @if (ViewBag.NextOpenMeating != null)
@@ -62,13 +72,16 @@
                                 <span id="NoAvailableLawUnitsInCaseGroup" style="display:none" class="text-bold">Няма повече налични съдии</span>
                             </div>
                         </div>
-                        <div class="tab-pane" id="tabManualSelect">
+                        }
+                        <div class="tab-pane @tabManualClass" id="tabManualSelect">
                             @Html.EditorFor(x => x.Description, "textarea")
                         </div>
-                        <div class="tab-pane" id="tabSelectByDuty">
+                        @if (!ViewBag.IsFastProcess){
+                            <div class="tab-pane @tabManualClass" id="tabSelectByDuty">
                             @Html.EditorFor(x => x.CourtDutyId, "GenericDropDown")
                             <a href="#" id="btnloadUnitsByDuty" onclick="loadUnitsByDuty(); return false;" class="btn btn-primary">Зареди списък</a>
                         </div>
+                        }
                     </div>
                 </div>
 
@@ -121,7 +134,7 @@
          $(function () {
             $('.nav-tabs li a').click(function (e) {
                 var tabLink = this;
-                if ($('#lawUnitList').html().length > 0) {
+                if (($('#lawUnitList').html().length > 0)) {
                     swalConfirm('При смяна на режима на разпределяне заредените участници ще се премахнат. Потвърдете смяната!', function () {
 
                         $('#lawUnitList').html('');
@@ -157,6 +170,10 @@
             }
             ManageButtonLawUnitByCaseGroup();
 
+           // ScriptFastProcess start
+
+
+            // ScriptFastProcess end
 
         $('#JudgeRoleId').change(function () {
             var roleId = $(this).val();

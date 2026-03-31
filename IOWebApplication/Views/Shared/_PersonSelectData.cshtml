@@ -18,6 +18,10 @@
             <option value="{{sourceType}}">{{sourceTypeName}}</option>
             {{/each}}
         </select>
+        <div class="check-tools" style="margin-top:10px;">
+            <a href="#" data-action="all" class="btn btn-xs btn-default">Маркирайте всички</a>
+            <a href="#" data-action="none" class="btn btn-xs btn-default">Размаркирайте всички</a>
+        </div>
     </div>
 </script>
 <script id="templateData" type="text/x-handlebars-template">
@@ -30,13 +34,13 @@
                 {{#each persons}}
                 <div class="row select-person">
                     <div class="col-lg-4">
-                        <label><input type="checkbox" class="select-person-check" value="{{id}}" /> {{fullName}}</label>
+                        <label><input type="checkbox" @*checked="checked"*@ class="select-person-check" value="{{id}}" /> {{fullName}}</label>
                         <br />
                         {{roleName}}
                     </div>
                     <div class="col-lg-8 select-adr-container">
                         {{#each addresses}}
-                        <label><input type="checkbox" class="select-address-check" value="{{Id}}" /> {{addressTypeName}}</label>
+                        <label><input type="checkbox" @*checked="checked"*@ class="select-address-check" value="{{id}}" /> {{addressTypeName}}</label>
                         <br />
                         {{fullAddress}}
                         {{/each}}
@@ -72,6 +76,14 @@
                 $(personContainer).find('.select-adr-container').show();
             } else {
                 $(personContainer).find('.select-adr-container').hide();
+            }
+        });
+
+        $(document).on('click', '.check-tools a', function () {
+            if ($(this).data('action') == 'all') {
+                $('.select-person').find('input[type="checkbox"]').prop('checked', true);
+            } else {
+                $('.select-person').find('input[type="checkbox"]').prop('checked', false);
             }
         });
     });

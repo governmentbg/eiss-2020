@@ -7,7 +7,6 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
@@ -23,7 +22,6 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
@@ -62,6 +60,7 @@ namespace IOWebApplication.Core.Services
             {
                 CaseId = caseSession.CaseId,
                 CaseSessionId = caseSessionId,
+                CaseSessionTypeId = caseSession.SessionTypeId,
                 PaperEdition = vksHeader?.PaperEdition,
                 CheckRow = repo.AllReadonly<VksNotificationPrintList>()
                                .Where(x => x.CaseSessionId == caseSessionId)
@@ -111,7 +110,7 @@ namespace IOWebApplication.Core.Services
                     linkListVM = linkListVM.Where(x => (x.isXFirst && x.PersonId == person.Id) ||
                                                        (!x.isXFirst && x.PersonRelId == person.Id))
                                            .ToList();
-                    if (linkListVM.Count() == 1)
+                    if (linkListVM.Count == 1)
                     {
                         notificationItem.CasePersonLinkId = linkListVM.First().Id;
                     }
@@ -160,11 +159,9 @@ namespace IOWebApplication.Core.Services
                     SetVksLabelFromTemplate(link);
                 }
 
-                item.CasePersonLinksDdl = casePersonLinkService.ListForPersonToDropDown(linkListVM, item.CasePersonId ?? 0)
-                                                               .Where(x => x.Value != "-2")
-                                                               .ToList();
+                item.CasePersonLinksDdl = casePersonLinkService.ListForPersonToDropDown(linkListVM, item.CasePersonId ?? 0, true, false);
                 item.NotificationAddressesDdl = GetAddrForPerson(linkListVM, item.CasePersonId ?? 0, item.CasePersonLinkId ?? 0);
-                if (item.NotificationAddressId == null && item.NotificationAddressesDdl.Count(x => x.Value != "-1") > 0)
+                if (item.NotificationAddressId == null && item.NotificationAddressesDdl.Any(x => x.Value != "-1"))
                 {
                     item.NotificationAddressId = long.Parse(item.NotificationAddressesDdl.First().Value);
                 }
@@ -213,7 +210,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на списък за призоваване CaseSessionId={ model.CaseSessionId }");
+                logger.LogError(ex, $"Грешка при запис на списък за призоваване CaseSessionId={model.CaseSessionId}");
                 return false;
             }
             return true;
@@ -232,6 +229,7 @@ namespace IOWebApplication.Core.Services
             var caseSessions = repo.AllReadonly<CaseSession>()
                                    .Include(x => x.Case)
                                    .ThenInclude(x => x.Otdelenie)
+                                   .Where(x => x.SessionType.SessionTypeGroup != NomenclatureConstants.CaseSessionTypeGroup.PrivateSession)
                                    .Where(x => x.CourtId == userContext.CourtId &&
                                                x.DateExpired == null &&
                                                (filter == null || x.DateFrom >= filter.DateFrom.Date) &&
@@ -315,13 +313,15 @@ namespace IOWebApplication.Core.Services
                         sideName += " ";
                     if (notification.NotificationAddress != null)
                         sideName += nomService.GetFullAddress(notification.NotificationAddress, false, true, true);
-                    if (notification.CasePerson?.PersonRole?.RoleKindId == NomenclatureConstants.PersonKinds.LeftSide)
+                    if (notification.CasePerson?.PersonRole?.RoleKindId == NomenclatureConstants.PersonKinds.LeftSide ||
+                        notification.CasePerson?.PersonRole?.ForVksAsLeftSide == true)
                     {
                         if (!string.IsNullOrEmpty(sideName))
                             item.LeftSide += (string.IsNullOrEmpty(item.LeftSide) ? string.Empty : "; ") + sideName;
                         forAdd = true;
                     }
-                    if (notification.CasePerson?.PersonRole?.RoleKindId == NomenclatureConstants.PersonKinds.RightSide)
+                    if (notification.CasePerson?.PersonRole?.RoleKindId == NomenclatureConstants.PersonKinds.RightSide ||
+                        notification.CasePerson?.PersonRole?.ForVksAsRightSide == true)
                     {
                         if (!string.IsNullOrEmpty(sideName))
                             item.RightSide += (string.IsNullOrEmpty(item.RightSide) ? string.Empty : "; ") + sideName;
@@ -348,6 +348,7 @@ namespace IOWebApplication.Core.Services
             if (vksHeader == null)
             {
                 vksHeader = new VksNotificationHeader();
+                vksHeader.DateWrt = DateTime.Now;
                 vksHeader.Month = vksMonth;
                 repo.Add(vksHeader);
                 repo.SaveChanges();
@@ -495,8 +496,8 @@ namespace IOWebApplication.Core.Services
         }
         public bool IsCaseForCountryPaper(int caseId)
         {
-            var caseCase = repo.GetById<Case>(caseId);
-            return (caseCase?.CaseGroupId == NomenclatureConstants.CaseGroups.GrajdanskoDelo || caseCase?.CaseGroupId == NomenclatureConstants.CaseGroups.Trade);
+            var caseCaseCaseGroupId = GetPropById<Case, int>(caseId, x => x.CaseGroupId);
+            return (caseCaseCaseGroupId == NomenclatureConstants.CaseGroups.GrajdanskoDelo || caseCaseCaseGroupId == NomenclatureConstants.CaseGroups.Trade);
         }
         public List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId)
         {
@@ -504,11 +505,11 @@ namespace IOWebApplication.Core.Services
                  .Include(x => x.Address)
                  .Where(x => x.CasePersonId == casePersonId)
                  .ToList();
-          var result = addresses.Select(x => new SelectListItem()
-                {
-                    Value = x.AddressId.ToString(),
-                    Text = ((x.ForNotification ?? false) ? " " : "") + nomService.GetFullAddress(x.Address, false, true, true)
-                }).ToList();
+            var result = addresses.Select(x => new SelectListItem()
+            {
+                Value = x.AddressId.ToString(),
+                Text = ((x.ForNotification ?? false) ? " " : "") + nomService.GetFullAddress(x.Address, false, true, true)
+            }).ToList();
 
             if (result.Count == 0)
                 result.Insert(0, new SelectListItem() { Text = "Няма данни", Value = "-1" });

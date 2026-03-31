@@ -1,0 +1,29 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
+@model BlankTemplateSelectVM
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "wtModalForm" }))
+{
+    @Html.EditorFor(x => x.BlankTemplateId, "GenericDropDown")
+    <div class="text-danger" style="font-weight:bold;">
+        Важно: Текущото съдържание ще бъде подменено с това в избрания шаблон!
+    </div>
+    <br />
+    <br />
+    <div class="form-group">
+        <input type="submit" value="Избери" class="btn btn-warning" />
+    </div>
+}
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(function () {
+        attachAjaxForm('#wtModalForm', function (data) {
+            if (data.responseJSON.result == true) {
+                HideModal();
+                cbackBlankTemplateSelect(data.responseJSON.mainText, data.responseJSON.addText);
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+
+        });
+    })
+</script>

@@ -1,0 +1,134 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Core.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@model RegixCriminalRecordsReportVM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.Filter.IdentifierFilter, "objInline", new { label = "Справка за: ЕГН/ЛНЧ " })
+        <br />
+        <br />
+
+        @if (string.IsNullOrEmpty(Model.Response.MessageError) == false)
+        {
+            <b>@Model.Response.MessageError</b>
+        }
+        else
+        {
+            @Html.DisplayFor(x => x.Response.RegistrationNumber, "objInline")
+            @Html.DisplayFor(x => x.Response.ValidFrom, "objInline")
+            @Html.DisplayFor(x => x.Response.ValidTo, "objInline")
+            <br />
+            <br />
+
+            <center>
+                <b>Данни за лицето</b>
+            </center>
+
+            @Html.DisplayFor(x => x.Response.PersonData.NamesBg, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.NamesEn, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.Gender, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.IdentityNumber, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.BirthDate, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.BirthPlace, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.PersonNationality, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.PersonIdentificationDocument, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.MotherNames, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.MotherNamesEn, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.FatherNames, "objInline")
+            @Html.DisplayFor(x => x.Response.PersonData.FatherNamesEn, "objInline")
+
+            <br />
+            <br />
+
+            @if (Model.Response.BulletinTypes.Count == 0)
+            {
+                <center>
+                    <b>Лицето не е осъдено</b>
+                </center>
+            }
+            {
+                @foreach (var cl in Model.Response.BulletinTypes)
+                {
+                    <center>
+                        <b>Бюлетин за съдимост</b>
+                    </center>
+                    @Html.DisplayFor(x => cl.BulletinType, "objInline")
+
+                    <center>
+                        <b>Лични данни за осъденото лице</b>
+                    </center>
+
+                    @Html.DisplayFor(x => cl.Person.NamesBg, "objInline")
+                    @Html.DisplayFor(x => cl.Person.NamesEn, "objInline")
+                    @Html.DisplayFor(x => cl.Person.Gender, "objInline")
+                    @Html.DisplayFor(x => cl.Person.IdentityNumber, "objInline")
+                    @Html.DisplayFor(x => cl.Person.BirthDate, "objInline")
+                    @Html.DisplayFor(x => cl.Person.BirthPlace, "objInline")
+                    @Html.DisplayFor(x => cl.Person.PersonNationality, "objInline")
+                    @Html.DisplayFor(x => cl.Person.PersonIdentificationDocument, "objInline")
+                    @Html.DisplayFor(x => cl.Person.MotherNames, "objInline")
+                    @Html.DisplayFor(x => cl.Person.MotherNamesEn, "objInline")
+                    @Html.DisplayFor(x => cl.Person.FatherNames, "objInline")
+                    @Html.DisplayFor(x => cl.Person.FatherNamesEn, "objInline")
+
+                    <br />
+                    <br />
+
+                    <center>
+                        <b>Данни за осъждането</b>
+                    </center>
+                    @Html.DisplayFor(x => cl.Conviction.Decision, "objInline")
+                    @Html.DisplayFor(x => cl.Conviction.CriminalCase, "objInline")
+                    @Html.DisplayFor(x => cl.Conviction.ConvictionRemarks, "objInline")
+
+                    @if (cl.Conviction.ConvictionOffence != null)
+                    {
+                        <b>Престъпления:</b>
+                        <br />
+                        @foreach (var cl1 in cl.Conviction.ConvictionOffence)
+                        {
+                            @cl1
+                            <br />
+                        }
+                    }
+
+                    @Html.DisplayFor(x => cl.Conviction.WithoutSanction, "objInline")
+
+                    @if (cl.Conviction.ConvictionSanction != null)
+                    {
+                        <b>Наказания, за специфични случаи на употреба:</b>
+                        <br />
+                        @foreach (var cl1 in cl.Conviction.ConvictionSanction)
+                        {
+                            @cl1
+                            <br />
+                        }
+                    }
+
+                    @Html.DisplayFor(x => cl.Conviction.ServingPrevSuspendedSentence, "objInline")
+
+                    @if (cl.Conviction.ConvictionDecisions != null)
+                    {
+                        <b>Допълнителни сведения:</b>
+                        <br />
+                        @foreach (var cl1 in cl.Conviction.ConvictionDecisions)
+                        {
+                            @cl1
+                            <br />
+                        }
+                    }
+
+                    @Html.DisplayFor(x => cl.Conviction.EisppNumber, "objInline")
+                }
+            }
+        }
+
+       
+
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}

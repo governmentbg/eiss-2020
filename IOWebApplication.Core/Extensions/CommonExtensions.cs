@@ -1,13 +1,11 @@
-﻿using Audit.Core;
-using Audit.Core.Providers;
-using IOWebApplication.Core.Models;
+﻿using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Audit;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq.Expressions;
@@ -37,6 +35,8 @@ namespace IOWebApplication.Core.Extensions
             model.FullName = source.MakeFullName();
             model.IsDeceased = source.IsDeceased;
             model.DateDeceased = source.DateDeceased;
+            model.GenderId = source.GenderId.NumberEmptyToNull();
+            model.CitizenshipId = source.CitizenshipId.NumberEmptyToNull();
 
             if (copySourceData)
             {
@@ -74,7 +74,7 @@ namespace IOWebApplication.Core.Extensions
         public static string MakeFullName(this NamesBase model)
         {
             //Ако е избрана институция се връща директно пълното име
-            if (model.Person_SourceType > 0 && model.Person_SourceType != SourceTypeSelectVM.EisppPerson)
+            if (!string.IsNullOrEmpty(model.FullName) && model.Person_SourceType > 0 && model.Person_SourceType != SourceTypeSelectVM.EisppPerson)
             {
                 return model.FullName;
             }
@@ -190,31 +190,6 @@ namespace IOWebApplication.Core.Extensions
             return result;
         }
 
-
-        public static void ParseFromEvent(this AuditLog model, AuditEvent auditEvent)
-        {
-            if (auditEvent == null)
-            {
-                return;
-            }
-
-            if (auditEvent.CustomFields.ContainsKey("currentContext"))
-            {
-                JObject obj = (JObject)auditEvent.CustomFields["currentContext"];
-
-                ContextInfoModel currentContext = obj.ToObject<ContextInfoModel>();
-                model.Operation = currentContext.Operation;
-                model.BaseObject = currentContext.BaseObject;
-                model.ObjectType = currentContext.ObjectType;
-                model.ObjectInfo = currentContext.ObjectInfo;
-            }
-
-            if (auditEvent.CustomFields.ContainsKey("currentIp"))
-            {
-                model.ClientIP = (string)auditEvent.CustomFields["currentIp"];
-            }
-        }
-
         public static bool IsDataTableRequest(this ActionExecutedContext context)
         {
 
@@ -227,10 +202,13 @@ namespace IOWebApplication.Core.Extensions
             return false;
         }
 
-        public static bool IsJsonResult(this ActionExecutedContext context)
+        public static bool IsHiddenActionResult(this ActionExecutedContext context)
         {
 
-            if (context?.Result is Microsoft.AspNetCore.Mvc.JsonResult)
+            if (context?.Result is Microsoft.AspNetCore.Mvc.JsonResult
+                 || context?.Result is Microsoft.AspNetCore.Mvc.PartialViewResult
+                 || context?.Result is Microsoft.AspNetCore.Mvc.FileResult
+                 || context?.Result is Microsoft.AspNetCore.Mvc.FileContentResult)
             {
                 return true;
             }

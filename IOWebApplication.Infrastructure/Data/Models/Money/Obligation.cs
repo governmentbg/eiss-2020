@@ -4,6 +4,8 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -97,6 +99,49 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         //Вид глоба
         [Column("money_fine_type_id")]
         public int? MoneyFineTypeId { get; set; }
+
+        [Column("amount_bgn")]
+        [Display(Name = "Сума в лева")]
+        public decimal? AmountBGN { get; set; }
+
+        /// <summary>
+        /// Идентификатор на среща
+        /// </summary>
+        [Column("mediation_case_session_id")]
+        [Comment("Идентификатор на среща")]
+        public int? MediationCaseSessionId { get; set; }
+
+        /// <summary>
+        /// Идентификатор на медиатор
+        /// </summary>
+        [Column("mediation_mediator_id")]
+        [Comment("Идентификатор на медиатор")]
+        public int? MediationMediatorId { get; set; }
+
+        /// <summary>
+        /// Идентификатор на ставки за заплащане на медиатори
+        /// </summary>
+        [Column("mediator_fee_id")]
+        [Comment("Идентификатор на ставки за заплащане на медиатори")]
+        public int? MediatorFeeId { get; set; }
+
+        /// <summary>
+        /// Среща за медиация
+        /// </summary>
+        [ForeignKey(nameof(MediationCaseSessionId))]
+        public virtual MediationCaseSession MediationCaseSession { get; set; }
+
+        /// <summary>
+        /// Медиатор
+        /// </summary>
+        [ForeignKey(nameof(MediationMediatorId))]
+        public virtual MediationMediator Mediator { get; set; }
+
+        /// <summary>
+        /// Ставки за заплащане на медиатори
+        /// </summary>
+        [ForeignKey(nameof(MediatorFeeId))]
+        public virtual MediatorFee MediatorFee { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

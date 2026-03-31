@@ -1,0 +1,53 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+@{
+    var containerId = Guid.NewGuid().ToString();
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+<h3 class="section-title section-title--xs mb-3" id="fp-debtdistribution">3.3 Разпределение на отговорността при повече от един длъжник</h3>
+<div class="row">
+    <div class="col-lg-12">
+        <label>@Html.RadioButtonFor(x => x.JoinedDestributionTypeId, 1)&nbsp;Солидарна отговорност</label>
+        &nbsp;&nbsp;&nbsp;
+        <label>@Html.RadioButtonFor(x => x.JoinedDestributionTypeId, 2)&nbsp;Разделна отговорност</label>
+        &nbsp;&nbsp;&nbsp;
+        <label>@Html.RadioButtonFor(x => x.JoinedDestributionTypeId, 0)&nbsp;Неуточнена</label>
+    </div>
+</div>
+<span class="text-danger" asp-validation-for="JoinedDestributionTypeId"></span>
+<div class="debtDistributionList">
+    <button onclick="autoDebtDistribution();return false;" class="btn u-btn-border cta-add-dark">Разпредели</button>
+    <h3 class="section-title section-title--xxs mb-3">Разделна отговорност</h3>
+    <div class="dynamic-form " data-reindex="true" data-container="@containerId" data-addcallback="callbackAddDebtDistribution">
+        <table class="fast-process-tbl" id="@containerId">
+            <tr>
+                <th>Длъжник</th>
+                <th>По вземане No</th>
+                <th>Дял</th>
+                <th>Размер</th>
+                <th>Валута</th>
+                @if (isInEuro)
+                {
+                    <th width="10%">Сума, евро</th>
+                }
+                else
+                {
+                    <th width="10%">Сума, лв</th>
+                }
+                <th width="30px"></th>
+            </tr>
+            @for (int i = 0; i < Model.DebtDistributions.Count(); i++)
+            {
+                Model.DebtDistributions[i].Index = i;
+                ViewData.TemplateInfo.HtmlFieldPrefix = Model.DebtDistributions[i].GetPath;
+
+                <partial name="_FastProcessDebtDistributionItem" model="@Model.DebtDistributions[i]" />
+                ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+            }
+        </table>
+        <div>
+            <span asp-validation-for="@Model.DebtDistributionValidations" class="text-danger"></span>
+        </div>
+        <button class="btn u-btn-border cta-add-dark add-item" data-container="@containerId" data-url="@Url.Action("New_DebtDistribution", new { documentId = Model.DocumentId, caseId = Model.CaseId })" data-index="@Model.DebtDistributions.Count()">Добави разпределение</button>
+    </div>
+</div>

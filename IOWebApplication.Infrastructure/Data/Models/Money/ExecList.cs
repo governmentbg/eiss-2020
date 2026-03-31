@@ -1,4 +1,6 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
@@ -12,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
 {
     //Изпълнителни листове
     [Table("money_exec_list")]
-    public class ExecList : UserDateWRT
+    public class ExecList : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -20,6 +22,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
 
         [Column("court_id")]
         public int CourtId { get; set; }
+
+        [Column("case_id")]
+        public int? CaseId { get; set; }
 
         [Column("exec_list_type_id")]
         public int ExecListTypeId { get; set; }
@@ -36,6 +41,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("out_document_id")]
         [Display(Name = "Документ")]
         public long? OutDocumentId { get; set; }
+
+        [Column("date_signed")]
+        public DateTime? DateSigned { get; set; }
 
         /// <summary>
         /// изпълнително дело, образувано от ЧСИ, ДСИ - не е обект на ЕИСС
@@ -73,6 +81,19 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Display(Name = "Статус")]
         public int? ExecListStateId { get; set; }
 
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
+
+        [Column("generate_exec_process")]
+        public bool? GenerateExecProcess { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -95,6 +116,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         public virtual ICollection<ExecListObligation> ExecListObligations { get; set; }
 
         public virtual ICollection<ExchangeDocExecList> ExchangeDocExecLists { get; set; }
+
+        [ForeignKey(nameof(CaseId))]
+        public virtual Case Case { get; set; }
 
         public ExecList()
         {

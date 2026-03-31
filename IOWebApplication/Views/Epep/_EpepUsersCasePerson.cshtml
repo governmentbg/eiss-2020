@@ -1,0 +1,8 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Epep
+@model List<EpepUserVM>
+<ul>
+    @foreach (var epepUser in Model)
+    {
+        <li>@epepUser.FullName ; @epepUser.RoleType (@epepUser.Email)</li>
+    }
+</ul>

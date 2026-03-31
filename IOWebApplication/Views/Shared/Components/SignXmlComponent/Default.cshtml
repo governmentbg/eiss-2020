@@ -1,0 +1,68 @@
+﻿@model IOWebApplication.Models.SignPdfViewModel
+
+<div id="signMessageContainer" style="display:none">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger no-margin-bottom">
+                <button class="close sign-close">×</button>
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span id="signErrorMessage"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="box box-success">
+            <div class="box-header with-border">
+                <h3 class="box-title">Подписване на XML</h3>
+                @if (!string.IsNullOrEmpty(Model.SignerName))
+                {
+                    <div class="pull-right">Очаква се подпис на: <strong>@Model.SignerName</strong></div>
+                }
+            </div>
+            <div class="box-body">
+                <object data="@(Model.PreviewPdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;">
+                    <embed src="@(Model.PreviewPdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;" />
+                </object>
+            </div>
+            <div class="box-footer">
+                <form action="@Url.Action("SignXml", "SignDocument", new { area = String.Empty })" method="post" class="xmlSigner">
+                    @Html.HiddenFor(m => m.TempFileId)
+                    @Html.HiddenFor(m => m.FileName)
+                    @Html.HiddenFor(m => m.SuccessUrl)
+                    @Html.HiddenFor(m => m.ErrorUrl)
+                    @Html.HiddenFor(m => m.SourceId)
+                    @Html.HiddenFor(m => m.SourceType)
+                    @Html.HiddenFor(m => m.SignerName)
+                    @Html.HiddenFor(m => m.SignerUic)
+                    @Html.HiddenFor(m => m.FileTitle)
+                    @Html.HiddenFor(m => m.FileId)
+                    @Html.HiddenFor(m => m.SignituresCount)
+                    @Html.HiddenFor(m => m.ClientCode)
+                    @Html.HiddenFor(m => m.WorkTaskId)
+                    @Html.HiddenFor(m => m.FileHash, new { disabled = "disabled" })
+                    @Html.HiddenFor(m => m.Signature)
+                    @Html.HiddenFor(m => m.ErrorCode)
+                    <a href="@Model.CancelUrl" class="btn btn-danger">Назад</a>
+                    <button type="button" class="btn btn-success pull-right submit-sign-xml" disabled>Подпиши</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('form.xmlSigner').submit(function () {
+            $('#ClientCode').val(Date.now());
+        });
+    });
+    function checkError(errorCode) {
+        $.get('@Url.Action("CheckLSMErrorCode", "SignDocument", new { area = String.Empty })' + '?errorCode=' + errorCode)
+            .then(function (data) {
+                showSignError(data.errorMessage);
+            });
+    }
+</script>
+<script defer src="~/js/prod/sign.min.js" asp-append-version="true"></script>

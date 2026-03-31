@@ -1,5 +1,6 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
 @using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @model ObligationMainDataVM
 
 @{
@@ -60,6 +61,14 @@
                     <i class="fa fa-paypal" title="Разходен ордер"></i>
                 </button>
             }
+            @if (Model.DocumentId > 0 && ViewBag.documentRequestTypeId > 0)
+            {
+                <a href="@Url.Action("BankFilePaymentReference", "Money")" target="_blank" class="btn btn-primary" title="Плащания от банков файл"><i class="fa fa-paypal"></i><span class="hidden-sm hidden-xs"> Плащания от банков файл</span></a>
+                <button type="button" class="btn btn-primary" id="btnBalanceBankPayment" onclick="MakeBalanceBankPayment()" value="Плащане по референция" title="Плащане по референция">
+                    Плащане по референция
+                    <i class="fa fa-paypal" title="Плащане по референция"></i>
+                </button>
+            }
         </div>
     </div>
 }
@@ -86,6 +95,7 @@
                         d.caseSessionActId = @(Model.CaseSessionActId??0);
                         d.documentId = @(Model.DocumentId??0);
                         d.caseSessionId = @(Model.CaseSessionId??0);
+                        d.assignmentDocumentId = @(Model.AssignmentDocumentId ?? 0);
                     },
                     initialCall: false
                 },
@@ -113,7 +123,7 @@
                         name: 'obligationDate',
                         data: 'obligationDate',
                         title: 'От дата',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                         "render": function (value) {
                             if (value)
@@ -126,21 +136,21 @@
                         name: 'casePersonUic',
                         data: 'casePersonUic',
                         title: 'Идентификатор',
-                        sortable: true,
+                        sortable: false,
                         searchable: false
                     },
                     {
                         name: 'casePersonName',
                         data: 'casePersonName',
                         title: 'Лице',
-                        sortable: true,
+                        sortable: false,
                         searchable: false
                     },
                     {
                         name: 'moneyTypeName',
                         data: 'moneyTypeName',
                         title: 'Вид сума / задължение',
-                        sortable: true,
+                        sortable: false,
                         searchable: true
                     },
                     {
@@ -148,8 +158,8 @@
                         name: 'amount',
                         data: 'amount',
                         title: 'Сума',
-                        sortable: true,
-                        searchable: true,
+                        sortable: false,
+                        searchable: false,
                         "render": function (value) {
                             if (value)
                                 return parseFloat(value).toFixed(2);
@@ -157,12 +167,31 @@
                                 return "0.00";
                         }
                     },
+                    @if (userContext.IsInterimPeriodEuro)
+                    {
+                        <text>
+                         {
+                            className: "text-right",
+                            name: 'amountBGN',
+                            data: 'amountBGN',
+                            title: 'Сума в лева',
+                            sortable: true,
+                            searchable: false,
+                            "render": function (value) {
+                                if (value)
+                                    return parseFloat(value).toFixed(2);
+                                else
+                                    return "0.00";
+                            }
+                         },
+                       </text>
+                    } 
                     {
                         className: "text-right",
                         name: 'amountPay',
                         data: 'amountPay',
                         title: 'Платена сума',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                         "render": function (value) {
                             if (value)
@@ -176,7 +205,7 @@
                         name: 'amountForPay',
                         data: 'amountForPay',
                         title: 'Остатък',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                         "render": function (value) {
                             if (value)
@@ -193,8 +222,8 @@
                         name: 'regNumberExpenseOrder',
                         data: 'regNumberExpenseOrder',
                         title: 'РКО',
-                        sortable: true,
-                        searchable: true,
+                        sortable: false,
+                        searchable: false,
                         "render": function (a, b, item, d) {
                             return TemplateToHtml('#templateExpenseOrder', item);
                         }
@@ -211,8 +240,8 @@
                             name: 'regNumberExecList',
                             data: 'regNumberExecList',
                             title: 'ИЛ',
-                            sortable: true,
-                            searchable: true,
+                            sortable: false,
+                            searchable: false,
                             "render": function (a, b, item, d) {
                                 return TemplateToHtml('#templateExecList', item);
                             }
@@ -224,7 +253,7 @@
                             name: 'isActive',
                         data: "isActive",
                         title: 'Активен',
-                        sortable: true,
+                        sortable: false,
                         searchable: false,
                         className: "text-center",
                         "render": function (value) {
@@ -284,9 +313,13 @@
             return;
         }
         requestContent('@Url.Action("Payment","Money")'
-            , { idStr:ids}
+            ,
+            {
+                idStr: ids,
+                documentId: @(Model.DocumentId ?? 0)
+            }
             , function (data) {
-                ShowModalDialog('Плащане', data);
+                ShowModalDialogBackdrop('Плащане', data);
             });
     }
 
@@ -320,6 +353,23 @@
                 ShowModalDialog('Разходен ордер', data);
             });
     }
+
+    function MakeBalanceBankPayment()
+    {
+        if (table === undefined) return;
+        var ids = GetAllCheckIds();
+
+        if (ids == "") {
+            messageHelper.ShowErrorMessage('Изберете поне едно задължение за плащане.');
+            return;
+        }
+        requestContent('@Url.Action("BalanceBankPayment", "Money")'
+            , { idStr: ids }
+            , function (data) {
+                ShowModalDialog('Плащане по референция', data);
+            });
+    }
+
 
 </script>
 <script id="templateExpenseOrder" type="text/x-handlebars-template">

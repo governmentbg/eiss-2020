@@ -41,6 +41,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Рецидив")]
         public int RecidiveTypeId { get; set; }
 
+        [Display(Name = "Не се наказва")]
+        [Column("not_punished")]
+        public bool? NotPunished { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 

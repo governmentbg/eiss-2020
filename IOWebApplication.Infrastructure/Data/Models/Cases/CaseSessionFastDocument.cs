@@ -37,7 +37,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(CaseSessionFastDocumentInitId))]
         public virtual CaseSessionFastDocument CaseSessionFastDocumentInit { get; set; }
 
-        public virtual ICollection<CaseSessionFastDocumentH> History { get; set; }
+        public virtual ICollection<CaseSessionFastDocumentH>? History { get; set; }
         
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
@@ -52,6 +52,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
+
+        
     }
 
     /// <summary>
@@ -68,6 +70,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(Id))]
         public virtual CaseSessionFastDocument CaseSessionFastDocument { get; set; }
+
+        public void ClearForeignKeys()
+        {
+            CaseSessionFastDocument = null;
+        }
     }
     public class BaseInfo_CaseSessionFastDocument : UserDateWRT
     {

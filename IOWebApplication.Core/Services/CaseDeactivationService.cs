@@ -1,18 +1,16 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using Microsoft.Extensions.Logging;
-using IOWebApplication.Infrastructure.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
-using IOWebApplication.Infrastructure.Constants;
-using iText.Kernel.XMP.Impl;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -23,7 +21,6 @@ namespace IOWebApplication.Core.Services
         private readonly IMQEpepService mqEpepService;
         public CaseDeactivationService(
             ILogger<CaseDeactivationService> _logger,
-            INomenclatureService _nomService,
             IRepository _repo,
             IUserContext _userContext,
             ICaseDeadlineService _caseDeadlineService,
@@ -110,7 +107,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool DeclareDeactivation(int id)
+        public async Task<bool> DeclareDeactivation(int id)
         {
             try
             {
@@ -129,7 +126,7 @@ namespace IOWebApplication.Core.Services
                 caseModel.CaseStateDescription = model.Description;
                 repo.Update(caseModel);
 
-                mqEpepService.AppendCase(caseModel, EpepConstants.ServiceMethod.Delete);
+                await mqEpepService.AppendCase(caseModel, EpepConstants.ServiceMethod.Delete);
                 caseDeadlineService.DeadLineOnCase(caseModel);
                 repo.SaveChanges();
 

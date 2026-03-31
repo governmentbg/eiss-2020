@@ -1,11 +1,10 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Cases
 {
@@ -36,6 +35,30 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Статус")]
         public int ActCoordinationTypeId { get; set; }
 
+        /// <summary>
+        /// Вид съгласуване: 1 - на акт,2 - на мотиви
+        /// </summary>
+        [Column("coordination_type")]
+        public int CoordinationType { get; set; }
+
+        /// <summary>
+        /// Дата на подписване на особеното мнение
+        /// </summary>
+        [Column("coordination_declared_date")]
+        public DateTime? CoordinationDeclaredDate { get; set; }
+
+        /// <summary>
+        /// Потребител обезличил акта
+        /// </summary>
+        [Column("depersonalize_user_id")]
+        public string DepersonalizeUserId { get; set; }
+
+        /// <summary>
+        /// Дата на финализиране на обезличаването
+        /// </summary>
+        [Column("depersonalize_end_date")]
+        public DateTime? DepersonalizeEndDate { get; set; }
+
         [Column("content")]
         [Display(Name = "Особено мнение")]
         [AllowHtml]
@@ -55,5 +78,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(ActCoordinationTypeId))]
         public virtual ActCoordinationType ActCoordinationType { get; set; }
+
+        [ForeignKey(nameof(DepersonalizeUserId))]
+        public virtual ApplicationUser DepersonalizeUser { get; set; }
     }
 }

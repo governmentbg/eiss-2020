@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -24,5 +25,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 
         [Column("code_for_search")]
         public string CodeForSearch { get; set; }
+
+        [Column("file_directory")]
+        [Comment("Име на директория, в която се пращат файловете")]
+        public string FileDirectory { get; set; }
+
+        [Column("file_structure_type")]
+        [Comment("Тип на структура на файла")]
+        public int FileStructureType { get; set; }
+
+        [Column("file_encoding_name")]
+        [Comment("Encoding на файла")]
+        public string FileEncodingName { get; set; }
     }
 }

@@ -1,0 +1,48 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+@{
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+
+    bool is417 = Model.RequestTypeCode == FastProcessRequestVM.FastProcess417;
+}
+<div class="itemList">
+    <h3 class="section-title section-title--xxs mb-3">Вземане за предаване на движима вещ</h3>
+    <div class="row">
+        <div class="col-lg-12">
+            @Html.EditorFor(x => x.ItemClaim.Description, "Textarea")
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.ItemClaim.ClaimedByDebtorWithReturn)
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.ItemClaim.ItemWithPledge)
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.ItemClaim.ItemClaimedWithReturn)
+        </div>
+        @if (is417)
+        {
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.ItemClaim.Contract)
+            </div>
+        }
+        <div class="col-lg-3">
+            <div class="row">
+                @if (isInEuro)
+                {
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.ItemClaim.TotalAmountEUR)
+                    </div>
+                }
+                else
+                {
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.ItemClaim.TotalAmountBGN)
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

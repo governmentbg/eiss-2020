@@ -1,16 +1,19 @@
-﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Common.BlankEditVM;
+﻿@using IOWebApplication.Infrastructure.Constants;
+@using IOWebApplication.Infrastructure.Contracts;
+@model IOWebApplication.Infrastructure.Models.ViewModels.Common.BlankEditVM;
+@inject IUserContext userContext;
 @{
     ViewData["Title"] = Model.Title;
     Layout = "~/Views/Shared/_MasterLayout.cshtml";
     bool hasFooter = !string.IsNullOrEmpty(Model.HtmlFooter) || Model.FooterIsEditable;
 }
-@section menuHeader{
+@section menuHeader {
     <header class="main-header">
         @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
     </header>
 }
 
-@section contentHeader{
+@section contentHeader {
     <section class="content-header">
         <h1>
             @ViewData["Title"]
@@ -35,6 +38,33 @@
 }
 <div class="row">
     <div class="col-lg-12">
+        <div class="box box-default" id="boxPreview">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <table border="0" cellpadding="5">
+                        <tr>
+                            <td>Преглед на документ</td>
+                            <td><select id="selPreviewDoc" class="form-control"></select></td>
+                            <td><a href="#" id="showPdf" class="btn btn-def"><i class="fa fa-search"></i>&nbsp; Преглед</a></td>
+                        </tr>
+                    </table>
+                </h3>
+
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+                <!-- /.box-tools -->
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body" style="" id="boxPreviewBody">
+            </div>
+            <!-- /.box-body -->
+        </div>
+
+
+
         @using (Html.BeginForm(FormMethod.Post, new { onsubmit = "storeContent();", enctype = "multipart/form-data" }))
         {
             @Html.HiddenFor(x => x.SourceType)
@@ -68,13 +98,13 @@
             </div>
             @if (hasFooter)
             {
-                <div class="box box-default @((!Model.FooterIsEditable) ? "collapsed-box":"")">
+                <div class="box box-default @((!Model.FooterIsEditable) ? "collapsed-box" : "")">
                     <div class="box-header with-border">
                         <h3 class="box-title">@(Model.FooterTitle ?? "Долен колонтитул")</h3>
 
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                                <i class="fa @((!Model.FooterIsEditable) ? "fa-plus":"fa-minus")"></i>
+                                <i class="fa @((!Model.FooterIsEditable) ? "fa-plus" : "fa-minus")"></i>
                             </button>
                         </div>
                         <!-- /.box-tools -->
@@ -106,7 +136,53 @@
                 &nbsp;
                 <a href="@Html.Raw(Model.ReturnUrl)" class="btn btn-danger">Назад</a>
 
+                @if (Model.BlankSourceType > 0 || Model.SourceType == SourceTypeSelectVM.CaseSessionActBlank)
+                {
+
+
+                    <div class="btn-group">
+                        <button type="button" title="Зареждане на предефинирано съдържание от шаблони" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-download"></i> Шаблони <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            @if (Model.SourceType == SourceTypeSelectVM.CaseSessionActBlank)
+                            {
+                                <li><a href="#" class="modal-loader" data-modal-title="Изберете личен шаблон" data-modal-url="@Url.Action("Get_LawUnitTemplates", "LawUnitTemplate", new { actId = Model.SourceId })">Лични шаблони</a></li>
+                            }
+                            @if (Model.BlankSourceType > 0)
+                            {
+                                <li><a href="#" class="modal-loader" data-modal-title="Изберете шаблон" data-modal-url="@Url.Action("Get_BlankTemplates", "BlankTemplate", new { sourceType = Model.BlankSourceType, sourceId = Model.BlankSourceId, caseId = Model.BlankCaseId })">Общи шаблони</a></li>
+                            }
+                        </ul>
+                    </div>
+                }
+               
+                @if (Model.BlankCaseId > 0)
+                {
+                    <text>
+                        &nbsp;<a href="#" id="btnTogglePreview" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp; Документи</a>
+                    </text>
+                }
+                @if (Model.RelatedActId > 0)
+                {
+                    <text>
+                        <div class="btn-group">
+                            <button type="button" title="Изтеглете съдържание от свързан акт" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-download"></i> Свързано съдържание <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" onclick="getContentPartByAct(1);return false;">Основна част</a></li>
+                                <li><a href="#" onclick="getContentPartByAct(2);return false;">Диспозитив</a></li>
+                            </ul>
+                        </div>
+
+                        @* <a href="#" onclick="getContentPartByAct(2);return false;" class="btn btn-default"><i class="fa fa-download"></i>&nbsp; Изтегли диспозитив</a> *@
+
+                    </text>
+                }
                 <div class="pull-right">
+                    <a href="#" onclick="requestV2T();return false;" class="btn btn-info">Voice 2 Text</a>
+                    &nbsp;&nbsp;&nbsp;
                     @if (!string.IsNullOrEmpty(Model.RelatedDocumentPreviewUrl))
                     {
                         <a href="@Html.Raw(Model.RelatedDocumentPreviewUrl)" class="btn btn-info" target="_blank">Свързан документ</a>
@@ -129,15 +205,44 @@
 </div>
 <script>
     $(function () {
-        @if (Model.FooterIsEditable)
-        {
+        $('#boxPreview').hide();
+    @if (Model.FooterIsEditable)
+    {
             <text>setTimeout(shrinkEditor, 200);</text>
-        }
-        @if (!string.IsNullOrEmpty(Model.AutoSaveKey))
-        {
+    }
+    @if (!string.IsNullOrEmpty(Model.AutoSaveKey))
+    {
             <text>initAutoSave('@Model.AutoSaveKey');</text>
-        }
+    }
+    @if (Model.BlankCaseId > 0)
+    {
+            <text>
+                                $('#btnTogglePreview').click(function(){
+                                    $('#boxPreview').toggle();
+                                            if($('#boxPreview').is(':visible')){
+                                                loadPreviewDocuments();
+                                            }
+                                });
+
+                                    $('#showPdf').click(function(){
+                                            let fileId = $('#selPreviewDoc').val();
+                                            if(fileId){
+                                                        previewPdf(`/files/preview/${fileId}`,'boxPreviewBody','50vh');
+                                            }
+                                    });
+            </text>
+    }
     });
+    var previewLoaded = false;
+    function loadPreviewDocuments(){
+        if(previewLoaded){
+            return;
+        }
+
+        requestCombo('@Url.Action("GetFileListByCase", "Files", new { caseId = Model.BlankCaseId })',{},'#selPreviewDoc');
+
+        previewLoaded = true;
+    }
     function shrinkEditor() {
         tinymce.activeEditor.getContainer().style.height = '400px';
     }
@@ -184,4 +289,51 @@
     }
 
     window.onbeforeunload = function () { storeContent(); }
+
+    function cbackBlankTemplateSelect(mainText, addText) {
+        try {
+            tinymce.editors[0].setContent(mainText);
+            tinymce.editors[1].setContent(addText);
+            messageHelper.ShowSuccessMessage('Съдържанието на предефинираните бланки е приложено успешно.')
+        } catch (e) { }
+    }
+
+    function requestV2T(){
+         requestContent('@Url.Action("Index", "Voice2Text")'
+            , { }
+            , function (data) {
+                ShowModalDialog('Търсене на файл по име в система Voice 2 Text', data);
+            });
+    }
+
+
+    @if (Model.RelatedActId > 0)
+    {
+            <text>
+                       function getContentPartByAct(actPart){
+                           let confirmText = '';
+                           switch(actPart){
+                               case 1:
+                                 confirmText = 'Потвърдете копирането на основната част от свързания акт!';
+                                 break;
+                               case 2:
+                                 confirmText = 'Потвърдете копирането на диспозитива от свързания акт!';
+                                 break;
+                                default:
+                                return;
+                           }
+                            swalConfirm(confirmText,
+                                function () {
+                                                   requestContent('@Url.Action("GetContentByActId", "CaseSessionAct", new { actId = Model.RelatedActId.Value })',{actPart:actPart},function(content){
+                                                tinymce.editors[tinymce.editors.length-1].insertContent(content);
+                                    });
+                                },
+                                function () {
+
+                                }
+                            );
+                    }
+            </text>
+    }
+
 </script>

@@ -10,6 +10,7 @@ using IOWebApplication.Infrastructure.Constants;
 using System.Linq;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 {
@@ -64,6 +65,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 
         [Column("document_notification_id")]
         public int? DocumentNotificationId { get; set; }
+
+        [Column("mediation_notification_id")]
+        public int? MediationNotificationId { get; set; }
+
 
         [Column("delivery_area_id")]
         [Display(Name = "Район")]
@@ -133,6 +138,40 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
         [Display(Name = "Данни за уведомяване")]
         public DateTime? DeliveryDateCC { get; set; }
 
+        // Нови полета
+        // DateSend, DateAccepted
+        [Display(Name = "Изготвил")]
+        [Column("prepared_by_id")]
+        public int? PreparedById { get; set; }
+
+        [Column("case_id")]
+        public int? CaseId { get; set; }
+
+
+        [Column("case_session_id")]
+        public int? CaseSessionId { get; set; }
+
+        /// <summary>
+        /// Вид доставка
+        /// </summary>
+        [Column("notification_delivery_group_id")]
+        [Display(Name = "Вид известяване")]
+        public int? NotificationDeliveryGroupId { get; set; }
+
+        [ForeignKey(nameof(NotificationDeliveryGroupId))]
+        public virtual NotificationDeliveryGroup NotificationDeliveryGroup { get; set; }
+
+        [ForeignKey(nameof(PreparedById))]
+        public virtual LawUnit PreparedBy { get; set; }
+
+        [ForeignKey(nameof(CaseId))]
+        public virtual Case Case { get; set; }
+
+        [ForeignKey(nameof(CaseSessionId))]
+        public virtual CaseSession CaseSession { get; set; }
+
+        //====================================================================================================================
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
@@ -144,6 +183,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 
         [ForeignKey(nameof(DocumentNotificationId))]
         public virtual DocumentNotification DocumentNotification { get; set; }
+
+        [ForeignKey(nameof(MediationNotificationId))]
+        public virtual MediationNotification MediationNotification { get; set; }
 
         [ForeignKey(nameof(NotificationStateId))]
         public virtual NotificationState NotificationState { get; set; }
@@ -179,15 +221,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
         }
         public static bool IsNotificationStateForReturn(int notificationStateId)
         {
-            int[] states = new int[]
-            {
-               NomenclatureConstants.NotificationState.Delivered,
-               NomenclatureConstants.NotificationState.Delivered47,
-               NomenclatureConstants.NotificationState.Delivered50,
-               NomenclatureConstants.NotificationState.Delivered51,
-               NomenclatureConstants.NotificationState.UnDelivered
-            };
-            return states.Contains(notificationStateId);
+           return NomenclatureConstants.NotificationState.NotificationEndState().Contains(notificationStateId);
+        }
+
+        public static bool IsNotificationStateForReturnSection(int notificationStateId)
+        {
+            var specialDeliveredCases = new int[]{ NomenclatureConstants.NotificationState.Delivered47, NomenclatureConstants.NotificationState.Delivered50, NomenclatureConstants.NotificationState.Delivered51 };
+            return NomenclatureConstants.NotificationState.NotificationEndState().Contains(notificationStateId) ||
+                   specialDeliveredCases.Contains(notificationStateId);
         }
         public static bool IsNotificationStateForOper(int notificationStateId)
         {

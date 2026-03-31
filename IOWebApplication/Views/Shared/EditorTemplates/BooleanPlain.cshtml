@@ -1,0 +1,7 @@
+﻿@model bool?
+@{
+    bool value = Model ?? false;
+}
+<label class="control-label">
+    @Html.CheckBox("",value) @Html.DisplayNameFor(model => model)
+</label>

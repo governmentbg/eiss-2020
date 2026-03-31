@@ -14,8 +14,12 @@
 }
 else
 {
-
-    ddl = new List<SelectListItem>();
+    if (ViewData["items"] != null)
+    {
+        ddl = (List<SelectListItem>)ViewData["items"];
+    }
+    else
+        ddl = new List<SelectListItem>();
 }
 
 <div class="form-group">

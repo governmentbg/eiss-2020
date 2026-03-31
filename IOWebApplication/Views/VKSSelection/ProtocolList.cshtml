@@ -17,10 +17,11 @@
         <div class="col-md-12 text-right pb-15">
             @if (ViewBag.CanEdit)
             {
-                <a id="Add" asp-controller="VksSelection" asp-action="CreateProtocol" asp-route-Id="@selectionId" class="btn btn-success">
-                    <i class="fa fa-plus"></i>
-                    Добави
-                </a>
+           
+
+                  <form action="@Url.Action("CreateProtocol",new{id=@selectionId})" method="post">
+                        <input type="submit" class="btn btn-success single-click-submit" title="Добави" value="Добави" />
+                    </form>
             }
 
         </div>
@@ -29,9 +30,10 @@
 }
 <div class="nav-tabs-custom">
     <ul class="nav nav-tabs" id="caseTab">
-        <li class=""><a href="@Url.Action("LawUnits")/@selectionId"><i class="fa fa-users"></i> Състав</a></li>
-        <li class=""><a href="@Url.Action("Preview")/@selectionId"><i class="fa fa-user"></i> Разпределение</a></li>
-        <li class="active"><a href="@Url.Action("ProtocolList")"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+           <li class=""><a href="#" onclick="document.location.href='@Url.Action("LawUnits",new {id=@selectionId})';"><i class="fa fa-users"></i> Състав</a></li>
+
+          <li class=""><a href="#" onclick="document.location.href='@Url.Action("Preview",new{ id=@selectionId})';"><i class="fa fa-newspaper-o"></i> Разпределение</a></li>
+        <li class="active"><a href="#"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
 
 
     </ul>

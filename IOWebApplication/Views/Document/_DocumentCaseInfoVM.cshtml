@@ -19,7 +19,7 @@
         @if (!string.IsNullOrEmpty(Model.CourtName))
         {
             <div class="col-lg-1 col-md-1 legacy-case-select">
-                <br/>
+                <br />
                 <a href="#" class="btn btn-info" title="@Model.CourtName"><i class="fa fa-info-circle"></i></a>
             </div>
         }
@@ -43,31 +43,31 @@
 <script>
     $(function () {
         $('#DocumentCaseInfo_IsLegacyCase').change(function () {
-           if ($(this).is(':checked')) {
-               $('.legacy-case-select').show();
-               $('.eiss-case-select').hide();
-           } else {
-               $('.legacy-case-select').hide();
-               $('.eiss-case-select').show();
-           }
+            if ($(this).is(':checked')) {
+                $('.legacy-case-select').show();
+                $('.eiss-case-select').hide();
+            } else {
+                $('.legacy-case-select').hide();
+                $('.eiss-case-select').show();
+            }
         }).trigger('change');
         //$('.legacy-case-check').hide();
     });
     function caseSelect() {
-        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#DocumentCaseInfo_CaseId').val() }, '#DocumentCaseInfo_SessionActId', '@Model.SessionActId');
+        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#DocumentCaseInfo_CaseId').val(), addDefaultItem : true }, '#DocumentCaseInfo_SessionActId', '@Model.SessionActId');
     }
-    //function legacyCaseNumberInit(instance) {
-    //    switch (instance) {
-    //        case 2:
-    //        case 3:
-    //            $('.legacy-case-check').show();
-    //            $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
-    //            break;
-    //        default:
-    //            $('#DocumentCaseInfo_IsLegacyCase').removeAttr('checked');
-    //            $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
-    //            $('.legacy-case-check').hide();
-    //            break;
-    //    }
-    //}
+        //function legacyCaseNumberInit(instance) {
+        //    switch (instance) {
+        //        case 2:
+        //        case 3:
+        //            $('.legacy-case-check').show();
+        //            $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
+        //            break;
+        //        default:
+        //            $('#DocumentCaseInfo_IsLegacyCase').removeAttr('checked');
+        //            $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
+        //            $('.legacy-case-check').hide();
+        //            break;
+        //    }
+        //}
 </script>

@@ -1,0 +1,105 @@
+﻿@model ElectionGroupVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Election
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@{
+    ViewData["Title"] = "История на сесия: " + Model.Label;
+
+}
+
+
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Election")">Списък избори</a></li>
+    </ol>
+}
+
+
+
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="logTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+    $(function () {
+        var table = $('#logTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("GetLogData")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.electionGroupId = '@Model.Id';
+                    d.personGid = '';
+                    d.electionProtocolId = '';
+                }
+
+            },
+            sortable: false,
+            filter: true,
+            columns: [
+                {
+                    name: 'dateWrt',
+                    data: 'dateWrt',
+                    title: 'Дата',
+                    sortable: false,
+                    "render": function (value) {
+                        return JsonBGdateTime(value);
+                    }
+                },
+                {
+                    name: 'userName',
+                    data: 'userName',
+                    title: 'Извършил операцията',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'afectedElectionPerson',
+                    data: 'afectedElectionPerson',
+                    title: 'Засегнат потребител',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'operation',
+                    data: 'operation',
+                    title: 'Операция',
+                    sortable: false,
+                    searchable: true
+                }
+                ,
+                {
+                    name: 'description',
+                    data: 'description',
+                    title: 'Описание',
+                    sortable: false,
+                    searchable: true
+                }
+            ]
+        });
+        table.order([0, 'desc']);
+    });
+    </script>
+
+
+}
+<script>
+
+
+
+
+    function HideAddButton(showA) {
+        if (show) {
+            x.style.display = "show"
+        }
+        else { x.style.display = "none" };
+    }
+
+</script>

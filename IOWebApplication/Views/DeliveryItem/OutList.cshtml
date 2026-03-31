@@ -1,13 +1,12 @@
 ﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 @model DeliveryItemListVM;
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Описна книга на призовкар";
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 <form id="formFilter" asp-action="Edit" method="post">

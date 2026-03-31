@@ -23,7 +23,7 @@
 
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -48,12 +48,17 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div id="saveContainer">
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = true })
+                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = true, viewLatinGender = true })
+
+                    @if (Model.CaseSessionId == null && Model.Person_SourceType > 0)
+                    {
+                        @Html.DisplayFor(x => x.FullName, "obj", new { label = "Наименование" })
+                    }
 
                     @*@if (Model.CaseSessionId == null)
-                        {
-                            @Html.EditorFor(x => x.IsInitialPerson)
-                        }*@
+                    {
+                    @Html.EditorFor(x => x.IsInitialPerson)
+                    }*@
                     <div class="row">
                         <div class="col-md-6"> @Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
                         <div class="col-md-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>
@@ -67,8 +72,8 @@
                             @Html.EditorFor(x => x.IsArrested)
                         </div>
                         @*<div id="divIsDeceased" class="col-md-3">
-                                @Html.EditorFor(x => x.IsDeceased)
-                            </div>*@
+                        @Html.EditorFor(x => x.IsDeceased)
+                        </div>*@
                     </div>
 
                     @if (ViewBag.isRegisterCompany)
@@ -83,19 +88,35 @@
                             </div>
                         </div>
                     }
-
                     @if (ViewBag.MilitaryRangId_ddl != null)
                     {
                         <div id="divMilitaryRang">
                             @Html.EditorFor(x => x.MilitaryRangId, "GenericDropDown")
                         </div>
                     }
+                    @if (ViewBag.isRNFL == true)
+                    {
+                        <div>
+                            <span class="text-muted">Забележка: Информацията се попълва само за синдик</span>
+                            <div class="row">
+                                <div class="col-md-6"> @Html.EditorFor(x => x.AppointDateFrom, "DateTime")</div>
+                                <div class="col-md-6"> @Html.EditorFor(x => x.AppointDateTo, "DateTime")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">@Html.EditorFor(x => x.RelatedActId, "GenericDropDown")</div>
+                            </div>
+                        </div>
+                    }
 
                     <div>
-                        @{ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.RegixRequestReason); }
+                        @{
+                            ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.RegixRequestReason);
+                        }
 
                         <partial name="../RegixReport/_RegixRequestReason" model="@Model.RegixRequestReason" />
-                        @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+                        @{
+                            ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+                        }
                     </div>
                 </div>
 
@@ -115,6 +136,14 @@
                     @if (Model.Id > 0)
                     {
                         <div class="pull-right">
+                            @if (canChange && Model.CaseSessionId == null && SourceTypeSelectVM.ActualPersonFromRegister.Contains(Model.Person_SourceType ?? 0))
+                            {
+                                <a asp-action="ActualizeFromBase" asp-route-id="@Model.Id" title="Актуализиране данни от основен регистър" class="btn btn-warning">
+                                    <i class="fa fa-recycle"></i>
+                                </a>
+                                <span>&nbsp;</span>
+                            }
+
                             @if (!Model.IsExpired && access.CanChangeFull && Model.CaseSessionId == null)
                             {
                                 @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на лице към дело", ExpireSubmitUrl = Url.Action("CasePerson_ExpiredInfo") })
@@ -152,12 +181,80 @@
                 }
                 <table id="mainTable" class="table table-hover table-striped"></table>
             </fieldset>
+            @if (Model.CaseSessionId == null)
+            {
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Предходни имена</legend>
+                    @if (canChange)
+                    {
+                        <div class="text-right">
+                            <a asp-action="AddPrevName" asp-route-casePersonId="@Model.Id" class="btn btn-success btn-sm">
+                                <i class="fa fa-address-card"></i>
+                                Добави предходно име
+                            </a>
+                        </div>
+                    }
+                    <table id="dtPrevNames" class="table table-hover table-striped"></table>
+                </fieldset>
+            }
         </div>
     }
 </div>
 
 
 @section scripts {
+    @if (Model.CaseSessionId == null)
+    {
+        <script>
+            function loadPrevNames() {
+                var dtPrevName = $('#dtPrevNames').DataTable({
+                    ajax: {
+                        "url": "@Url.Action("ListDataCasePersonPrevName")",
+                        "type": "POST",
+                        "datatype": "json",
+                        data: function (d) {
+                            d.casePersonId = @Model.Id;
+                        }
+
+                    },
+                    dom: 'rt',
+                    columns: [
+                        {
+                            name: 'prevNameType',
+                            data: 'prevNameType',
+                            title: 'Вид предходно име',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'fullName',
+                            data: 'fullName',
+                            title: 'Имена',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'actions',
+                            data: "id",
+                            title: "",
+                            sortable: false,
+                            searchable: false,
+                            className: "text-center noExport",
+                            "render": function (value) {
+                                return TemplateToHtml('#templateEditPrevName', value);
+                            }
+                        }
+                    ]
+                });
+            }
+        </script>
+        <script id="templateEditPrevName" type="text/x-handlebars-template">
+            @if (canChange)
+            {
+                                   <a href="@Url.Action("EditPrevName", "CasePerson")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+            }
+        </script>
+    }
     <script>
         $(function () {
             var table = $('#mainTable').DataTable({
@@ -170,7 +267,7 @@
                     }
 
                 },
-                dom:'rt',
+                dom: 'rt',
                 columns: [
                     {
                         name: 'addressTypeName',
@@ -213,22 +310,28 @@
                 ]
             });
         });
+        @if (Model.CaseSessionId == null)
+        {
+                        <text>loadPrevNames();</text>
+        }
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
         @if (canChange)
         {
-            <a href="@Url.Action("EditCasePersonAdr", "CasePerson")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+                                                    <a href="@Url.Action("EditCasePersonAdr", "CasePerson")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
         }
     </script>
+
 }
 
 <script>
-    var arrayRoleKind;
+            var arrayRoleKind;
     $(document).ready(function () {
         arrayRoleKind = @Html.Raw(Json.Serialize(@ViewBag.PersonRolesForArrested));
-        ChangePerson();
+        initPersonControl();
         initPersonRole();
+        ChangePerson();
     });
 
     function selectAddress(sender) {

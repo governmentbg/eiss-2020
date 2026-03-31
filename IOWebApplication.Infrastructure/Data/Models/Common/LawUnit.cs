@@ -1,6 +1,7 @@
 ﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
@@ -14,11 +15,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// Правораздаващи лица
     /// </summary>
     [Table("common_law_unit")]
-    public class LawUnit : BaseInfo_LawUnit, IHaveHistory<LawUnitH>
+    public class LawUnit : BaseInfo_LawUnit, IHaveHistory<LawUnitH>, IHaveId
     {
         public ICollection<CourtLawUnit> Courts { get; set; }
         public ICollection<LawUnitSpeciality> LawUnitSpeciality { get; set; }
-        public ICollection<LawUnitH> History { get; set; }
+        public ICollection<LawUnitH>? History { get; set; }
+        public ICollection<ApplicationUser> ApplicationUsers { get; set; }
     }
 
     /// <summary>
@@ -35,6 +37,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(Id))]
         public virtual LawUnit LawUnit { get; set; }
+
+        public void ClearForeignKeys()
+        {
+            LawUnit = null;
+        }
     }
 
     public class BaseInfo_LawUnit : PersonNamesBase, IUserDateWRT
@@ -45,6 +52,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         /// <summary>
         /// 1-съдия,2-заседател,3-прокурор,4-вещи лица
         /// </summary>
+        [Display(Name = "Тип лице")]
         [Column("law_unit_type_id")]
         public int LawUnitTypeId { get; set; }
 

@@ -11,8 +11,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Identity
                 .HasKey(user => user.Id);
 
             // Indexes for "normalized" username and email, to allow efficient lookups
-            builder.HasIndex(u => u.NormalizedUserName).HasName("user_name_index").IsUnique();
-            builder.HasIndex(u => u.NormalizedEmail).HasName("email_index");
+            builder.HasIndex(u => u.NormalizedUserName).HasDatabaseName("user_name_index").IsUnique();
+            builder.HasIndex(u => u.NormalizedEmail).HasDatabaseName("email_index");
 
             // Each User can have many UserClaims
             builder.HasMany(e => e.Claims)
@@ -88,7 +88,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Identity
             builder.Property(p => p.LawUnitId)
               .HasColumnName("lawunit_id");
             builder.HasOne(u => u.LawUnit)
-               .WithMany()
+               .WithMany(l => l.ApplicationUsers)
                .HasForeignKey(u => u.LawUnitId);
 
             builder.Property(p => p.CourtId)

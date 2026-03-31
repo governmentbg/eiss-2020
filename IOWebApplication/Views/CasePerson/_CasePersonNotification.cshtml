@@ -1,7 +1,5 @@
 ﻿@model CaseMainDataVM
 @using IOWebApplication.Infrastructure.Models.ViewModels
-@inject IViewLocalizer Localizer
-
 <div class="row">
     <div class="col-md-12 text-right pb-15">
         <a asp-controller="CasePerson" asp-action="CasePersonNotification" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success">
@@ -99,8 +97,8 @@
 </script>
 
 <script id="casePersonNotificationTemplateEdit" type="text/x-handlebars-template">
-    <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
-    <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
+    <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="Нагоре"><i class="fa fa-angle-up"></i></a>
+    <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="Надолу"><i class="fa fa-angle-down"></i></a>
 </script>
 
 

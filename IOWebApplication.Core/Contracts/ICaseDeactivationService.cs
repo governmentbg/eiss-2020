@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -11,6 +12,6 @@ namespace IOWebApplication.Core.Contracts
 
         SaveResultVM Add(CaseDeactivation model);
 
-        bool DeclareDeactivation(int id);
+        Task<bool> DeclareDeactivation(int id);
     }
 }

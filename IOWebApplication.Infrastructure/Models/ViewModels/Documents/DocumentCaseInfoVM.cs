@@ -33,7 +33,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Година дело")]
         public int? CaseYear { get; set; }
         [Display(Name = "Код на дело")]
-        public string CaseShortNumber { get; set; }       
+        public string CaseShortNumber { get; set; }
 
         [Display(Name = "Избор на съдебен акт")]
         public bool HasLawAct { get; set; }
@@ -43,18 +43,28 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Забележка")]
         public string Description { get; set; }
-        
+
 
         public void ToEntity(DocumentCaseInfo model)
         {
+            if (this.IsLegacyCase)
+            {
+                this.CaseId = null;
+            }
+            else
+            {
+                this.CaseRegNumber = null;
+            }
+
             model.CourtId = this.CourtId;
-            model.IsLegacyCase= this.IsLegacyCase;
+            model.IsLegacyCase = this.IsLegacyCase;
             model.CaseRegNumber = this.CaseRegNumber;
             model.CaseShortNumber = this.CaseShortNumber;
             model.CaseYear = this.CaseYear;
             model.CaseId = this.CaseId;
             model.SessionActId = this.SessionActId;
             model.Description = this.Description;
+
         }
     }
 

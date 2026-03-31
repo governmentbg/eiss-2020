@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
@@ -41,7 +42,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string UserName { get; set; }
 
         [Display(Name = "Дата на постъпване на първоинстанционно дело и номер на новообразуваното дело")]
-        public string NewCaseData { get; set; }
+        public string NewCaseData { get { return string.Join(Environment.NewLine, NewCaseDatas.Distinct()); } }
+
+        public string[] NewCaseDatas { get; set; }
     }
 
     public class CaseMigrationReturnFilterReportVM

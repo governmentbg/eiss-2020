@@ -147,7 +147,6 @@
     function GetActDiscription() {
         var actId = $("#CaseSessionActId").val();
         var modelId = @Model.Id;
-        debugger;
         if ((actId > 0) && (modelId < 1)) {
             postContent('@Url.Action("Get_ActDescription","CasePersonSentence")'
                 , { ActId: actId }

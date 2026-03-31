@@ -18,7 +18,7 @@
 
     function pcLoadData() {
         requestGET_Json('@Url.Action("GetDataCasePersonSentencePunishmentCrime", "CasePersonSentence")'
-            , { CasePersonSentencePunishmentId:@Model}
+            , { CasePersonSentencePunishmentId: @Model}
             , function (data) {
                 $('#pcContainer').html(TemplateToHtml('#casePersonSentencePunishmentCrimeTemplate', data));
             });
@@ -26,7 +26,7 @@
 
     function pcCreatePunishmentCrime() {
         requestContent('@Url.Action("CasePersonSentencePunishmentCrime", "CasePersonSentence")'
-            , { CasePersonSentencePunishmentId:@Model, id: null }
+            , { CasePersonSentencePunishmentId: @Model, id: null }
             , function (data) {
                 ShowModalDialog('Добавяне на участие', data);
             });
@@ -34,7 +34,7 @@
 
     function pcEditPunishmentCrime(id) {
         requestContent('@Url.Action("CasePersonSentencePunishmentCrime", "CasePersonSentence")'
-            , { CasePersonSentencePunishmentId:@Model, id:id}
+            , { CasePersonSentencePunishmentId: @Model, id: id }
             , function (data) {
                 if ('@access.CanChange' == 'True') {
                     ShowModalDialog('Редакция на участие', data);
@@ -45,6 +45,22 @@
             });
     }
 
+    function pcDeletePunishmentCrime(id) {
+        swalConfirm('Потвърди изтриване на записът!', function () {
+            postContent('@Url.Action("CasePersonSentencePunishmentCrime_Delete", "CasePersonSentence")'
+                , { Id: id }
+                , function (data) {
+                    if (data.result == true) {
+                        pcLoadData(""); 
+                        messageHelper.ShowSuccessMessage('Записът е изтрит успешно.');
+                    } else {
+                        pcLoadData("");
+                        messageHelper.ShowErrorMessage('Грешка при изтриване.');
+                    }
+                });
+        });
+    }
+
 </script>
 
 <script id="casePersonSentencePunishmentCrimeTemplate" type="text/x-handlebars-template">
@@ -52,11 +68,12 @@
         <legend class="legend_1" data-position="BankAccount"> Участие в престъпления</legend>
         {{#each this}}
         <div class="row">
-            <div class="col-lg-4"><b>Престъпление: </b>{{caseCrimeLabel}}</div>
-            <div class="col-lg-4"><b>Роля на лицето в престъплението: </b>{{personRoleInCrimeLabel}}</div>
-            <div class="col-lg-3"><b>Рецидив: </b>{{recidiveTypeLabel}}</div>
+            <div class="col-lg-3"><b>Престъпление: </b>{{caseCrimeLabel}}</div>
+            <div class="col-lg-3"><b>Роля на лицето в престъплението: </b>{{personRoleInCrimeLabel}}</div>
+            <div class="col-lg-2"><b>Рецидив: </b>{{recidiveTypeLabel}}</div>
+            <div class="col-lg-2"><b>ЕИСПП Номер: </b><div class="{{eisppNumberCSS}}">{{eisppNumber}}</div></div>
 
-            <div class="col-lg-1">
+            <div class="col-lg-2">
                 @if (access.CanChange)
                 {
                     <a href="#" class="btn btn-xs btn-warning" onclick="pcEditPunishmentCrime('{{id}}'); return false;" title="Редакция"><i class="fa fa-edit"></i></a>
@@ -64,6 +81,10 @@
                 else
                 {
                     <a href="#" class="btn btn-xs btn-def" onclick="pcEditPunishmentCrime('{{id}}'); return false;" title="Преглед"><i class="fa fa-eye"></i></a>
+                }
+                @if (access.CanChange)
+                {
+                    <a href="#" class="btn btn-xs btn-danger" onclick="pcDeletePunishmentCrime('{{id}}'); return false;" title="Премахни"><i class="fa fa-times"></i></a>
                 }
             </div>
         </div>

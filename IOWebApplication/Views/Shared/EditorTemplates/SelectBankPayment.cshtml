@@ -1,0 +1,34 @@
+﻿@model long
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_bankpayment";
+    var label = (string)ViewData["label"];
+    decimal amount = 0;
+    if (ViewData["amount"] != null)
+    {
+        amount = (decimal)ViewData["amount"];
+    }
+
+    var addClass = "";
+    if (string.IsNullOrEmpty(label))
+    {
+        addClass = "form-group";
+    }
+}
+
+<div class="bankpayment-container @addClass" data-amount="@amount" @if (ViewData["onChange"] != null)
+{
+    <text> onchange="@(ViewData["onChange"])" </text>
+}>
+    @if (string.IsNullOrEmpty(label))
+    {
+            <label asp-for="@Model" class="control-label"></label>
+            <input id="@fieldName" class="form-control bankpayment-control" autocomplete="false" placeholder="Въведете номер на банкова референция" />
+    }
+    else
+    {
+                    <input id="@fieldName" class="form-control bankpayment-control" autocomplete="false" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="bankpayment-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

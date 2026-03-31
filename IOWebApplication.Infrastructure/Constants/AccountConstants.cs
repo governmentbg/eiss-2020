@@ -46,6 +46,11 @@ namespace IOWebApplication.Infrastructure.Constants
             public const string CourtManager = "COURT_MAN";
 
             /// <summary>
+            /// 3.6. Медиация
+            /// </summary>
+            public const string Mediation = "MEDIATION";
+
+            /// <summary>
             /// 4. Счетоводство
             /// </summary>
             public const string MoneyAccount = "MONEY";
@@ -74,6 +79,11 @@ namespace IOWebApplication.Infrastructure.Constants
             /// 6.2. Управление на магистрати и служители
             /// </summary>
             public const string HrAdmin = "HR_ADMIN";
+
+            /// <summary>
+            /// 6.3. Специални справки
+            /// </summary>
+            public const string SpecReports = "SPEC_REPORTS";
 
             /// <summary>
             /// 7. Ограничен достъп

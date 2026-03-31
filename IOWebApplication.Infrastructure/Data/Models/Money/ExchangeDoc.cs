@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using System;
@@ -13,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
     /// Приемо предавателен протокол за ИЛ
     /// </summary>
     [Table("money_exchange_doc")]
-    public class ExchangeDoc : UserDateWRT
+    public class ExchangeDoc : UserDateWRT, IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -36,6 +37,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
 
         [Column("out_document_id")]
         public long? OutDocumentId { get; set; }
+
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

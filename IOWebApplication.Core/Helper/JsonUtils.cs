@@ -60,7 +60,7 @@ namespace IOWebApplication.Core.Helper
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw;
                 }
@@ -129,7 +129,7 @@ namespace IOWebApplication.Core.Helper
 
                 paramName = currentParamName;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

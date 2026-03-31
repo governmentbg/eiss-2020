@@ -42,6 +42,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("is_true")]
         public bool IsTrue { get; set; }
 
+        //ProcessPriority отделени със запетая
+        [Column("process_priority_id")]
+        public string ProcessPriorityId { get; set; }
+
+        [Column("sheet_index")]
+        public int SheetIndex { get; set; }
+
         [ForeignKey(nameof(CourtTypeId))]
         public virtual CourtType CourtType { get; set; }
     }

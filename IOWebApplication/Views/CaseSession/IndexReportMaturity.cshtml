@@ -26,7 +26,7 @@
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
@@ -78,9 +78,14 @@
                     {
                         name: 'caseRegNum',
                         data: 'caseRegNum',
-                        title: 'Номер/Година',
+                        title: 'Номер на дело',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
                     },
                     {
                         name: 'caseRegDate',
@@ -169,11 +174,14 @@
                         }
                     },
                     {
-                        name: 'casePersons',
-                        data: 'casePersons',
+                        name: 'casePerson',
+                        data: 'casePerson',
                         title: 'Лица',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            return row.casePersons;
+                        },
                     },
                     {
                         name: 'actions',
@@ -187,7 +195,7 @@
                         }
                     }
                 ]
-            });
+            }).order([[1, "asc"]]);
         }
     }
 </script>

@@ -1,22 +1,20 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Money;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
     public interface IMoneyService : IBaseService
     {
-        IQueryable<ObligationVM> Obligation_Select(int caseSessionActId, long documentId, int caseSessionId, int courtId);
+        IQueryable<ObligationVM> Obligation_Select(int caseSessionActId, long documentId, int caseSessionId, int courtId, long assignmentDocumentId);
 
-        (bool result, string errorMessage) Obligation_SaveData(ObligationEditVM model);
+        (bool result, string errorMessage, bool deactivate) Obligation_SaveData(ObligationEditVM model);
 
         ObligationEditVM Obligation_GetById(int id);
 
@@ -36,7 +34,7 @@ namespace IOWebApplication.Core.Contracts
 
         PaymentVM Payment_GetById(int id);
 
-        bool Payment_Storno(int id, ref string errorMessage);
+        bool Payment_Storno(Payment model, ref string errorMessage);
 
         IQueryable<ObligationForPayVM> ObligationPaymentForPayment_Select(int paymentId);
 
@@ -65,27 +63,39 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<Obligation> ObligationByIds_Select(string ids);
         (bool result, string errorMessage) ExpenseOrder_Save(ExpenseOrderEditVM model);
         IQueryable<ExpenseOrderVM> ExpenseOrder_Select(int courtId, DateTime? fromDate, DateTime? toDate, string name, string expenseOrderRegNumber);
-        (bool result, string errorMessage) ExpenseOrder_Storno(int id); 
+        (bool result, string errorMessage) ExpenseOrder_Storno(ExpenseOrder model);
         (bool result, string errorMessage) ExpenseOrder_Update(ExpenseOrderEditVM model);
         ExpenseOrderEditVM ExpenseOrder_GetById(int id);
         ExpenseOrder ExpenseOrder_LastOrderForPerson(string obligationIdStr);
         (bool result, string errorMessage) ExecList_Save(ExecListEditVM model);
         IQueryable<ExecListVM> ExecList_Select(int courtId, ExecListFilterVM model);
-        (bool result, string errorMessage) ExecList_Storno(int id);
+        (bool result, string errorMessage) ExecList_Storno(ExecList model);
         (bool result, string errorMessage) ExecList_Update(ExecListEditVM model);
         ExecListEditVM ExecList_GetById(int id);
         ObligationReceive LastDataForReceive_Select(int sourceType, long sourceId);
-        (bool result, string errorMessage) ExecList_PrepareSave(ExecListEditVM model);
+        (bool result, string errorMessage, int? caseId) ExecList_PrepareSave(ExecListEditVM model);
         IQueryable<PaymentCaseVM> PaymentForCase_Select(int caseId);
         IQueryable<ExecListVM> ExecListForCase_Select(int caseId);
         (bool result, string errorMessage, int id) ExchangeDoc_Save(string execListIds);
         IQueryable<ExchangeDocVM> ExchangeDoc_Select(int courtId, ExchangeDocFilterVM model);
-        (bool result, string errorMessage) ExchangeDoc_Storno(int id);
+        (bool result, string errorMessage) ExchangeDoc_Storno(ExchangeDoc model);
         ExchangeDocEditVM ExchangeDoc_GetById(int id);
         IQueryable<ExecListVM> ExecListReport_Select(int courtId, ExecListFilterVM model, string newLine);
         byte[] ExecListReportToExcelOne(ExecListFilterVM model);
         IQueryable<ObligationThirdPersonVM> ObligationThirdPerson_Select(int courtId, ObligationThirdPersonFilterVM model);
         IQueryable<ExpenseOrderVM> ExpenseOrderForCase_Select(int caseId);
         SaveResultVM ExecListRegister(ExecList model);
+        (bool result, string errorMessage) CheckObligationBeforePayment(string ids);
+        Case ExecListCaseData(int execListId);
+        SaveResultVM ExecListSign(ExecList model);
+        Task InitNewObligationFromSource(ObligationEditVM model);
+        IQueryable<BankFilePaymentVM> BankFilePayment_Select(BankFilePaymentFilterVM filter);
+        IQueryable<BankFilePaymentVM> BankFilePaymentReference_Select(BankFilePaymentReferenceFilterVM filter);
+        Task<IEnumerable<LabelValueVM>> GetBalanceBankPayment(string bankReference, decimal amount);
+        Task<LabelValueVM> GetBankPaymentById(long id);
+        Task<(decimal amount, string errorMessage)> GetObligationDataForBalanceBankPayment(int obligationId);
+        Task<(bool result, string errorMessage)> BalanceBankPayment_SaveData(BalanceBankPaymentVM model);
+        (bool result, string errorMessage) BankFilePayment_Storno(BankFilePayment model);
+        Task<bool> HasDocumentObligationPayments(long documentId);
     }
 }

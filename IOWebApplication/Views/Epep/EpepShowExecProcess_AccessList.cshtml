@@ -1,0 +1,83 @@
+﻿@model ExecProcessInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+@using RestEpep = IOWebApplication.Infrastructure.Models.Integrations.EpepRest;
+@{
+    RestEpep.ExecProcessAccessVM[] accessList = Model.Data.AccessList;
+}
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a href="#" class="btn btn-success" onclick="addAccess();return false;">
+            <i class="fa fa-plus"></i>
+            Нов достъп
+        </a>
+    </div>
+</div>
+@if (accessList.Length > 0)
+{
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Достъпи до партидата в ЕПЕП</legend>
+        @for (int i = 0; i < accessList.Length; i++)
+        {
+            var accessInfo = accessList[i];
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => accessInfo.Creator, "obj", null, new { label = "Създал достъпа" })
+                </div>
+                <div class="col-md-2">
+                    @Html.DisplayFor(x => accessInfo.CreateDate, "date", null, new { label = "Създадено на" })
+                </div>
+                <div class="col-md-3">
+                    @if (accessInfo.DateClaimed == null)
+                    {
+                        @Html.DisplayFor(x => accessInfo.UserName, "objVal", null, new { label = "Съдебен изпълнител/лице", value = "Неизползван достъп" })
+                    }
+                    else
+                    {
+                        string userAccessInfo = $"{accessInfo.UserName} на дата: {accessInfo.DateClaimed:dd.MM.yyyy HH:mm}";
+                        @Html.DisplayFor(x => accessInfo.UserName, "objVal", null, new { label = "Съдебен изпълнител/лице", value = userAccessInfo })
+                    }
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">Код за достъп</label>
+                        <div>
+                            @Html.Raw(accessInfo.AccessKey)
+                            @if (accessInfo.DateClaimed == null)
+                            {
+                                <span>&nbsp;</span>
+                                <a href="@Url.Action("ExecProcess_AccessDocument",new{actId=Model.CaseSessionActId,execListId=Model.ExecListId,accessGid=accessInfo.Gid})">Печат</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <a href="#" onclick="removeAccess('@accessInfo.Gid');return false;" class="btn btn-danger btn-sm m-b-5" title="Премахване на достъп"><i class="fa fa-remove"></i></a>
+                </div>
+            </div>
+        }
+    </fieldset>
+}
+else
+{
+    <p>Няма въведени достъпи.</p>
+}
+
+<script>
+    function addAccess(){
+       swalConfirm('Потвърдете създаването на нов достъп по електронната партида!', function () {
+                postContent('@Url.Action("ExecProcess_NewAccess")'
+                    , { actId: @Model.CaseSessionActId,execListId:@Model.ExecListId, processGid: '@Model.Data.Gid'}, function (res) {
+                        messageHelper.ShowResult(res);
+                    })
+            });
+    }
+    function removeAccess(gid){
+       swalConfirm('Потвърдете премахването избрания достъп от електронната партида!', function () {
+                postContent('@Url.Action("ExecProcess_DeleteAccess")'
+                    , { actId: @Model.CaseSessionActId,execListId:@Model.ExecListId, accessGid: gid}, function (res) {
+                        messageHelper.ShowResult(res);
+                    })
+            });
+    }
+</script>
+

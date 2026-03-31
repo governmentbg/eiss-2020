@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -10,6 +11,6 @@ namespace IOWebApplication.Core.Contracts
     {
         IQueryable<MultiSelectTransferVM> CourtGroupCode_Select(int courtId, int courtGroupId, int caseGroupId);
         IQueryable<MultiSelectTransferVM> CourtGroupCodeForSelect_Select(int courtId, int caseGroupId, int caseTypeId);
-        bool CourtGroupCode_SaveData(int courtGroupId, List<int> codes);
+        Task<bool> CourtGroupCode_SaveData(int courtGroupId, List<int> codes);
     }
 }

@@ -62,10 +62,22 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("error_description")]
         public string ErrorDescription { get; set; }
 
+        [Column("last_date_error")]
+        public DateTime? LastDateError { get; set; }
+
         [ForeignKey(nameof(IntegrationTypeId))]
         public virtual IntegrationType IntegrationType { get; set; }
 
         [ForeignKey(nameof(IntegrationStateId))]
         public virtual IntegrationState IntegrationState { get; set; }
+
+        [NotMapped]
+        public string OperName { get; set; }
+
+        [NotMapped]
+        public int SourceIdInt
+        {
+            get { return (int)SourceId; }
+        }
     }
 }

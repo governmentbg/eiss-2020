@@ -1,0 +1,59 @@
+﻿@model SummaryCaseInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+
+@{
+    ViewData["Title"] = "Преглед на свързано дело";
+    Integration.Epep.SummaryCase Case = null;
+    if (Model != null)
+    {
+        ViewData["Title"] = $"{Model.Case.CaseKindName} {Model.Case.Number}/{Model.Case.CaseYear} ; {Model.Case.CourtName}";
+        Case = Model.Case;
+    }
+    var dataTimeformat = "dd.MM.yyyy HH:mm";
+
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+@section titleAdd{
+
+    @if (Case.RestrictedAccess == true)
+    {
+        <span class="text-red">
+            <i class="fa fa-exclamation-triangle fa-lg" title="Ограничен достъп"></i>
+        </span>
+    }
+}
+
+@if (Model == null)
+{
+    return;
+}
+
+<div class="pull-right">
+    Данните са актуални към: @Model.DateWrt.ToString(dataTimeformat)
+    <a href="@Url.Action("EpepShowResultCase",new{inMigrationId=Model.MigrationId,refreshData=true})" class="btn btn-success btn-xs">Актуализиране</a>
+</div>
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseInfo">
+        <li class="active"><a href="#tabMainData" data-toggle="tab">Основни данни</a></li>
+        <li><a href="#tabSides" data-toggle="tab">Страни и призовки</a></li>
+        <li><a href="#tabHearings" data-toggle="tab">Заседания и актове</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="tabMainData">
+            <partial name="EpepShowResultCase_MainData" model="@Model" />
+        </div>
+        <div class="tab-pane" id="tabSides">
+            <partial name="EpepShowResultCase_Sides" model="@Case" />
+        </div>
+        <div class="tab-pane" id="tabHearings">
+            <partial name="EpepShowResultCase_Hearings" model="@Case" />
+        </div>
+    </div>
+</div>

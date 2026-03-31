@@ -12,6 +12,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     [Display(Name = "Съдия")]
     public int LawUnitID { get; set; }
 
-       
+    [Display(Name = "Период")]
+    public int ResetPeriodId { get; set; }
+        
+
+
     }
 }

@@ -1,0 +1,13 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+
+<h3 class="section-title section-title--xxs mb-3">Основание за компетентност на съда</h3>
+<div class="row">
+    <div class="col-lg-4">
+        @Html.EditorFor(x => x.CompetencyBase417.ForCompetencyBase)
+    </div>
+    <div class="col-lg-8 combo-forcompetence">
+        <select asp-for="@Model.CompetencyBase417.CompetencyBaseCode" asp-items="@ViewBag.CompetencyBaseDDL" class="form-control"></select>
+    </div>
+</div>
+<div class="text-sm">Важно: Попълва се само при заявления по чл. 417, ал. 1, т. 3, 6 или 10 от ГПК</div>

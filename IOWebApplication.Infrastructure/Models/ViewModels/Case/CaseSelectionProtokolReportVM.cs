@@ -36,5 +36,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public string CaseTypeLabel { get; set; }
 
         public string CaseCodeLabel { get; set; }
+        public string CaseCourtGroupLabel { get; set; }
     }
 }

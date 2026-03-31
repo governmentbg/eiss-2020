@@ -1,14 +1,14 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 @using IOWebApplication.Core.Helper.GlobalConstants;
+@using IOWebApplication.Infrastructure.Constants
 @model CaseDeadLineFilterVM;
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Срокове";
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 <form id="formFilter" asp-action="Edit" method="post">
@@ -17,9 +17,10 @@
         <div class="col-md-3">
             @Html.EditorFor(x => x.DeadlineTypeId, "GenericDropDown")
         </div>
-        <div class="col-md-3">
+        <div class="col-lg-3">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        @*<div class="col-md-3">
             @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
-        </div>
+        </div>*@
         <div class="col-md-3">
             @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
         </div>
@@ -96,13 +97,10 @@
                     },
                     {
                         name: 'makerName',
-                        data: 'id',
+                        data: 'makerName',
                         title: 'За изпълнение от',
-                        sortable: true,
-                        searchable: true,
-                        "render": function (data, type, row) {
-                            return row.lawUnitName + "<br>" + row.secretaryName ;
-                        }
+                        sortable: false,
+                        searchable: false
                     },
                     {
                         name: 'startDate',
@@ -159,9 +157,15 @@
 <script id="templateEdit" type="text/x-handlebars-template">
     <div class="row">
         @*<a href="{{this.sourceUrl}}" class="btn btn-def btn-sm" title="">
-            <i class="fa fa-eye"></i>
-            <span class="hidden-sm hidden-xs"></span>
-        </a>*@
+                <i class="fa fa-eye"></i>
+                <span class="hidden-sm hidden-xs"></span>
+            </a>*@
         <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
     </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        initLawUnit();
+    });
 </script>

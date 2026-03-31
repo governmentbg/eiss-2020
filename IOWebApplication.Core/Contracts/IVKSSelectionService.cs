@@ -59,5 +59,7 @@ namespace IOWebApplication.Core.Contracts
     bool CanEditCurrentOtdelenie(int lawunitId, int OtdelenieID);
 
     int GetCourtDepartmentIdFromSelection(int selectionId);
+
+    bool SelectionHasUnfilledSessionDates(int selectionId);
     }
 }

@@ -1,6 +1,9 @@
 ﻿@model CasePersonSentencePunishment
 @using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@inject IUserContext userContext
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
@@ -12,9 +15,12 @@
     {
         ViewData["Title"] = "Добавяне на наказание";
     }
+
+    bool is92024 = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request9_2024);
+    bool isViewBGN = (bool?)ViewBag.IsViewBGN ?? false;
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -39,6 +45,10 @@
                             <fieldset class="is-fieldset">
                                 <legend class="legend_1"> Основни данни</legend>
                                 <div class="col-lg-12">@Html.EditorFor(x => x.SentenceTypeId, "GenericDropDown")</div>
+                                @if (is92024)
+                                {
+                                    <div class="col-lg-12">@Html.EditorFor(x => x.PunishmentGeneralCategoryId, "GenericDropDown")</div>
+                                }
                                 <div class="col-lg-12">@Html.EditorFor(x => x.SentenceRegimeTypeId, "GenericDropDown")</div>
                                 <div class="col-lg-12">@Html.EditorFor(x => x.SentenceText, "Textarea")</div>
                                 <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
@@ -57,6 +67,15 @@
                                 <div class="col-lg-3">@Html.EditorFor(x => x.SentenseYears, "Int32")</div>
                             </fieldset>
                         </div>
+                        <div class="col-lg-12" id="divPreliminaryDetention">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Приспадането и зачитането на предварителното задържане</legend>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.PreliminaryDetentionDays, "Int32")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.PreliminaryDetentionWeeks, "Int32")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.PreliminaryDetentionMonths, "Int32")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.PreliminaryDetentionYears, "Int32")</div>
+                            </fieldset>
+                        </div>
                         <div id="divProbation" class="col-lg-12">
                             <fieldset class="is-fieldset">
                                 <legend class="legend_1"> Изпитателен срок</legend>
@@ -70,9 +89,14 @@
                         <div class="col-lg-12" id="divMoney">
                             <fieldset class="is-fieldset">
                                 <legend class="legend_1"> Сума</legend>
-                                <div class="col-lg-12">@Html.EditorFor(x => x.SentenseMoney, "Decimal")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.SentenseMoney, "Decimal")</div>
+                                @if (isViewBGN && Model.Id > 0)
+                                {
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.SentenseMoneyBGN, "Decimal")</div>
+                                }
                             </fieldset>
                         </div>
+                        
                     </div>
                     @if (Model.Id > 0)
                     {
@@ -94,7 +118,7 @@
                     <div class="pull-right">
                         @if (Model.DateExpired == null && access.CanChangeFull)
                         {
-                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, ReturnUrl = $"IndexCasePersonSentencePunishment?casePersonSentenceId={Model.CasePersonSentenceId}", DialogTitle = "Премахване на наказание", ExpireSubmitUrl = Url.Action("CasePersonPunishment_ExpiredInfo") })
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, ReturnUrl = @Url.Action("IndexCasePersonSentencePunishment", "CasePersonSentence", new { casePersonSentenceId = @Model.CasePersonSentenceId }), DialogTitle = "Премахване на наказание", ExpireSubmitUrl = Url.Action("CasePersonPunishment_ExpiredInfo") })
                             <span>&nbsp;</span>
                         }
 
@@ -110,6 +134,7 @@
 
     $(document).ready(function () {
         Is_PeriodProbation();
+        $('#SentenseMoneyBGN').attr("disabled", true);
     });
 
     $('#SentenceTypeId').change(function () {
@@ -120,39 +145,30 @@
         $("#divTime").hide();
         $("#divMoney").hide();
         $("#divProbation").hide();
+        $("#divPreliminaryDetention").hide();
+
         var sentenceTypeId = $("#SentenceTypeId").val();
-        var modelId = @Model.Id;
+
         if (sentenceTypeId > 0) {
-            postContent('@Url.Action("Is_Period","CasePersonSentence")'
+
+            postContent('@Url.Action("GetSentenceTypeHas", "CasePersonSentence")'
                 , { sentenceTypeId }
                 , function (data) {
-                    if (data.result == @NomenclatureConstants.SentenceType_Select.AllChoice) {
+                    if (data.result.hasPeriod) {
                         $("#divTime").show();
+                    }
+
+                    if (data.result.hasMoney) {
                         $("#divMoney").show();
                     }
-                    else {
-                        if (data.result == @NomenclatureConstants.SentenceType_Select.HasPeriod) {
-                            $("#divTime").show();
-                            $("#divMoney").hide();
-                        }
-                        else {
-                            if (data.result == @NomenclatureConstants.SentenceType_Select.HasMoney) {
-                                $("#divTime").hide();
-                                $("#divMoney").show();
-                            }
-                        };
-                    };
-                });
 
-            postContent('@Url.Action("Is_Probation", "CasePersonSentence")'
-                , { sentenceTypeId }
-                , function (data) {
-                    if (data.result == true) {
+                    if (data.result.hasProbation) {
                         $("#divProbation").show();
                     }
-                    else {
-                        $("#divProbation").hide();
-                    };
+
+                    if ((data.result.hasPreliminaryDetention) && ('@is92024' == 'True')) {
+                        $("#divPreliminaryDetention").show();
+                    }
                 });
         };
     }

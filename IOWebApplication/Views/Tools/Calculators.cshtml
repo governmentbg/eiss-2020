@@ -1,0 +1,103 @@
+﻿@model ToolsCalculatorVM
+@{
+    bool showExpense = true;
+}
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#tabLegalInterest" data-toggle="tab"><i class="fa fa-database"></i> Законна лихва</a></li>
+        @if (showExpense)
+        {
+            <li><a href="#tabExpenses" data-toggle="tab"><i class="fa fa-database"></i> Дължими разноски</a></li>
+        }
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="tabLegalInterest">
+            <div class="row">
+                <div class="col-lg-4">
+                    @Html.EditorFor(x => x.LegalInterestAmount)
+                </div>
+                <div class="col-lg-4">
+                    @Html.EditorFor(x => x.LegalInterestDateFrom, "DateTime")
+                </div>
+                <div class="col-lg-4">
+                    @Html.EditorFor(x => x.LegalInterestDateTo, "DateTime")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <button class="btn btn-success" onclick="calcLegalInterest();return false;">Изчисли</button>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-lg-6">
+                    <span id="resultLegalInterest" class="text-bold"></span>
+                </div>
+            </div>
+        </div>
+        @if (showExpense)
+        {
+            <div class="tab-pane " id="tabExpenses">
+                <div class="row">
+                    <div class="col-lg-4">
+                        @Html.EditorFor(x => x.ExpenseClaimTotal)
+                    </div>
+                    <div class="col-lg-4">
+                        @Html.EditorFor(x => x.ExpenseClaimExpense)
+                    </div>
+                    <div class="col-lg-4">
+                        @Html.EditorFor(x => x.ExpenseComfirmedTotal)
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <button class="btn btn-success" onclick="calcExpense();return false;">Изчисли</button>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-lg-6">
+                        <span id="resultExpense" class="text-bold"></span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<script>
+    $(function(){
+        initDatePicker();
+    });
+    function calcExpense(){
+        let claimTotal = parseFloat($('#ExpenseClaimTotal').val());
+        let claimExpense = parseFloat($('#ExpenseClaimExpense').val());
+        let comfirmedTotal = parseFloat($('#ExpenseComfirmedTotal').val());
+
+        if(claimTotal == 0){
+            swalOk('Въведете Претендирани вземания');
+            return false;
+        }
+
+        let result = (comfirmedTotal / claimTotal) * claimExpense;
+
+        $('#resultExpense').text(`Дължими разноски: ${result.toFixed(2)}`);
+    }
+
+    function calcLegalInterest(){
+         let amount = parseFloat($('#LegalInterestAmount').val());
+         let dateFrom = $('#LegalInterestDateFrom').val()
+         let dateTo = $('#LegalInterestDateTo').val()
+         if(amount == 0){
+             swalOk('Въведете сума!');
+             return;
+         }
+         requestContent('@Url.Action("Calc_LegalInterest", "Tools")',{amount:amount,fromDate:dateFrom,toDate:dateTo},function(result){
+             if(result == -1){
+                 swalOk('Въведете валиден интервал за изчисляване!');
+                 return;
+             }
+             $('#resultLegalInterest').text(`Законна лихва: ${result.toFixed(2)}`);
+         });
+    }
+</script>

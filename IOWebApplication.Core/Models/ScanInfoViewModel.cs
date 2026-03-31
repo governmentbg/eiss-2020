@@ -4,7 +4,7 @@ namespace IOWebApplication.Core.Models
 {
     public class ScanInfoViewModel
     {
-        // <summary>
+        /// <summary>
         /// URL to be redirected after signing
         /// </summary>
         public Uri ReturnUrl { get; set; }
@@ -36,5 +36,10 @@ namespace IOWebApplication.Core.Models
         /// Base64 encoded file content
         /// </summary>
         public string FileContent { get; set; }
+
+
+        public int ScanDPI { get; set; }
+
+        public int ScanBlackThreshold { get; set; }
     }
 }

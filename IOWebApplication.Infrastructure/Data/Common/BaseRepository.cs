@@ -1,5 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +25,28 @@ namespace IOWebApplication.Infrastructure.Data.Common
         /// </summary>
         protected DbContext Context { get; set; }
 
+        protected ILogger logger { get; set; }
+
+        protected HttpContext httpContext;
+
+        private string _currentPath;
+        protected string currentPath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_currentPath))
+                {
+                    return _currentPath;
+                }
+                if (httpContext != null && httpContext.Request != null)
+                {
+                    _currentPath = httpContext.Request.Path;
+                    return _currentPath;
+                }
+                return string.Empty;
+            }
+        }
+
         /// <summary>
         /// Representation of table in database
         /// </summary>
@@ -32,12 +59,15 @@ namespace IOWebApplication.Infrastructure.Data.Common
 
         public IEnumerable<T> ExecuteProc<T>(string procedureName, params object[] args) where T : class
         {
-            return this.Context.Query<T>().FromSql("/*NO LOAD BALANCE*/ select * from " + procedureName, args).ToList();
+            return this.DbSet<T>().FromSqlRaw($"/*NO LOAD BALANCE*/ select * from  {procedureName}", args).ToList();
+
+            //return this.Context.Query<T>().FromSql("/*NO LOAD BALANCE*/ select * from " + procedureName, args).ToList();
         }
 
         public IEnumerable<T> ExecuteSQL<T>(string query, params object[] args) where T : class
         {
-            return this.Context.Query<T>().FromSql("/*NO LOAD BALANCE*/ " + query, args).ToList();
+            //throw new NotImplementedException();
+            return this.DbSet<T>().FromSqlRaw($"/*NO LOAD BALANCE*/ {query}", args).ToList();
         }
 
         /// <summary>
@@ -47,6 +77,11 @@ namespace IOWebApplication.Infrastructure.Data.Common
         public void Add<T>(T entity) where T : class
         {
             this.DbSet<T>().Add(entity);
+        }
+
+        public async Task AddAsync<T>(T entity) where T : class
+        {
+            await this.DbSet<T>().AddAsync(entity);
         }
 
         /// <summary>
@@ -64,12 +99,21 @@ namespace IOWebApplication.Infrastructure.Data.Common
         /// <returns>Queryable expression tree</returns>
         public IQueryable<T> All<T>() where T : class
         {
-            return this.DbSet<T>().AsQueryable();
+            string tag = $"{AuditConstants.TagNet8_1} - {currentPath}: ";
+
+            return this.DbSet<T>()
+                .TagWith(tag)
+                .AsQueryable();
         }
 
         public IQueryable<T> All<T>(Expression<Func<T, bool>> search) where T : class
         {
-            return this.DbSet<T>().Where(search).AsQueryable();
+            string tag = $"{AuditConstants.TagNet8_1} - {currentPath}: ";
+
+            return this.DbSet<T>()
+                .Where(search)
+                .TagWith(tag)
+                .AsQueryable();
         }
 
         /// <summary>
@@ -78,14 +122,20 @@ namespace IOWebApplication.Infrastructure.Data.Common
         /// <returns>Expression tree</returns>
         public IQueryable<T> AllReadonly<T>() where T : class
         {
+            string tag = $"{AuditConstants.TagNet8_1} - {currentPath}: ";
+
             return this.DbSet<T>()
+                .TagWith(tag)
                 .AsQueryable()
                 .AsNoTracking();
         }
         public IQueryable<T> AllReadonly<T>(Expression<Func<T, bool>> search) where T : class
         {
+            string tag = $"{AuditConstants.TagNet8_1} - {currentPath}: ";
+
             return this.DbSet<T>()
                 .Where(search)
+                .TagWith(tag)
                 .AsQueryable()
                 .AsNoTracking();
         }
@@ -99,6 +149,26 @@ namespace IOWebApplication.Infrastructure.Data.Common
             T entity = GetById<T>(id);
 
             Delete<T>(entity);
+        }
+
+        /// <summary>
+        /// Deletes a record from database, based on expression
+        /// </summary>
+        /// <param name="deleteWhereClause">Expression to select entities to delete</param>
+        public int ExecuteDelete<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class
+        {
+
+            return this.DbSet<T>().Where(deleteWhereClause).ExecuteDelete();
+        }
+
+        /// <summary>
+        /// Deletes a record from database, based on expression
+        /// </summary>
+        /// <param name="deleteWhereClause">Expression to select entities to delete</param>
+        public async Task<int> ExecuteDeleteAsync<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class
+        {
+
+            return await this.DbSet<T>().Where(deleteWhereClause).ExecuteDeleteAsync();
         }
 
         /// <summary>
@@ -143,6 +213,11 @@ namespace IOWebApplication.Infrastructure.Data.Common
         /// </summary>
         /// <param name="id">record identificator</param>
         /// <returns>Single record</returns>
+        public async Task<T> GetByIdAsync<T>(object id) where T : class
+        {
+            return await this.DbSet<T>().FindAsync(id);
+        }
+
         public T GetById<T>(object id) where T : class
         {
             return this.DbSet<T>().Find(id);
@@ -157,7 +232,13 @@ namespace IOWebApplication.Infrastructure.Data.Common
         public Tprop GetPropById<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
             where T : class
         {
-            return this.DbSet<T>().Where(where).Select(select).FirstOrDefault();
+            return this.DbSet<T>().AsNoTracking().Where(where).Select(select).FirstOrDefault();
+        }
+
+        public async Task<Tprop> GetPropByIdAsync<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
+           where T : class
+        {
+            return await this.DbSet<T>().AsNoTracking().Where(where).Select(select).FirstOrDefaultAsync();
         }
 
         /// <summary>
@@ -166,12 +247,43 @@ namespace IOWebApplication.Infrastructure.Data.Common
         /// <returns>Error code</returns>
         public int SaveChanges()
         {
+            //var ent = this.Context.ChangeTracker.Entries();
+            //string info = "";
+            //var hasActChanged = ent.Any(x => x.Metadata.Name.EndsWith(typeof(CaseSessionAct).Name)
+            //    && x.Properties.Any(p => p.Metadata.Name == nameof(CaseSessionAct.RegNumber) && p.OriginalValue != null && p.CurrentValue == null));
+            //if (hasActChanged)
+            //{
+            //    foreach (var e in ent)
+            //    {
+            //        if (typeof(IHistory).IsAssignableFrom(e.Metadata.ClrType))
+            //        {
+            //            continue;
+            //        }
+            //        info += $"{e.Metadata.Name} - {e.State}; id= {e.Properties.Where(p => p.Metadata.Name == "Id").Select(x => x.CurrentValue).FirstOrDefault()}" + System.Environment.NewLine;
+            //        //За да не логва съдържанието на диспозитива
+            //        foreach (var p in e.Properties.Where(px => px.Metadata.Name != nameof(CaseSessionAct.Description)))
+            //        {
+            //            info += $"  {p.Metadata.Name} ({p.OriginalValue})=>({p.CurrentValue})" + System.Environment.NewLine;
+            //        }
+            //    }
+            //    if (!string.IsNullOrEmpty(info) && logger != null)
+            //    {
+            //        logger.LogCritical("ACT REGNUMBER RESET!!!" + System.Environment.NewLine + info);
+            //        this.Context.Dispose();
+            //        throw new Exception("ACT REGNUMBER RESET");
+            //    }
+            //}
             return this.Context.SaveChanges();
         }
 
         public async Task<int> SaveChangesAsync()
         {
             return await this.Context.SaveChangesAsync();
+        }
+
+        public void Attach<T>(T entity) where T : class
+        {
+            this.DbSet<T>().Attach(entity);
         }
 
         /// <summary>
@@ -203,6 +315,30 @@ namespace IOWebApplication.Infrastructure.Data.Common
             DeleteRange(entities);
         }
 
+        public IDbContextTransaction BeginTransaction(bool fakeTransaction = false)
+        {
+            if (fakeTransaction)
+            {
+                return new MockTransaction();
+            }
+            return Context.Database.BeginTransaction();
+        }
 
+        public bool StopTrackingApplicationUser()
+        {
+            bool result = false;
+            var ent = this.Context.ChangeTracker.Entries();
+            foreach (var item in ent.Where(x => x.Metadata.Name.EndsWith(typeof(ApplicationUser).Name)))
+            {
+                item.State = EntityState.Detached;
+                result = true;
+            }
+
+            return result;
+        }
+        public void ClearEntityTracker()
+        {
+            Context.ChangeTracker.Clear();
+        }
     }
 }

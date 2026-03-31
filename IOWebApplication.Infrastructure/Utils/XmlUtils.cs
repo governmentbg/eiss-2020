@@ -76,6 +76,26 @@ namespace IOWebApplication.Infrastructure.Utils
             return result;
         }
 
+
+        public static T DeserializeXmlSignature<T>(string xml) where T : class
+        {
+            T result = null;
+
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            XDocument xdoc = XDocument.Parse(xml);
+
+            Stream s = new MemoryStream();
+            xdoc.Save(s);
+            s.Seek(0, SeekOrigin.Begin);
+
+            using (XmlReader reader = XmlReader.Create(s))
+            {
+                result = (T)serializer.Deserialize(reader);
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Сериализира ЕИСПП Пакет
         /// </summary>
@@ -112,14 +132,14 @@ namespace IOWebApplication.Infrastructure.Utils
                 {
                     serializer.Serialize(writer, objectToSerialize);
                 }
-                
+
                 result = writer.ToString();
             }
 
             return result;
         }
 
-      
+
 
     }
 }

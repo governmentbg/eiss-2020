@@ -38,7 +38,7 @@ namespace IOWebApplication.Infrastructure.Services
             var mongoFileId = (await GridFsBucket.UploadFromBytesAsync(file.FileName, file.FileContent, options)).ToString();
             if (!string.IsNullOrEmpty(mongoFileId))
             {
-                cdnService.SaveMongoFileData(file, mongoFileId);
+                await cdnService.SaveMongoFileData(file, mongoFileId);
             }
             return mongoFileId;
         }
@@ -69,7 +69,7 @@ namespace IOWebApplication.Infrastructure.Services
             {
                 await GridFsBucket.DeleteAsync(id);
             }
-            cdnService.DeleteMongoFileData(id.ToString());
+            await cdnService.DeleteMongoFileData(id.ToString());
         }
         private async Task<GridFSFileInfo> GetFileInfoAsync(string fileName)
         {

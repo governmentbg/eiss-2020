@@ -1,0 +1,19 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessClaimCircumstancesVM
+<h3 class="section-title section-title--xs mb-3" id="fp-circumstances">3.2. Обстоятелства, от които произтича вземането</h3>
+<div class="row">
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.ClaimCircumstancesCode, "GenericDropDownString", null, new { items = ViewBag.ClaimCircumstancesCodeDDL })
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.Number)
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.Date,"DateTimeNull")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        @Html.EditorFor(x => x.Description,"Textarea")
+    </div>
+</div>

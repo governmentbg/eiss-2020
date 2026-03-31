@@ -22,15 +22,15 @@ namespace IOWebApplication.Controllers
             nomService = _nomService;
             commonService = _commonService;
         }
-        //public IActionResult InitAllCounters()
-        //{
-        //    if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
-        //    {
-        //        return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
-        //    }
-        //    service.InitAllCounters();
-        //    return Content("InitAllCounters done.");
-        //}
+        public IActionResult InitAllCounters()
+        {
+            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            service.InitAllCounters();
+            return Content("InitAllCounters done.");
+        }
 
         public IActionResult SetCounterValues()
         {

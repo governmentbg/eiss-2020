@@ -3,12 +3,14 @@ using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
 using IOWebApplication.Infrastructure.Utils;
 using IOWebApplicationService.Infrastructure.Contracts;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -136,7 +138,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 string message = null;
                 bool isReadyMessage = false;
-                
+                Case aCase = null;
                 if (mq.Content != null)
                 {
                     message = Encoding.UTF8.GetString(mq.Content);
@@ -146,8 +148,10 @@ namespace IOWebApplicationService.Infrastructure.Services
                 {
 
                     var eisppEventItem = repo.AllReadonly<EisppEventItem>()
+                                             .Include(x => x.Case)
                                              .Where(x => x.MQEpepId == mq.Id)
-                                            .FirstOrDefault();
+                                             .FirstOrDefault();
+                    aCase = eisppEventItem.Case;
                     if (!string.IsNullOrEmpty(eisppEventItem.RequestXML))
                     {
                         isReadyMessage = true;
@@ -236,8 +240,17 @@ namespace IOWebApplicationService.Infrastructure.Services
                             eisppEvent.CriminalProceeding.Case.LegalProceedingType = -1;
                         }
 
-                        message = XmlUtils.SerializeEisppPackage(package);
-                        message = await eisppRulesService.ApplyRules(structureId, message, eventType);
+                        if (aCase == null)
+                        {
+                            message = XmlUtils.SerializeEisppPackage(package);
+                            var eisppEventItem = repo.AllReadonly<EisppEventItem>()
+                             .Include(x => x.Case)
+                             .Where(x => x.MQEpepId == mq.Id)
+                             .FirstOrDefault();
+                            aCase = eisppEventItem.Case;
+                            
+                        }
+                        message = await eisppRulesService.ApplyRules(structureId, message, eventType, aCase?.IsGeneratedEisppNumber ?? false);
                     }
                     else
                     {

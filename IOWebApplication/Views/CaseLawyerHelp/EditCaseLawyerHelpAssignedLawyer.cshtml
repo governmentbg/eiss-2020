@@ -1,0 +1,53 @@
+﻿@model CaseLawyerHelpAssignedLawyerEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+
+@{
+    ViewData["Title"] = "Върнати адвокати по заявка за правна помощ от ЕЕСПП";
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditCaseLawyerHelpAssignedLawyer" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseLawyerHelpId)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1" data-position="BankAccount"> Основни данни</legend>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.CaseSessionActAssignedId, "GenericDropDown")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.LawyerStateId, "GenericDropDown")</div>
+                </fieldset>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="CaseLawyerHelp" asp-action="Edit" asp-route-id="@Model.CaseLawyerHelpId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+        });
+    </script>
+}

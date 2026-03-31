@@ -1,0 +1,26 @@
+﻿@model IOWebApplication.Models.SignPdfViewModel
+<div class="row">
+    <div class="col-md-12">
+        <div class="box box-success">
+            <div class="box-header with-border">
+                <h3 class="box-title">Грешка</h3>
+            </div>
+            <div class="box-body">
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <p class="text-danger">@Model.ErrorMessage</p>
+                }
+                else
+                {
+                    <p class="text-danger">Възникна грешка при изтегляне на документ за подписване.</p>
+                }
+
+                <p class="text-danger">Моля, опитайте отново по-късно.</p>
+
+            </div>
+            <div class="box-footer">
+                <a href="@Model.CancelUrl" class="btn btn-danger">Назад</a>
+            </div>
+        </div>
+    </div>
+</div>

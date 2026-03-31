@@ -28,6 +28,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("col_index")]
         public int ColIndex { get; set; }
 
+        [Column("sisma_index")]
+        public string SismaIndex { get; set; }
+
         [ForeignKey(nameof(CourtTypeId))]
         public virtual CourtType CourtType { get; set; }
 

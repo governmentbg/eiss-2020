@@ -1,0 +1,27 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@model int
+@{
+    switch (Model)
+    {
+        case NomenclatureConstants.CourtGroupKinds.FastProcessCentral:
+            ViewData["Title"] = "Група централизирано разпределение ГД";
+            break;
+        case NomenclatureConstants.CourtGroupKinds.FastProcessCentralDistributionJurisdiction:
+            ViewData["Title"] = "Група централизирано разпределение по подсъдност ГД";
+            break;
+    }
+    
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CourtLawUnit/_CentralDistributionCC.cshtml" model="@new CourtLawUnitGroupCCFilterVM { CourtGroupKind = @Model }" />
+    </div>
+</div>

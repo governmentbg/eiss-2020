@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -10,22 +11,25 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
     public class CaseClassificationService : BaseService, ICaseClassificationService
     {
         private readonly INomenclatureService nomService;
+        private readonly IMQEpepService mqService;
 
         public CaseClassificationService(
             ILogger<CaseClassificationService> _logger,
             INomenclatureService _nomService,
+            IMQEpepService _mqService,
             IRepository _repo,
             IUserContext _userContext)
         {
             logger = _logger;
             nomService = _nomService;
+            mqService = _mqService;
             repo = _repo;
             userContext = _userContext;
         }
@@ -42,7 +46,7 @@ namespace IOWebApplication.Core.Services
 
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
             var nomClassification = nomService.GetDropDownList<Classification>(false, false);
-            var caseClassification = repo.AllReadonly<CaseClassification>().Where(x => x.CaseId == caseId && 
+            var caseClassification = repo.AllReadonly<CaseClassification>().Where(x => x.CaseId == caseId &&
                                          (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
                                          (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date
                                          ).ToList();
@@ -92,6 +96,20 @@ namespace IOWebApplication.Core.Services
                 DateTime fromDate = DateTime.Now;
                 DateTime toDate = DateTime.Now.AddSeconds(-1);
 
+                if (model.checkListVMs.Any(c => c.Value == NomenclatureConstants.CaseClassifications.SpecialAccess.ToString() && c.Checked) &&
+                    !model.checkListVMs.Any(c => c.Value == NomenclatureConstants.CaseClassifications.Restriction.ToString() && c.Checked))
+                {
+
+                    foreach (var item in model.checkListVMs)
+                    {
+                        if (item.Value == NomenclatureConstants.CaseClassifications.Restriction.ToString())
+                        {
+                            item.Checked = true;
+                            break;
+                        }
+                    }
+                }
+
                 var expiryList = repo.All<CaseClassification>()
                     .Where(x => x.CaseId == model.CourtId && (x.CaseSessionId ?? 0) == model.ObjectId && (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
                     .ToList();
@@ -113,11 +131,14 @@ namespace IOWebApplication.Core.Services
                     repo.Add<CaseClassification>(newClassification);
                 }
                 repo.SaveChanges();
+
+                //В поле CourtId е tbl.Case.Id
+                mqService.AppendCaseDataChange(model.CourtId);
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CaseClassification CaseId={ model.CourtId }");
+                logger.LogError(ex, $"Грешка при запис на CaseClassification CaseId={model.CourtId}");
                 return false;
             }
         }
@@ -128,26 +149,22 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseId"></param>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public List<SelectListItem> CaseClassification_Select(int caseId, int? caseSessionId)
+        public async Task<List<SelectListItem>> CaseClassification_Select(int caseId, int? caseSessionId)
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
-            return repo.AllReadonly<CaseClassification>()
-           .Include(x => x.Classification)
-           .Where(x => x.CaseId == caseId && (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) && (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
-           .Select(x => new SelectListItem()
-           {
-               Value = x.Id.ToString(),
-               Text = x.Classification.Label,
-           }).ToList();
+            return await repo.AllReadonly<CaseClassification>()
+                             .Where(x => x.CaseId == caseId && 
+                                        (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) && 
+                                        (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Value = x.Id.ToString(),
+                                 Text = x.Classification.Label,
+                             })
+                             .ToListAsync();
         }
 
-        /// <summary>
-        /// Извличане на данни за индикатори по дело/заседание
-        /// </summary>
-        /// <param name="caseId"></param>
-        /// <param name="caseSessionId"></param>
-        /// <returns></returns>
-        public List<CaseClassification> CaseClassification_SelectObject(int caseId, int? caseSessionId)
+        public List<CaseClassification> CaseClassification_SelectRow(int caseId, int? caseSessionId)
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
             return repo.AllReadonly<CaseClassification>()
@@ -156,6 +173,23 @@ namespace IOWebApplication.Core.Services
                                    (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) && 
                                    (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
                        .ToList();
+        }
+
+        /// <summary>
+        /// Извличане на данни за индикатори по дело/заседание
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <param name="caseSessionId"></param>
+        /// <returns></returns>
+        public async Task<List<CaseClassification>> CaseClassification_SelectObject(int caseId, int? caseSessionId)
+        {
+            DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
+            return await repo.AllReadonly<CaseClassification>()
+                             .Include(x => x.Classification)
+                             .Where(x => x.CaseId == caseId &&
+                                         (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
+                                         (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
+                             .ToListAsync();
         }
     }
 }

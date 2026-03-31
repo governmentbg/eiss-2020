@@ -57,6 +57,9 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         public bool IsGeneratedEisppNumber { get; set; }
 
+        [XmlIgnore]
+        public bool HaveOtherWithThisEisppNumber { get; set; }
+
         public static string GetRulesPath()
         {
             return CriminalProceeding.GetRulesPath() + "DLO.";

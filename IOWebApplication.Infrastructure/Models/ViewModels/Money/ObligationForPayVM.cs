@@ -22,9 +22,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         public decimal Amount { get; set; }
 
+        public decimal AmountBGN { get; set; }
+
         public decimal AmountPay { get; set; }
 
         public decimal AmountForPay { get { return this.Amount - this.AmountPay; } }
+
+        public decimal AmountForPayRead { get; set; }    
 
         public string ObligationInfo { get; set; }
 
@@ -38,5 +42,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public string RegNumberExecList { get; set; }
 
         public int ExecListId { get; set; }
+
+        public string ReceivePerson { get; set; }
     }
 }

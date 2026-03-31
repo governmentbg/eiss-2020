@@ -10,6 +10,8 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Report;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IOWebApplication.Controllers
@@ -87,7 +89,7 @@ namespace IOWebApplication.Controllers
         {
             SetViewbagAddress();
             var model = new Address()
-            { 
+            {
                 CountryCode = NomenclatureConstants.CountryBG
             };
             return View(nameof(EditAddress), model);
@@ -227,5 +229,235 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.breadcrumbs = service.BankAccount_LoadBreadCrumbsAddEdit(sourceType, sourceId);
         }
+
+        /// <summary>
+        /// Темплейти за статистиката
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult ExcelReportTemplate()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Извличане на данните за темплйтите за статистиката
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ExcelReportTemplateListData(IDataTablesRequest request)
+        {
+            var data = service.ExcelReportTemplate_Select();
+
+            return request.GetResponse(data);
+        }
+        private void SetViewBagExcelReportTemplate()
+        {
+            ViewBag.CourtTypeId_ddl = nomenclatureService.GetDropDownList<CourtType>();
+            ViewBag.ReportTypeId_ddl = nomenclatureService.GetDDL_ExcelReportTemplateReportType(true, false);
+        }
+
+        /// <summary>
+        /// Добавяне на темплейт
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult AddExcelReportTemplate()
+        {
+            SetViewBagExcelReportTemplate();
+            ExcelReportTemplate model = new ExcelReportTemplate();
+            return View(nameof(EditExcelReportTemplate), model);
+        }
+
+        public IActionResult EditExcelReportTemplate(int id)
+        {
+            var model = service.GetById<ExcelReportTemplate>(id);
+            SetViewBagExcelReportTemplate();
+            return View(nameof(EditExcelReportTemplate), model);
+        }
+
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        public IActionResult EditExcelReportTemplate(ICollection<IFormFile> files, ExcelReportTemplate model)
+        {
+            SetViewBagExcelReportTemplate();
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditExcelReportTemplate));
+            }
+
+            if (model.Id < 1)
+            {
+                if (files == null || files.Count() < 1)
+                {
+                    SetErrorMessage("Няма избран файл.");
+                    return View(nameof(EditExcelReportTemplate), new { model });
+                }
+            }
+
+            var currentId = model.Id;
+            if (service.ExcelReportTemplate_SaveData(files, model))
+            {
+                this.SaveLogOperation(currentId == 0, model.Id, null, nameof(EditExcelReportTemplate));
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EditExcelReportTemplate), new { id = model.Id });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(nameof(EditExcelReportTemplate), model);
+        }
+
+        /// <summary>
+        /// Сваляне на файл
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<FileResult> DownloadFile(int id)
+        {
+            var model = await service.GetReadonlyAsync<ExcelReportTemplate>(id);
+            return File(model.Content, model.ContentType, model.FileName);
+        }
+
+        #region FilterTemplates
+
+        /// <summary>
+        /// Страница с шаблони за филтри за справки
+        /// </summary>
+        /// <param name="FilterTemplateTypeId">Тип шаблон</param>
+        /// <returns></returns>
+        public IActionResult IndexFilterTemplates(int FilterTemplateTypeId)
+        {
+            var model = new FilterTemplatesFilterVM()
+            {
+                FilterTemplateTypeId = FilterTemplateTypeId
+            };
+            return View(model);
+        }
+
+        /// <summary>
+        /// Страница с шаблони за филтри за специализирана справка
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult IndexFilterTemplatesSpecializedReport()
+        {
+            var model = new FilterTemplatesFilterVM()
+            {
+                FilterTemplateTypeId = NomenclatureConstants.FilterTemplateTypeConstants.SpecializedReport
+            };
+            return View("IndexFilterTemplates", model);
+        }
+
+        /// <summary>
+        /// Метод за извличане на данни за шаблони за филтри за справки
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="filter">Филтър попълнен от потребител</param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ListDataFilterTemplates(IDataTablesRequest request, FilterTemplatesFilterVM filter)
+        {
+            var data = service.GetFilterTemplates_Select(filter);
+            return request.GetResponse(data);
+        }
+
+        /// <summary>
+        /// Добавяне на нов шаблон за филтър на специализирана справка
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult AddFilterTemplatesSpecializedReport()
+        {
+            SetViewbagFilterTemplatesSpecializedReport();
+            var model = new FilterTemplatesSpecializedReportEditVM()
+            {
+                FilterTemplateTypeId = NomenclatureConstants.FilterTemplateTypeConstants.SpecializedReport,
+                IsActive = true,
+                SpecializedReportFilter = new SpecializedReportFilterVM()
+                {
+                    DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
+                    DateTo = DateTime.Now
+                }
+            };
+            return View(nameof(EditFilterTemplatesSpecializedReport), model);
+        }
+
+        /// <summary>
+        /// Метод за редакция на шаблон за филтър на специализирана справка
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task<IActionResult> EditFilterTemplatesSpecializedReport(int id)
+        {
+            SetViewbagFilterTemplatesSpecializedReport();
+            FilterTemplatesSpecializedReportEditVM model = await service.GetFilterTemplatesSpecializedReportById(id);
+            return View(nameof(EditFilterTemplatesSpecializedReport), model);
+        }
+
+        /// <summary>
+        /// Запис на шаблон за филтър на специализирана справка
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> EditFilterTemplatesSpecializedReport(FilterTemplatesSpecializedReportEditVM model)
+        {
+            SetViewbagFilterTemplatesSpecializedReport();
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditFilterTemplatesSpecializedReport), model);
+            }
+
+            string _isvalid = IsValidFilterTemplatesSpecializedReport(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
+                return View(nameof(EditFilterTemplatesSpecializedReport), model);
+            }
+
+            var currentId = model.Id;
+            int? saveId = await service.SaveFilterTemplatesSpecializedReport(model);
+            if (saveId != null)
+            {
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EditFilterTemplatesSpecializedReport), new { id = saveId });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+
+            return View(nameof(EditFilterTemplatesSpecializedReport), model);
+        }
+
+        /// <summary>
+        /// Зареждане на номенклатурни листове за добавяне/редакция на шаблон за филтър на специализирана справка
+        /// </summary>
+        private void SetViewbagFilterTemplatesSpecializedReport()
+        {
+            ViewBag.SpecializedReportFilter_CourtId_ddl = nomenclatureService.GetDropDownList<Court>();
+            ViewBag.SpecializedReportFilter_InstanceId_ddl = nomenclatureService.GetDropDownList<CaseInstance>();
+            ViewBag.SpecializedReportFilter_CaseClassificationIds_ddl = nomenclatureService.GetDropDownList<Classification>();
+            ViewBag.SpecializedReportFilter_CaseGroupIds_ddl = nomenclatureService.GetDropDownList<CaseGroup>();
+            ViewBag.SpecializedReportFilter_ActComplainResultId_ddl = nomenclatureService.GetDropDownList<ActComplainResult>();
+            ViewBag.SpecializedReportFilter_CaseStateId_ddl = nomenclatureService.GetDropDownList<CaseState>();
+        }
+
+        /// <summary>
+        /// Валидация при добавяне/редакция на шаблон за филтър на специализирана справка
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        private string IsValidFilterTemplatesSpecializedReport(FilterTemplatesSpecializedReportEditVM model)
+        {
+            if (string.IsNullOrEmpty(model.Label))
+                return "Въведете име на шаблон";
+
+            if ((model.SpecializedReportFilter.DateTo - model.SpecializedReportFilter.DateFrom).Days > 365)
+                return "Периода на справката е по-голям от година";
+
+            return string.Empty;
+        }
+
+        #endregion
     }
 }

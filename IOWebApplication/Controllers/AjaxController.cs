@@ -14,14 +14,12 @@ using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Net.Http.Headers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text.Encodings.Web;
-using System.Threading;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -29,40 +27,53 @@ namespace IOWebApplication.Controllers
     [Authorize]
     public class AjaxController : Controller
     {
+        private ICaseService _caseService;
+        private ICaseService caseService
+        {
+            get
+            {
+                if (_caseService == null)
+                {
+                    _caseService = (ICaseService)HttpContext.RequestServices.GetService(typeof(ICaseService));
+                }
+                return _caseService;
+            }
+        }
+
         private readonly INomenclatureService nomenclatureService;
-        private readonly ICaseService caseService;
         private readonly IUserContext userContext;
         private readonly ICommonService commonService;
-        private readonly ICasePersonService casePersonService;
+        //private readonly ICasePersonService casePersonService;
         private readonly ICalendarService calendarService;
         private readonly ICaseGroupService caseGroupService;
         private readonly ICaseLoadIndexService caseLoadIndexService;
-        private readonly ICdnService cdnService;
+        //private readonly ICdnService cdnService;
 
         protected readonly ILogOperationService<ApplicationDbContext> logOperation;
 
         public AjaxController(
             INomenclatureService _nomenclatureService,
-            ICaseService _caseService,
+            //ICaseService _caseService,
             ICommonService _commonService,
             IUserContext _userContext,
-            ICasePersonService _casePersonService,
+            //ICasePersonService _casePersonService,
             ICalendarService _calendarService,
             ICaseGroupService _caseGroupService,
             ICaseLoadIndexService _caseLoadIndexService,
-            ILogOperationService<ApplicationDbContext> _logOperation,
-            ICdnService _cdnService)
+            ILogOperationService<ApplicationDbContext> _logOperation
+            //ICdnService _cdnService
+            )
         {
             nomenclatureService = _nomenclatureService;
-            caseService = _caseService;
+            //caseService = _caseService;
             commonService = _commonService;
             userContext = _userContext;
             logOperation = _logOperation;
             calendarService = _calendarService;
-            casePersonService = _casePersonService;
+            //casePersonService = _casePersonService;
             caseGroupService = _caseGroupService;
             caseLoadIndexService = _caseLoadIndexService;
-            cdnService = _cdnService;
+            //cdnService = _cdnService;
         }
 
         [HttpGet]
@@ -94,7 +105,7 @@ namespace IOWebApplication.Controllers
         [AllowAnonymous]
         public IActionResult GetBlankFooter(int id, string date, string time)
         {
-            var court = nomenclatureService.GetById<Infrastructure.Data.Models.Common.Court>(id);
+            var court = nomenclatureService.GetReadonly<Infrastructure.Data.Models.Common.Court>(id);
 
             if (court != null)
             {
@@ -107,7 +118,8 @@ namespace IOWebApplication.Controllers
                 {
                     addData += $";email: {court.Email.Trim()}";
                 }
-                var _info = System.Net.WebUtility.HtmlEncode($"{court.Address}{addData}, {court.CityName}");
+                var ekatte = nomenclatureService.GetEkatteByEkatte(court.CityCode);
+                var _info = System.Net.WebUtility.HtmlEncode($"{ekatte?.TVM} {ekatte?.Name}, {court.Address}{addData}");
                 return Content($"<!DOCTYPE html><html><head><meta http-equiv=Content-Type content=\"text/html;charset=utf-8\"></head><body style=\"width:80%;text-align:center;\">{_info}</body></html>", "text/html");
             }
 
@@ -189,7 +201,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult GetDDL_DocumentTypeByCourt(int documentGroupId, bool addDefaultElement = false, int? courtOrganizationId = null)
         {
-            var model = nomenclatureService.GetDDL_DocumentTypeByCourt(documentGroupId, addDefaultElement, false, courtOrganizationId);
+            var model = nomenclatureService.GetDDL_DocumentTypeByCourt(documentGroupId, addDefaultElement, false, courtOrganizationId).SingleOrChoose();
 
             return Json(model);
         }
@@ -234,12 +246,27 @@ namespace IOWebApplication.Controllers
 
             return Json(ddlUnits.ToSelectList());
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDDL_CaseTypeUnits(int caseTypeId, bool addDefaultElement = true)
+        {
+            var model = await nomenclatureService.GetDDL_CaseTypeUnit(caseTypeId);
+            return Json(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDDL_DocumentTypeByCaseType(int caseTypeId, int? documentKind = null, bool addDefaultElement = true)
+        {
+            var model = await nomenclatureService.GetDDL_DocumentTypeByCaseType(caseTypeId, documentKind, addDefaultElement);
+            return Json(model);
+        }
+
         [HttpGet]
         public IActionResult Get_CaseTypeUnitsReserves(int caseTypeUnitId)
         {
             if (caseTypeUnitId == 0)
             {
-                return null;
+                return Json(new List<SelectListItem>());
             }
             var model = caseGroupService.GetById_CaseTypeUnit(caseTypeUnitId);
 
@@ -297,7 +324,7 @@ namespace IOWebApplication.Controllers
             {
                 return null;
             }
-            var model = caseService.GetById<Case>(caseId);
+            var model = caseService.GetReadonly<Case>(caseId);
             if (model != null)
             {
                 return Json(new { courtId = model.CourtId, regNumber = model.RegNumber, caseType = model.CaseTypeId, caseGroup = model.CaseGroupId });
@@ -305,19 +332,21 @@ namespace IOWebApplication.Controllers
             return null;
         }
         [HttpGet]
-        public IActionResult GetDDL_CaseSessionActs(int caseId, bool declaredOnly = true)
+        public IActionResult GetDDL_CaseSessionActs(int caseId, bool notRegistered = false, bool declaredOnly = true, bool addDefaultItem = false)
         {
-            var model = caseService.GetDDL_SessionActsByCase(caseId, false, declaredOnly);
+            var model = caseService.GetDDL_SessionActsByCase(caseId, addDefaultItem, notRegistered, declaredOnly);
 
             return Json(model);
         }
-        //[HttpGet]
-        //public IActionResult Get_CaseCode(int caseTypeId, string query = null, int? id = null)
-        //{
-        //    var model = nomenclatureService.GetDDL_CaseCode(caseTypeId.ValueToArray<int>(), query, id);
 
-        //    return Json(model);
-        //}
+        [HttpGet]
+        public IActionResult Get_CaseCodeByLoadGroup_DropDown(string caseTypeId)
+        {
+            var model = nomenclatureService.GetDDL_CaseCodeDropDown(caseTypeId.StringToIntArray());
+
+            return Json(model);
+        }
+
         [HttpGet]
         public IActionResult Get_CaseCodeByLoadGroup(string caseTypeId, string query = null, int? id = null)
         {
@@ -325,7 +354,9 @@ namespace IOWebApplication.Controllers
 
             return Json(model);
         }
+
         [HttpGet]
+        [ResponseCache(Duration = 30)]
         public IActionResult Get_PersonRoles(string query = null, int? id = null)
         {
             var model = nomenclatureService.Get_PersonRoles(query, id);
@@ -485,7 +516,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult Get_CaseType(int caseTypeId)
         {
-            var model = nomenclatureService.GetById<CaseType>(caseTypeId);
+            var model = nomenclatureService.GetReadonly<CaseType>(caseTypeId);
             return Json(model);
         }
         [HttpGet]
@@ -495,9 +526,9 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
         [HttpGet]
-        public IActionResult GetDDL_HtmlTemplate(int notificationTypeId, int caseId)
+        public IActionResult GetDDL_HtmlTemplate(int notificationTypeId, int caseId, int htmlTemplateId)
         {
-            var model = nomenclatureService.GetDDL_HtmlTemplate(notificationTypeId, caseId);
+            var model = nomenclatureService.GetDDL_HtmlTemplate(notificationTypeId, caseId, htmlTemplateId);
             return Json(model);
         }
         [HttpGet]
@@ -522,9 +553,22 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetDDL_SessionResultBase(int sessionResultId)
+        public IActionResult GetDDL_SessionResultBase(int sessionResultId, int? caseId = null, int? caseSessionId = null)
         {
-            var model = nomenclatureService.GetDDL_SessionResultBase(sessionResultId);
+            var model = nomenclatureService.GetDDL_SessionResultBase(sessionResultId, true, false, true, caseId, caseSessionId);
+            return Json(model);
+        }
+
+        /// <summary>
+        /// Метод връщащ списък с основания към резултати за среща за медиация
+        /// </summary>
+        /// <param name="mediationResultId">Идентификатор на избраният резултат</param>
+        /// <param name="addDefaultElement">Флаг за добавяне на елемент "Избери"</param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> GetDDL_MediationResultBase(int mediationResultId, bool addDefaultElement = true)
+        {
+            var model = await nomenclatureService.GetDDL_MediationResultBase(mediationResultId, addDefaultElement);
             return Json(model);
         }
 
@@ -564,7 +608,7 @@ namespace IOWebApplication.Controllers
                 objectTypeId = int.Parse(sourceType.Replace(SourceTypeSelectVM.LawUnitPrefix, ""));
             }
             var model = commonService.SelectEntity_Select(st, request.Search?.Value.EmptyToNull(), objectTypeId);
-            return request.GetResponse(model, model);
+            return request.GetResponse(model);
         }
 
         [HttpGet]
@@ -574,9 +618,9 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
-        public IActionResult Calendar_GetByPerson(string start, string end)
+        public IActionResult Calendar_GetByPerson(string start, string end, int caseMode = 0)
         {
-            var model = calendarService.SelectByPerson(start.StrToDateFormat("yyyy-MM-dd"), end.StrToDateFormat("yyyy-MM-dd"));
+            var model = calendarService.SelectByPerson(start.StrToDateFormat("yyyy-MM-dd"), end.StrToDateFormat("yyyy-MM-dd"), caseMode);
             return Json(model);
         }
 
@@ -633,9 +677,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult Search_ActLawBase(string query)
+        public IActionResult Search_ActLawBase(string query, int caseId)
         {
-            var model = nomenclatureService.Get_ActLawBase(query, 0);
+            var model = nomenclatureService.Get_ActLawBase(query, caseId, 0);
 
             return Json(model);
         }
@@ -643,7 +687,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult Get_ActLawBase(int id)
         {
-            var model = nomenclatureService.Get_ActLawBase(null, id).FirstOrDefault();
+            var model = nomenclatureService.Get_ActLawBase(null, 0, id).FirstOrDefault();
 
             return Json(model);
         }
@@ -662,7 +706,7 @@ namespace IOWebApplication.Controllers
                     }
                 case SourceTypeSelectVM.Instutution:
                     {
-                        model = commonService.Institution_Select(0, query.EmptyToNull(), intId)
+                        model = commonService.InstitutionByName_Select(query.EmptyToNull(), intId)
                                             .ToList()
                                             .Select(x => new LabelValueVM
                                             {
@@ -679,6 +723,43 @@ namespace IOWebApplication.Controllers
             }
 
             return Json(model);
+        }
+
+        /// <summary>
+        /// Извличане на данни за падащ списък занаселени места
+        /// </summary>
+        /// <param name="countryId">Идентификатор на държава</param>
+        /// <param name="addDefaultElement">Флаг дали да се добави елемент "Избери"</param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> GetDDL_EkatteSobr(int? countryId, bool addDefaultElement = true)
+        {
+            var model = await nomenclatureService.GetDDL_EkatteSobr(countryId, addDefaultElement);
+            return Json(model);
+        }
+
+        /// <summary>
+        /// Извличане на данни за падащ списък за населени места от ЕИСПП
+        /// </summary>
+        /// <param name="countryId">Идентификатор на държава</param>
+        /// <param name="addDefaultElement">Флаг дали да се добави елемент "Избери"</param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> GetDDL_EisppEkatte(int? countryId, bool addDefaultElement = true)
+        {
+            var model = await nomenclatureService.GetDDL_EisppEkatte(countryId, addDefaultElement);
+            return Json(model);
+        }
+
+        public async Task<IActionResult> CheckCaseCodeForDebtorsCount(int caseCodeId)
+        {
+            var checkCaseCodeForDebtorsCount = await caseService.CheckCaseCodeForDebtorsCount(caseCodeId);
+
+            return Json(new
+            {
+                result = true,
+                hasDebtorsCount = checkCaseCodeForDebtorsCount
+            });
         }
     }
 }

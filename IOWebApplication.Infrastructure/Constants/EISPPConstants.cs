@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Constants
@@ -20,14 +21,13 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const string EISS_PNE = "eiss_pne";
 
-
             /// <summary>
-            /// Мярка статус
+            /// Видове мерки за процесуална принуда
             /// </summary>
             public const string MeasureType = "214";
 
             /// <summary>
-            /// Вид мярка
+            /// Състояния на мярка за процесуална принуда
             /// </summary>
             public const string MeasureStatus = "215";
 
@@ -152,7 +152,7 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const string PersonStatus = "244";
 
-            // <summary>
+            /// <summary>
             /// nprfzlosn
             /// Основание за статус на НП за лице
             /// Основания за налагане на административно наказание ??? 
@@ -398,9 +398,15 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int ReturnToProsecutor = 943;
 
             /// <summary>
-            /// Връщане на НД за доразследване на прокурор
+            /// Връщане на НД за ново разглеждане на първоинстанционен съд
             /// </summary>
             public const int ReturnToFirst = 945;
+
+            /// <summary>
+            /// Връщане на НД за ново разглеждане на въззивен съд
+            /// </summary>
+            public const int ReturnToSecond = 946;
+
 
             /// <summary>
             ///Приемане на жалба
@@ -435,12 +441,77 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int ReciveSentence = 914;
 
             /// <summary>
+            ///Влизане на присъда в сила
+            /// </summary>
+            public const int ForceSentence = 924;
+
+            /// <summary>
+            ///Отменяне на първоинстанционна присъда
+            /// </summary>
+            public const int CancellationSentence = 890;
+
+            /// <summary>
+            /// Отменяне на решение на ВЗИ по първоинстанционна присъда
+            /// </summary>
+            public const int CancellationSentenceVKS = 894;
+
+            /// <summary>
+            /// Отменя въззивна присъда решение и първоинстанционната присъда определение разпореждане отчасти и връща делото на първата инстанция (чл.425,ал. 1,т.1 от НПК)
+            /// </summary>
+            public const int Cancellation21Part = 1900001796;
+
+            /// <summary>
+            /// Отменя въззивна присъда/решение и първоинстанционната присъда/определение/разпореждане отчасти и връща делото на прокурора (чл.425, ал.1, т.1 от НПК)
+            /// </summary>
+            public const int Cancellation21Prosecutor = 1900001795;
+
+            /// <summary>
+            ///  Отменя въззивна присъда/решение и първоинстанционната присъда/определение/разпореждане отчасти и връща делото на първата инстанция (чл.425,ал. 1,т.1 от НПК)
+            /// </summary>
+            public const int Cancellation21 = 1900001794;
+
+
+            /// <summary>
             /// Обединяване на НД
             /// </summary>
             public const int CaseUnion = 898;
             public const int CaseUnionInner = 1721;
-        }
 
+            /// <summary>
+            /// Образуване на производство по изпълнение на ЕЗА
+            /// </summary>
+            public const int CaseCreateExecEZA = 1900001822;
+
+            /// <summary>
+            ///  Оттегляне на жалба
+            /// </summary>
+            public const int CancelComplain = 1900001813;
+
+            /// <summary>
+            /// Оставя в сила разпореждане за връщане на касационна жалба (чл. 351, ал. 6 от НПК)
+            /// </summary>
+            public const int ConfirmComplain = 1900001790;
+
+
+
+
+            public static bool IsCancellationSentence(int? eventTypeId)
+            {
+                var events = new int?[] { CancellationSentence, CancellationSentenceVKS, Cancellation21Part, Cancellation21Prosecutor, Cancellation21 };
+                return events.Contains(eventTypeId);
+            }
+        }
+        public class ComplainType
+        {
+            /// <summary>
+            /// жалба
+            /// </summary>
+            public const int Complain = 642;
+            /// <summary>
+            /// частна жалба
+            /// </summary>
+            public const int PrivateComplain = 641;
+        }
 
         public class SidType
         {
@@ -623,7 +694,7 @@ namespace IOWebApplication.Infrastructure.Constants
             /// <summary>
             /// Наказание за което се въвежда начало и режим
             /// </summary>
-            public const string efective = "efective";
+            public const string effective = "effective";
 
             /// <summary>
             /// Наказание за което се въвежда условен период
@@ -714,6 +785,8 @@ namespace IOWebApplication.Infrastructure.Constants
             public const string Relaps = "eispp_relaps";
 
             public const string ComplaintType = "eispp_complaint_type";
+
+            public const string AddressType = "eispp_address";
         }
         public class EventKind 
         {
@@ -725,6 +798,13 @@ namespace IOWebApplication.Infrastructure.Constants
         {
             public const string Iskane = "eispp_iskane";
             public const string Tujba = "eispp_tujba";
+        }
+        public class CanGenerateDocGroup
+        {
+            // точен входящ документ „Жалба“,  „Жалба и протест“,  „Протест“
+            public const string Instance2 = "eispp_instance2";
+            // Обвинителен акт
+            public const string Indictment = "eispp_indictment";
         }
         public class ServingType
         {

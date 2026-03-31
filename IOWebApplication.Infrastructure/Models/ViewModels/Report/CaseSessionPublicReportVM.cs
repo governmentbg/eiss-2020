@@ -7,6 +7,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 {
     public class CaseSessionPublicReportVM
     {
+        public int Id { get; set; }
+
+        public int CaseId { get; set; }
+
         [Display(Name = "№ по ред")]
         public int Index { get; set; }
 
@@ -50,7 +54,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string SessionAct { get; set; }
 
         [Display(Name = "Решение")]
-        public string SessionActDecision { get; set; }
+        public string SessionActDecision 
+        { 
+            get 
+            {
+                return string.IsNullOrEmpty(ActDecision) == false ? ActDecision : AnnouncedForResolution;
+            }
+        }
 
         [Display(Name = "Дата, за която е отложено; причини за отлагането")]
         public string SessionAdjourn { get; set; }
@@ -102,6 +112,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public int DurationMonths { get; set; }
 
         public int JudgeReporterId { get; set; }
+
+        public string ActDecision { get; set; }
+
+        public string AnnouncedForResolution { get; set; }
+
+        public List<CaseSessionPublicCaseLawUnit> CaseLawUnitList { get; set; }
     }
 
     public class CaseSessionPublicFilterReportVM
@@ -120,6 +136,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Инстанция")]
         public int InstanceId { get; set; }
+    }
 
+    public class CaseSessionPublicCaseLawUnit()
+    {
+        public int LawUnitId { get; set; }
+
+        public int JudgeDepartmentRoleId { get; set; }
+
+        public string FullName { get; set; }
+
+        public int JudgeRoleId { get; set; }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using IO.RegixClient;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
@@ -8,19 +7,22 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Regix;
+using IOWebApplication.Infrastructure.Extensions;
+using IOWebApplication.Infrastructure.Models.Regix.CriminalRecordsReport;
 using IOWebApplication.Infrastructure.Models.Regix.FetchNomenclatures;
 using IOWebApplication.Infrastructure.Models.Regix.GetActualStateV3;
 using IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts;
 using IOWebApplication.Infrastructure.Models.Regix.GetPensionIncomeAmountReport;
 using IOWebApplication.Infrastructure.Models.Regix.GetPersonalIdentityV2;
 using IOWebApplication.Infrastructure.Models.Regix.GetStateOfPlay;
+using IOWebApplication.Infrastructure.Models.Regix.RelationsSearch;
 using IOWebApplication.Infrastructure.Models.Regix.SearchDisabilityCompensationByPaymentPeriod;
 using IOWebApplication.Infrastructure.Models.Regix.SearchUnemploymentCompensationByPaymentPeriod;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
+using Nest;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Regix;
@@ -28,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -46,74 +49,82 @@ namespace IOWebApplication.Core.Services
             userContext = _userContext;
         }
 
-        private CallContext RegixCallContex()
+        private CallContext RegixCallContex(string lawReason = "Единна информационна система на съдилищата", string remark = "")
         {
-            return new CallContext()
+            var result = new CallContext()
             {
                 AdministrationName = "Висш съдебен съвет",
                 AdministrationOId = "2.16.100.1.1.511.1.2",
                 EmployeeIdentifier = "1",
                 EmployeeNames = "Администратор",
                 EmployeePosition = "Администратор",
-                LawReason = "За целите на разработката и тестването на ЕИСС",
-                Remark = "",
+                LawReason = lawReason,
+                Remark = remark,
                 ServiceType = "За административна услуга",
                 ServiceURI = "2.16.100.1.1.511.1.2"
             };
+
+            if (!string.IsNullOrEmpty(userContext.UserId))
+            {
+                result.AdministrationName = userContext.CourtName;
+            }
+
+            return result;
         }
 
-        public PersonDataResponseType GetPersonalData(string egn)
+        public async Task<PersonDataResponseType> GetPersonalData(string egn, string remark = "")
         {
             PersonDataRequestType req = new PersonDataRequestType()
             {
                 EGN = egn
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м и чл. 385 от ЗСВ, Наредба №14/18.11.2009 г. (достъп на ОСВ до НБД \"Население\")", remark);
 
             string operationName = "TechnoLogica.RegiX.GraoNBDAdapter.APIService.INBDAPI.PersonDataSearch";
-            return client.GetData<PersonDataResponseType>(operationName, req, context);
+            return await getDataFromOldClient<PersonDataResponseType>(operationName, req, context);
         }
 
-        public PermanentAddressResponseType GetPermanentAddress(string egn)
+        private async Task<PermanentAddressResponseType> GetPermanentAddress(string egn, string remark = "")
         {
-            CallContext context = RegixCallContex();
-            return client.GetPermanentAddress(egn, DateTime.Now, context);
-        }
-        public TemporaryAddressResponseType GetCurrentAddress(string egn)
-        {
-            CallContext context = RegixCallContex();
-            return client.GetCurrentAddress(egn, DateTime.Now, context);
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м и чл. 385 от ЗСВ, Наредба №14/18.11.2009 г. (достъп на ОСВ до НБД \"Население\")", remark);
+            return await client.GetPermanentAddressAsync(egn, DateTime.Now, context);
         }
 
-        public ActualStateResponseV3 GetActualStateV3(string uic)
+        private async Task<TemporaryAddressResponseType> GetCurrentAddress(string egn, string remark = "")
+        {
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м и чл. 385 от ЗСВ, Наредба №14/18.11.2009 г. (достъп на ОСВ до НБД \"Население\")", remark);
+            return await client.GetCurrentAddressAsync(egn, DateTime.Now, context);
+        }
+
+        private async Task<ActualStateResponseV3> GetActualStateV3(string uic, string remark = "")
         {
             ActualStateRequestV3 req = new ActualStateRequestV3()
             {
                 UIC = uic,
                 FieldList = ""
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 11 от ЗТРРЮЛНЦ, чл. 113 от Наредба №1/14.02.2007 г. за водене, съхраняване и достъп до ТРРЮЛНЦ", remark);
 
             string operationName = "TechnoLogica.RegiX.AVTRAdapter.APIService.ITRAPI.GetActualStateV3";
-            return client.GetData<ActualStateResponseV3>(operationName, req, context);
+            return await getDataFromOldClient<ActualStateResponseV3>(operationName, req, context);
         }
 
-        public EmploymentContractsResponse GetEmploymentContracts(string identityId, EikTypeType eikType, ContractsFilterType contractsFilterType)
+        private async Task<IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EmploymentContractsResponse> GetEmploymentContracts(string identityId, IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EikTypeType eikType, IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.ContractsFilterType contractsFilterType, string remark = "")
         {
-            IdentityTypeRequest identity = new IdentityTypeRequest() { ID = identityId, TYPE = eikType };
-            EmploymentContractsRequest req = new EmploymentContractsRequest()
+            IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.IdentityTypeRequest identity = new IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.IdentityTypeRequest() { ID = identityId, TYPE = eikType };
+            IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EmploymentContractsRequest req = new IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EmploymentContractsRequest()
             {
                 Identity = identity,
                 ContractsFilter = contractsFilterType,
                 ContractsFilterSpecified = true
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м от ЗСВ; Споразумение с НАП за осигуряването на достъп на ОСВ до електронни услуги на НАП от 21.05.2018 г.", remark);
 
             string operationName = "TechnoLogica.RegiX.NRAEmploymentContractsAdapter.APIService.INRAEmploymentContractsAPI.GetEmploymentContracts";
-            return client.GetData<EmploymentContractsResponse>(operationName, req, context);
+            return await getDataFromOldClient<IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EmploymentContractsResponse>(operationName, req, context);
         }
 
-        public POVNVEDResponseType SearchDisabilityCompensationByPaymentPeriod(string identifier, Infrastructure.Models.Regix.SearchDisabilityCompensationByPaymentPeriod.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo)
+        private async Task<POVNVEDResponseType> SearchDisabilityCompensationByPaymentPeriod(string identifier, Infrastructure.Models.Regix.SearchDisabilityCompensationByPaymentPeriod.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo, string remark = "")
         {
             POVNVEDRequestType req = new POVNVEDRequestType()
             {
@@ -122,13 +133,13 @@ namespace IOWebApplication.Core.Services
                 DateFrom = dateFrom,
                 DateTo = dateTo
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м от ЗСВ", remark);
 
             string operationName = "TechnoLogica.RegiX.NoiROAdapter.APIService.IROAPI.SearchDisabilityCompensationByPaymentPeriod";
-            return client.GetData<POVNVEDResponseType>(operationName, req, context);
+            return await getDataFromOldClient<POVNVEDResponseType>(operationName, req, context);
         }
 
-        public POBVEDResponseType SearchUnemploymentCompensationByPaymentPeriod(string identifier, Infrastructure.Models.Regix.SearchUnemploymentCompensationByPaymentPeriod.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo)
+        private async Task<POBVEDResponseType> SearchUnemploymentCompensationByPaymentPeriod(string identifier, Infrastructure.Models.Regix.SearchUnemploymentCompensationByPaymentPeriod.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo, string remark = "")
         {
             POBVEDRequestType req = new POBVEDRequestType()
             {
@@ -137,13 +148,13 @@ namespace IOWebApplication.Core.Services
                 DateFrom = dateFrom,
                 DateTo = dateTo
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м от ЗСВ", remark);
 
             string operationName = "TechnoLogica.RegiX.NoiROAdapter.APIService.IROAPI.SearchUnemploymentCompensationByPaymentPeriod";
-            return client.GetData<POBVEDResponseType>(operationName, req, context);
+            return await getDataFromOldClient<POBVEDResponseType>(operationName, req, context);
         }
 
-        public UP8ResponseType GetPensionIncomeAmountReport(string identifier, Infrastructure.Models.Regix.GetPensionIncomeAmountReport.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo)
+        private async Task<UP8ResponseType> GetPensionIncomeAmountReport(string identifier, Infrastructure.Models.Regix.GetPensionIncomeAmountReport.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo, string remark = "")
         {
             PeriodType period = new PeriodType();
             period.From = new MonthType();
@@ -159,47 +170,79 @@ namespace IOWebApplication.Core.Services
                 IdentifierType = identifierType,
                 Period = period
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м от ЗСВ", remark);
 
             string operationName = "TechnoLogica.RegiX.NoiRPAdapter.APIService.IRPAPI.GetPensionIncomeAmountReport";
-            return client.GetData<UP8ResponseType>(operationName, req, context);
+            return await getDataFromOldClient<UP8ResponseType>(operationName, req, context);
         }
 
-        public PersonalIdentityInfoResponseType GetPersonalIdentityV2(string identityDocumentNumber, string egn)
+        private async Task<PersonalIdentityInfoResponseType> GetPersonalIdentityV2(string identityDocumentNumber, string egn, string remark = "")
         {
             PersonalIdentityInfoRequestType req = new PersonalIdentityInfoRequestType()
             {
                 IdentityDocumentNumber = identityDocumentNumber,
                 EGN = egn
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м от ЗСВ, чл. 70 от ЗБЛД", remark);
 
             string operationName = "TechnoLogica.RegiX.MVRBDSAdapter.APIService.IMVRBDSAPI.GetPersonalIdentityV2";
-            return client.GetData<PersonalIdentityInfoResponseType>(operationName, req, context);
+            return await getDataFromOldClient<PersonalIdentityInfoResponseType>(operationName, req, context);
         }
 
-        public StateOfPlay GetStateOfPlay(string uic)
+        private async Task<StateOfPlay> GetStateOfPlay(string uic, string remark = "")
         {
             GetStateOfPlayRequest req = new GetStateOfPlayRequest()
             {
                 UIC = uic
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 360м от ЗСВ, чл. 8 от ЗРБ, чл. 15 от Наредба за поддържане и функциониране на регистър БУЛСТАТ", remark);
 
             string operationName = "TechnoLogica.RegiX.AVBulstat2Adapter.APIService.IAVBulstat2API.GetStateOfPlay";
-            return client.GetData<StateOfPlay>(operationName, req, context);
+            return await getDataFromOldClient<StateOfPlay>(operationName, req, context);
         }
 
-        public Nomenclatures FetchNomenclatures()
+        private async Task<Nomenclatures> FetchNomenclatures()
         {
             FetchNomenclatures req = new FetchNomenclatures()
             {
 
             };
-            CallContext context = RegixCallContex();
+            CallContext context = RegixCallContex("чл. 360м от ЗСВ, чл. 8 от ЗРБ, чл. 15 от Наредба за поддържане и функциониране на регистър БУЛСТАТ");
 
             string operationName = "TechnoLogica.RegiX.AVBulstat2Adapter.APIService.IAVBulstat2API.FetchNomenclatures";
-            return client.GetData<Nomenclatures>(operationName, req, context);
+            return await getDataFromOldClient<Nomenclatures>(operationName, req, context);
+        }
+
+        private async Task<RelationsResponseType> GetRelationsSearch(string identifier, string remark = "")
+        {
+            RelationsRequestType req = new RelationsRequestType()
+            {
+                EGN = identifier
+            };
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м и чл. 385 от ЗСВ, Наредба №14/18.11.2009 г. (достъп на ОСВ до НБД \"Население\")", remark);
+
+            string operationName = "TechnoLogica.RegiX.GraoNBDAdapter.APIService.INBDAPI.RelationsSearch";
+            return await getDataFromOldClient<RelationsResponseType>(operationName, req, context);
+        }
+
+        private async Task<CriminalRecordsReportType> CriminalRecordsReport(string identifier, Infrastructure.Models.Regix.CriminalRecordsReport.AllIdentifiersType identifierType, string remark = "")
+        {
+            CriminalRecordsReportRequestType req = new CriminalRecordsReportRequestType()
+            {
+                IdentifierType = identifierType,
+                PID = identifier,
+            };
+            CallContext context = RegixCallContex("чл. 2. (1) от ЗЕУ, чл. 360м и чл. 385 от ЗСВ, Наредба №14/18.11.2009 г. (достъп на ОСВ до НБД \"Население\")", remark);
+
+            string operationName = "EGov.RegiX.MPCriminalRecordsAdapter.APIService.ICriminalRecordsAPI.CriminalRecordsReport";
+
+            return await getDataFromOldClient<CriminalRecordsReportType>(operationName, req, context);
+        }
+
+        async Task<T> getDataFromOldClient<T>(string operationName, object req, CallContext context) where T : class
+        {
+            return await client.GetDataAsync<T>(operationName, req, context);
+            //return await Task.FromResult(client.GetData<T>(operationName, req, context));
         }
 
         private bool RegixReport_SaveData(RegixReport model, RegixReportVM reportVM, int regixTypeId, string requestData, string responseData, bool saveChanges)
@@ -231,11 +274,16 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private (bool result, PersonDataResponseType response) PersonalDataSave(RegixPersonDataVM model)
+        private async Task<(bool result, PersonDataResponseType response)> PersonalDataSave(RegixPersonDataVM model)
         {
+            //КБорисов, ако ЕГН-то е празно да не го подава на Regix, защото гърми
+            if (string.IsNullOrEmpty(model?.PersonDataFilter?.EgnFilter))
+            {
+                return (result: false, response: null);
+            }
             try
             {
-                var response = GetPersonalData(model.PersonDataFilter.EgnFilter);
+                var response = await GetPersonalData(model.PersonDataFilter.EgnFilter, generateRemarkForContext(model.Report));
                 RegixReport saved = new RegixReport();
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.PersonData, JsonConvert.SerializeObject(model.PersonDataFilter),
                          JsonConvert.SerializeObject(response), true) == false)
@@ -253,20 +301,20 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool PersonData_SaveData(RegixPersonDataVM model)
+        public async Task<bool> PersonData_SaveData(RegixPersonDataVM model)
         {
-            (bool result, PersonDataResponseType response) = PersonalDataSave(model);
+            (bool result, PersonDataResponseType response) = await PersonalDataSave(model);
             return result;
         }
 
-        private PersonDataResponseType GetPersonalDataAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        private async Task<PersonDataResponseType> GetPersonalDataAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             RegixPersonDataVM model = new RegixPersonDataVM();
             model.PersonDataFilter.EgnFilter = egn;
             model.PersonDataFilter.PersonNamesCheck = true;
             FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
 
-            (bool result, PersonDataResponseType response) = PersonalDataSave(model);
+            (bool result, PersonDataResponseType response) = await PersonalDataSave(model);
 
             return result == true ? response : new PersonDataResponseType();
         }
@@ -316,33 +364,33 @@ namespace IOWebApplication.Core.Services
             model.RegixRequestTypeId = regixRequestTypeId;
         }
 
-        public PermanentAddressResponseType GetPermanentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        public async Task<PermanentAddressResponseType> GetPermanentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             RegixPersonAddressVM model = new RegixPersonAddressVM();
             model.PersonAddressFilter.EgnFilter = egn;
             FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
 
-            (bool result, PermanentAddressResponseType response) = PermanentAddressSave(model);
+            (bool result, PermanentAddressResponseType response) = await PermanentAddressSave(model);
 
             return result == true ? response : new PermanentAddressResponseType();
         }
 
-        public TemporaryAddressResponseType GetCurrentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        public async Task<TemporaryAddressResponseType> GetCurrentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             RegixPersonAddressVM model = new RegixPersonAddressVM();
             model.PersonAddressFilter.EgnFilter = egn;
             FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
 
-            (bool result, TemporaryAddressResponseType response) = CurrentAddressSave(model);
+            (bool result, TemporaryAddressResponseType response) = await CurrentAddressSave(model);
 
             return result == true ? response : new TemporaryAddressResponseType();
         }
 
-        private (bool result, PermanentAddressResponseType response) PermanentAddressSave(RegixPersonAddressVM model)
+        private async Task<(bool result, PermanentAddressResponseType response)> PermanentAddressSave(RegixPersonAddressVM model)
         {
             try
             {
-                var response = GetPermanentAddress(model.PersonAddressFilter.EgnFilter);
+                var response = await GetPermanentAddress(model.PersonAddressFilter.EgnFilter, generateRemarkForContext(model.Report));
                 string responseJson = JsonConvert.SerializeObject(response);
 
                 RegixReport saved = new RegixReport();
@@ -361,11 +409,11 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private (bool result, TemporaryAddressResponseType response) CurrentAddressSave(RegixPersonAddressVM model)
+        private async Task<(bool result, TemporaryAddressResponseType response)> CurrentAddressSave(RegixPersonAddressVM model)
         {
             try
             {
-                var response = GetCurrentAddress(model.PersonAddressFilter.EgnFilter);
+                var response = await GetCurrentAddress(model.PersonAddressFilter.EgnFilter, generateRemarkForContext(model.Report));
                 string responseJson = JsonConvert.SerializeObject(response);
 
                 RegixReport saved = new RegixReport();
@@ -384,18 +432,18 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool PersonAddress_SaveData(RegixPersonAddressVM model)
+        public async Task<bool> PersonAddress_SaveData(RegixPersonAddressVM model)
         {
             try
             {
                 if (model.AddressTypeId == NomenclatureConstants.RegixType.PersonPermanentAddress)
                 {
-                    (bool result, PermanentAddressResponseType response) = PermanentAddressSave(model);
+                    (bool result, PermanentAddressResponseType response) = await PermanentAddressSave(model);
                     return result;
                 }
                 else if (model.AddressTypeId == NomenclatureConstants.RegixType.PersonCurrentAddress)
                 {
-                    (bool result, TemporaryAddressResponseType response) = CurrentAddressSave(model);
+                    (bool result, TemporaryAddressResponseType response) = await CurrentAddressSave(model);
                     return result;
                 }
                 else
@@ -465,12 +513,12 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
-        public bool EmploymentContracts_SaveData(RegixEmploymentContractsVM model)
+        public async Task<bool> EmploymentContracts_SaveData(RegixEmploymentContractsVM model)
         {
             try
             {
-                var response = GetEmploymentContracts(model.EmploymentContractsFilter.IdentityFilter, (EikTypeType)model.EmploymentContractsFilter.EikTypeId,
-                                                      (ContractsFilterType)model.EmploymentContractsFilter.ContractsFilterTypeId);
+                var response = await GetEmploymentContracts(model.EmploymentContractsFilter.IdentityFilter, (IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EikTypeType)model.EmploymentContractsFilter.EikTypeId,
+                                                      (IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.ContractsFilterType)model.EmploymentContractsFilter.ContractsFilterTypeId, generateRemarkForContext(model.Report));
                 RegixReport saved = new RegixReport();
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.EmploymentContracts,
                                          JsonConvert.SerializeObject(model.EmploymentContractsFilter), JsonConvert.SerializeObject(response), true) == false)
@@ -488,7 +536,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private void MapEmploymentContracts(EContract fromObj, RegixEmploymentContractsResponseVM toObj)
+        private void MapEmploymentContracts(IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EContract fromObj, RegixEmploymentContractsResponseVM toObj)
         {
             toObj.ContractorBulstat = fromObj.ContractorBulstat;
             toObj.ContractorName = fromObj.ContractorName;
@@ -497,7 +545,7 @@ namespace IOWebApplication.Core.Services
             toObj.StartDate = fromObj.StartDateSpecified == true ? fromObj.StartDate.ToString("dd.MM.yyyy") : "";
             toObj.LastAmendDate = fromObj.LastAmendDateSpecified == true ? fromObj.LastAmendDate.ToString("dd.MM.yyyy") : "";
             toObj.EndDate = fromObj.EndDateSpecified == true ? fromObj.EndDate.ToString("dd.MM.yyyy") : "";
-            toObj.Reason = fromObj.ReasonSpecified == true ? fromObj.Reason.ToString() : "";
+            toObj.Reason = fromObj.Reason;
             toObj.TimeLimit = fromObj.TimeLimitSpecified == true ? fromObj.TimeLimit.ToString("dd.MM.yyyy") : "";
             toObj.EcoCode = fromObj.EcoCode;
             toObj.ProfessionCode = fromObj.ProfessionCode;
@@ -508,7 +556,7 @@ namespace IOWebApplication.Core.Services
         public RegixEmploymentContractsVM GetEmploymentContractsById(int id)
         {
             var report = GetRegixReportById(id);
-            var employmentContracts = JsonConvert.DeserializeObject<EmploymentContractsResponse>(report.ResponseData);
+            var employmentContracts = JsonConvert.DeserializeObject<IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts.EmploymentContractsResponse>(report.ResponseData);
 
             RegixEmploymentContractsVM model = new RegixEmploymentContractsVM();
             SetRegixReportVM(report, model.Report);
@@ -524,25 +572,25 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
-        public bool CompensationByPaymentPeriod_SaveData(RegixCompensationByPaymentPeriodVM model)
+        public async Task<bool> CompensationByPaymentPeriod_SaveData(RegixCompensationByPaymentPeriodVM model)
         {
             try
             {
                 string responseJson = "";
                 if (model.CompensationTypeId == NomenclatureConstants.RegixType.DisabilityCompensationByPaymentPeriod)
                 {
-                    var response = SearchDisabilityCompensationByPaymentPeriod(model.CompensationByPaymentPeriodFilter.IdentifierFilter,
+                    var response = await SearchDisabilityCompensationByPaymentPeriod(model.CompensationByPaymentPeriodFilter.IdentifierFilter,
                             (Infrastructure.Models.Regix.SearchDisabilityCompensationByPaymentPeriod.IdentifierType)model.CompensationByPaymentPeriodFilter.IdentifierTypeFilter,
                             model.CompensationByPaymentPeriodFilter.DateFromFilter,
-                            model.CompensationByPaymentPeriodFilter.DateToFilter);
+                            model.CompensationByPaymentPeriodFilter.DateToFilter, generateRemarkForContext(model.Report));
                     responseJson = JsonConvert.SerializeObject(response);
                 }
                 else if (model.CompensationTypeId == NomenclatureConstants.RegixType.UnemploymentCompensationByPaymentPeriod)
                 {
-                    var response = SearchUnemploymentCompensationByPaymentPeriod(model.CompensationByPaymentPeriodFilter.IdentifierFilter,
+                    var response = await SearchUnemploymentCompensationByPaymentPeriod(model.CompensationByPaymentPeriodFilter.IdentifierFilter,
                             (Infrastructure.Models.Regix.SearchUnemploymentCompensationByPaymentPeriod.IdentifierType)model.CompensationByPaymentPeriodFilter.IdentifierTypeFilter,
                             model.CompensationByPaymentPeriodFilter.DateFromFilter,
-                            model.CompensationByPaymentPeriodFilter.DateToFilter);
+                            model.CompensationByPaymentPeriodFilter.DateToFilter, generateRemarkForContext(model.Report));
                     responseJson = JsonConvert.SerializeObject(response);
                 }
                 else
@@ -564,6 +612,8 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
+
+        
 
         private void MapDisabilityCompensationByPaymentPeriod(POVNVEDResponseType fromObj, RegixCompensationByPaymentPerioResponseVM toObj)
         {
@@ -628,15 +678,15 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
-        public bool PensionIncomeAmountReport_SaveData(RegixPensionIncomeAmountVM model)
+        public async Task<bool> PensionIncomeAmountReport_SaveData(RegixPensionIncomeAmountVM model)
         {
             try
             {
                 string responseJson = "";
-                var response = GetPensionIncomeAmountReport(model.PensionIncomeAmountFilter.IdentifierFilter,
+                var response = await GetPensionIncomeAmountReport(model.PensionIncomeAmountFilter.IdentifierFilter,
                         (Infrastructure.Models.Regix.GetPensionIncomeAmountReport.IdentifierType)model.PensionIncomeAmountFilter.IdentifierTypeFilter,
                         model.PensionIncomeAmountFilter.DateFromFilter,
-                        model.PensionIncomeAmountFilter.DateToFilter);
+                        model.PensionIncomeAmountFilter.DateToFilter, generateRemarkForContext(model.Report));
                 responseJson = JsonConvert.SerializeObject(response);
                 RegixReport saved = new RegixReport();
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.PensionIncomeAmount, JsonConvert.SerializeObject(model.PensionIncomeAmountFilter), responseJson, true) == false)
@@ -686,11 +736,11 @@ namespace IOWebApplication.Core.Services
         }
 
 
-        public bool PersonalIdentityV2_SaveData(RegixPersonalIdentityV2VM model)
+        public async Task<bool> PersonalIdentityV2_SaveData(RegixPersonalIdentityV2VM model)
         {
             try
             {
-                var response = GetPersonalIdentityV2(model.PersonalIdentityV2Filter.IdentityDocumentNumber, model.PersonalIdentityV2Filter.EGN);
+                var response = await GetPersonalIdentityV2(model.PersonalIdentityV2Filter.IdentityDocumentNumber, model.PersonalIdentityV2Filter.EGN, generateRemarkForContext(model.Report));
                 RegixReport saved = new RegixReport();
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.PersonalIdentityV2, JsonConvert.SerializeObject(model.PersonalIdentityV2Filter),
                          JsonConvert.SerializeObject(response), true) == false)
@@ -803,11 +853,11 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
-        private (bool result, ActualStateResponseV3 response) ActualStateV3Save(RegixActualStateV3VM model)
+        private async Task<(bool result, ActualStateResponseV3 response)> ActualStateV3Save(RegixActualStateV3VM model)
         {
             try
             {
-                var response = GetActualStateV3(model.ActualStateV3Filter.UIC);
+                var response = await GetActualStateV3(model.ActualStateV3Filter.UIC, generateRemarkForContext(model.Report));
                 RegixReport saved = new RegixReport();
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.ActualStateV3, JsonConvert.SerializeObject(model.ActualStateV3Filter),
                          JsonConvert.SerializeObject(response), true) == false)
@@ -825,19 +875,19 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool ActualStateV3_SaveData(RegixActualStateV3VM model)
+        public async Task<bool> ActualStateV3_SaveData(RegixActualStateV3VM model)
         {
-            (bool result, ActualStateResponseV3 response) = ActualStateV3Save(model);
+            (bool result, ActualStateResponseV3 response) = await ActualStateV3Save(model);
             return result;
         }
 
-        private ActualStateResponseV3 GetActualStateV3AndSave(string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        private async Task<ActualStateResponseV3> GetActualStateV3AndSave(string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             RegixActualStateV3VM model = new RegixActualStateV3VM();
             model.ActualStateV3Filter.UIC = uic;
             FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
 
-            (bool result, ActualStateResponseV3 response) = ActualStateV3Save(model);
+            (bool result, ActualStateResponseV3 response) = await ActualStateV3Save(model);
 
             return result == true ? response : new ActualStateResponseV3();
         }
@@ -1165,14 +1215,14 @@ namespace IOWebApplication.Core.Services
             return (result: true, errorMessage: "");
         }
 
-        public IEnumerable<PersonSearchVM> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        public async Task<IEnumerable<PersonSearchVM>> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             List<PersonSearchVM> result = new List<PersonSearchVM>();
             switch (uicType)
             {
                 case NomenclatureConstants.UicTypes.EGN:
-                    var responseNBD = GetPersonalDataAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
-                    if (responseNBD != null)
+                    var responseNBD = await GetPersonalDataAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+                    if (responseNBD != null && responseNBD.PersonNames != null)
                     {
                         var itemNBD = new PersonSearchVM()
                         {
@@ -1182,15 +1232,29 @@ namespace IOWebApplication.Core.Services
                             FirstName = responseNBD.PersonNames.FirstName,
                             MiddleName = responseNBD.PersonNames.SurName,
                             FamilyName = responseNBD.PersonNames.FamilyName,
+                            LatinName = $"{responseNBD.LatinNames.FirstName} {responseNBD.LatinNames.SurName} {responseNBD.LatinNames.FamilyName}".Replace("  ", " "),
                             IsDead = responseNBD.DeathDateSpecified && responseNBD.DeathDate.Year > 1900,
                             DeathDate = responseNBD.DeathDate.ToString("dd.MM.yyyy")
                         };
+                        if (responseNBD.Gender != null && responseNBD.Gender.GenderCodeSpecified)
+                        {
+                            //Кодовете за пол в НБД и в ЕИСС да обърнати
+                            switch (responseNBD.Gender.GenderCode)
+                            {
+                                case 2:
+                                    itemNBD.GenderId = 1;
+                                    break;
+                                case 1:
+                                    itemNBD.GenderId = 2;
+                                    break;
+                            }
+                        }
                         result.Add(itemNBD);
                     }
                     //var adr = GetPermanentAddress(uic);
                     break;
                 case NomenclatureConstants.UicTypes.EIK:
-                    var responseTR = GetActualStateV3AndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+                    var responseTR = await GetActualStateV3AndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
                     if (responseTR != null && responseTR.Deed != null)
                     {
                         var itemTR = new PersonSearchVM()
@@ -1204,7 +1268,7 @@ namespace IOWebApplication.Core.Services
                     }
                     break;
                 case NomenclatureConstants.UicTypes.Bulstat:
-                    var responseBS = GetStateOfPlayAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+                    var responseBS = await GetStateOfPlayAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
                     if (responseBS != null && responseBS.Subject != null)
                     {
                         var itemBS = new PersonSearchVM()
@@ -1247,11 +1311,11 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        public (bool result, StateOfPlay response) StateOfPlaySave(RegixStateOfPlayVM model)
+        private async Task<(bool result, StateOfPlay response)> StateOfPlaySave(RegixStateOfPlayVM model)
         {
             try
             {
-                var response = GetStateOfPlay(model.StateOfPlayFilter.UIC);
+                var response = await GetStateOfPlay(model.StateOfPlayFilter.UIC, generateRemarkForContext(model.Report));
                 RegixReport saved = new RegixReport();
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.StateOfPlay, JsonConvert.SerializeObject(model.StateOfPlayFilter),
                          JsonConvert.SerializeObject(response), true) == false)
@@ -1269,19 +1333,19 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool StateOfPlay_SaveData(RegixStateOfPlayVM model)
+        public async Task<bool> StateOfPlay_SaveData(RegixStateOfPlayVM model)
         {
-            (bool result, StateOfPlay response) = StateOfPlaySave(model);
+            (bool result, StateOfPlay response) = await StateOfPlaySave(model);
             return result;
         }
 
-        private StateOfPlay GetStateOfPlayAndSave(string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        private async Task<StateOfPlay> GetStateOfPlayAndSave(string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             RegixStateOfPlayVM model = new RegixStateOfPlayVM();
             model.StateOfPlayFilter.UIC = uic;
             FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
 
-            (bool result, StateOfPlay response) = StateOfPlaySave(model);
+            (bool result, StateOfPlay response) = await StateOfPlaySave(model);
 
             return result == true ? response : new StateOfPlay();
         }
@@ -1626,9 +1690,9 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private void MapStateOfPlay(StateOfPlay fromObj, RegixStateOfPlayResponseVM toObj)
+        private async Task MapStateOfPlay(StateOfPlay fromObj, RegixStateOfPlayResponseVM toObj)
         {
-            var nomenclature = FetchNomenclatures();
+            var nomenclature = await FetchNomenclatures();
 
             if (fromObj.RepresentationType != null)
             {
@@ -1667,7 +1731,7 @@ namespace IOWebApplication.Core.Services
             MapStateOfPlayAdditionalActivities2008(nomenclature, fromObj, toObj);
         }
 
-        public RegixStateOfPlayVM GetStateOfPlayById(int id)
+        public async Task<RegixStateOfPlayVM> GetStateOfPlayById(int id)
         {
             var report = GetRegixReportById(id);
             RegixStateOfPlayVM model = new RegixStateOfPlayVM();
@@ -1676,7 +1740,7 @@ namespace IOWebApplication.Core.Services
             model.StateOfPlayFilter = JsonConvert.DeserializeObject<RegixStateOfPlayFilterVM>(report.RequestData);
 
             var response = JsonConvert.DeserializeObject<StateOfPlay>(report.ResponseData);
-            MapStateOfPlay(response, model.StateOfPlayResponse);
+            await MapStateOfPlay(response, model.StateOfPlayResponse);
             return model;
         }
 
@@ -1688,6 +1752,7 @@ namespace IOWebApplication.Core.Services
                           .Include(x => x.User)
                           .Include(x => x.User.LawUnit)
                           .Include(x => x.Case)
+                          .Include(x => x.Case.CaseType)
                           .Include(x => x.Document)
                           .Include(x => x.Document.DocumentType)
                           .Include(x => x.CaseSessionAct.CaseSession)
@@ -1711,7 +1776,7 @@ namespace IOWebApplication.Core.Services
 
             if (model.CaseId != null)
             {
-                report.HeaderFooter.CaseNumber = model.Case.RegNumber + "/" + model.Case.RegDate.ToString("dd.MM.yyyy");
+                report.HeaderFooter.CaseNumber = model.Case.CaseType.Code + " №" + model.Case.RegNumber + "/" + model.Case.RegDate.ToString("dd.MM.yyyy");
             }
 
             if (model.CaseSessionActId != null)
@@ -1721,14 +1786,14 @@ namespace IOWebApplication.Core.Services
 
             if (model.DocumentId != null)
             {
-                report.HeaderFooter.DocumentNumber = model.Document.DocumentType.Label + model.Document.DocumentNumber + "/" + model.Document.DocumentDate.ToString("dd.MM.yyyy");
+                report.HeaderFooter.DocumentNumber = model.Document.DocumentType.Label + " №" + model.Document.DocumentNumber + "/" + model.Document.DocumentDate.ToString("dd.MM.yyyy");
             }
 
         }
 
-        public DocumentRegixVM GetPersonalIdentity(string identityDocumentNumber, string egn)
+        public async Task<DocumentRegixVM> GetPersonalIdentity(string identityDocumentNumber, string egn, string remark = "")
         {
-            var personalIdentityInfoResponse = GetPersonalIdentityV2(identityDocumentNumber, egn);
+            var personalIdentityInfoResponse = await GetPersonalIdentityV2(identityDocumentNumber, egn, remark);
 
             return new DocumentRegixVM()
             {
@@ -1750,14 +1815,14 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool PersonDataAddress_SaveData(RegixPersonDataAddressVM model)
+        public async Task<bool> PersonDataAddress_SaveData(RegixPersonDataAddressVM model)
         {
             try
             {
                 RegixPersonAllDataResponse response = new RegixPersonAllDataResponse();
-                response.PersonDataResponseType = GetPersonalData(model.PersonAddressFilter.EgnFilter);
-                response.PermanentAddressResponseType = GetPermanentAddress(model.PersonAddressFilter.EgnFilter);
-                response.TemporaryAddressResponseType = GetCurrentAddress(model.PersonAddressFilter.EgnFilter);
+                response.PersonDataResponseType = await GetPersonalData(model.PersonAddressFilter.EgnFilter, generateRemarkForContext(model.Report));
+                response.PermanentAddressResponseType = await GetPermanentAddress(model.PersonAddressFilter.EgnFilter, generateRemarkForContext(model.Report));
+                response.TemporaryAddressResponseType = await GetCurrentAddress(model.PersonAddressFilter.EgnFilter, generateRemarkForContext(model.Report));
                 string responseJson = JsonConvert.SerializeObject(response);
 
                 RegixReport saved = new RegixReport();
@@ -1811,7 +1876,7 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<RegixReport, bool>> dateSearch = x => true;
             if (model.DateFrom != null || model.DateTo != null)
-                dateSearch = x => x.DateWrt.Date >= dateFromSearch.Date && x.DateWrt.Date <= dateToSearch.Date;
+                dateSearch = x => x.DateWrt >= dateFromSearch && x.DateWrt <= dateToSearch.MakeEndDate();
 
             Expression<Func<RegixReport, bool>> userWhere = x => true;
             if (string.IsNullOrEmpty(model.UserId) == false && model.UserId != "0")
@@ -1867,6 +1932,674 @@ namespace IOWebApplication.Core.Services
                            DateWrt = x.DateWrt,
                            RegixRequestTypeId = x.RegixRequestTypeId
                        }).AsQueryable();
+        }
+
+        private string generateRemarkForContext(RegixReportVM model)
+        {
+            string result = "";
+
+            if (model == null)
+            {
+                return result;
+            }
+
+            if (model.DocumentId > 0)
+            {
+                var docinfo = repo.AllReadonly<IOWebApplication.Infrastructure.Data.Models.Documents.Document>()
+                                    .Where(x => x.Id == model.DocumentId)
+                                    .Select(x => new
+                                    {
+                                        DocumentType = x.DocumentType.Label,
+                                        x.DocumentNumber,
+                                        x.DocumentDate
+                                    }).FirstOrDefault();
+                if (docinfo != null)
+                {
+                    return $"{docinfo.DocumentType} {docinfo.DocumentNumber}/{docinfo.DocumentDate:dd.MM.yyyy}";
+                }
+            }
+
+            if (model.CaseId > 0)
+            {
+                var caseInfo = repo.AllReadonly<IOWebApplication.Infrastructure.Data.Models.Cases.Case>()
+                                    .Where(x => x.Id == model.CaseId)
+                                    .Select(x => new
+                                    {
+                                        CaseType = x.CaseType.Code,
+                                        x.ShortNumberValue,
+                                        x.RegDate
+                                    }).FirstOrDefault();
+
+                if (caseInfo != null)
+                {
+                    return $"{caseInfo.CaseType} {caseInfo.ShortNumberValue}/{caseInfo.RegDate:yyyy}";
+                }
+            }
+
+            if (model.CaseSessionActId > 0)
+            {
+                var actInfo = repo.AllReadonly<IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionAct>()
+                                    .Where(x => x.Id == model.CaseSessionActId)
+                                    .Select(x => new
+                                    {
+                                        ActType = x.ActType.Label,
+                                        x.RegNumber,
+                                        x.RegDate
+                                    }).FirstOrDefault();
+
+                if (actInfo != null)
+                {
+                    return $"{actInfo.ActType} {actInfo.RegNumber}/{actInfo.RegDate:dd.MM.yyyy}";
+                }
+            }
+
+            return "Във връзка с регистриране на документ";
+        }
+
+        public async Task<bool> RelationsSearch_SaveData(RegixRelationsSearchVM model)
+        {
+            try
+            {
+                var response = await GetRelationsSearch(model.RelationsSearchFilter.IdentifierFilter, generateRemarkForContext(model.Report));
+                RegixReport saved = new RegixReport();
+                if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.RelationsSearch, JsonConvert.SerializeObject(model.RelationsSearchFilter),
+                         JsonConvert.SerializeObject(response), true) == false)
+                {
+                    return false;
+                }
+
+                model.Report.Id = saved.Id;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на RelationsSearch_SaveData");
+                return false;
+            }
+        }
+
+        public async Task<bool> CriminalRecordsReport_SaveData(RegixCriminalRecordsReportVM model)
+        {
+            try
+            {
+                var response = await CriminalRecordsReport(model.Filter.IdentifierFilter, (AllIdentifiersType)model.Filter.IdentifierTypeFilter, generateRemarkForContext(model.Report));
+                RegixReport saved = new RegixReport();
+                if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.CriminalRecordsReport, JsonConvert.SerializeObject(model.Filter),
+                         JsonConvert.SerializeObject(response), true) == false)
+                {
+                    return false;
+                }
+
+                model.Report.Id = saved.Id;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на CriminalRecordsReport_SaveData");
+                return false;
+            }
+        }
+
+        private void MapRelationsSearch(IOWebApplication.Infrastructure.Models.Regix.RelationsSearch.PersonRelationType fromObj, RegixRelationsSearchResponseVM toObj)
+        {
+            toObj.RelationTypeLabel = fromObj.RelationCodeSpecified == true ? fromObj.RelationCode.ToString() : "";
+            toObj.Identifier = fromObj.EGN;
+            toObj.BirthDate = fromObj.BirthDateSpecified == true ? fromObj.BirthDate.ToString(FormattingConstant.NormalDateFormat) : "";
+            toObj.FirstName = fromObj.FirstName;
+            toObj.SurName = fromObj.SurName;
+            toObj.FamilyName = fromObj.FamilyName;
+            toObj.GenderCode = fromObj.Gender.GenderName.ToString();
+            toObj.NationalityName = fromObj.Nationality.NationalityName;
+            toObj.NationalityName2 = fromObj.Nationality.NationalityName2;
+            toObj.DeathDate = fromObj.DeathDateSpecified == true ? fromObj.DeathDate.ToString(FormattingConstant.NormalDateFormat) : "";
+        }
+
+        public RegixRelationsSearchVM GetRelationsSearchById(int id)
+        {
+            var report = GetRegixReportById(id);
+            var relationsSearch = JsonConvert.DeserializeObject<RelationsResponseType>(report.ResponseData);
+
+            RegixRelationsSearchVM model = new RegixRelationsSearchVM();
+            SetRegixReportVM(report, model.Report);
+
+            model.RelationsSearchFilter = JsonConvert.DeserializeObject<RegixRelationsSearchFilterVM>(report.RequestData);
+
+            foreach (var item in relationsSearch.PersonRelations)
+            {
+                RegixRelationsSearchResponseVM employContractsResponse = new RegixRelationsSearchResponseVM();
+                MapRelationsSearch(item, employContractsResponse);
+                model.RelationsSearchResponse.Add(employContractsResponse);
+            }
+            return model;
+        }
+
+        public RegixCriminalRecordsReportVM GetCriminalRecordsReportById(int id)
+        {
+            var report = GetRegixReportById(id);
+            var criminalRecordsReport = JsonConvert.DeserializeObject<CriminalRecordsReportType>(report.ResponseData);
+
+            RegixCriminalRecordsReportVM model = new RegixCriminalRecordsReportVM();
+            SetRegixReportVM(report, model.Report);
+
+            model.Filter = JsonConvert.DeserializeObject<RegixCriminalRecordsReportFilterVM>(report.RequestData);
+
+            MapCriminalRecordsReport(criminalRecordsReport, model.Response);
+
+            return model;
+        }
+
+        private string GetCriminalPersonNameType(PersonNameType fromObj)
+        {
+            if (fromObj == null)
+                return string.Empty;
+
+            return fromObj.FullName ?? ((fromObj.FirstName ?? "") + " " + (fromObj.SurName ?? "") + " " + (fromObj.FamilyName ?? ""));
+        }
+
+        private string GetCriminalNameType(string nameType)
+        {
+            string result = "";
+            switch (nameType)
+            {
+                case "nickname":
+                    result = "Псевдоним";
+                    break;
+                case "previous":
+                    result = "Предишно име";
+                    break;
+                case "maiden":
+                    result = "Моминско име";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+
+            return result;
+        }
+
+        private string GetCriminalGender(int sex)
+        {
+            string result = "";
+            switch (sex)
+            {
+                case 0:
+                    result = "Неизвестен";
+                    break;
+                case 1:
+                    result = "Мъж";
+                    break;
+                case 2:
+                    result = "Жена";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+
+            return result;
+        }
+
+        private string GetCriminalPlaceType(PlaceType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = model.Country?.CountryName + ",";
+                if (string.IsNullOrEmpty(model.City?.CityName) == false)
+                    result += " " + model.City.CityName;
+
+                if (string.IsNullOrEmpty(model.Descr) == false)
+                    result += " " + model.Descr;
+
+                if (string.IsNullOrEmpty(model.DescrEn) == false)
+                    result += " " + model.DescrEn;
+            }
+
+            return result;
+        }
+
+        private string GetCriminalPersonIdentityNumberType(PersonIdentityNumberType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                if (string.IsNullOrEmpty(model.EGN) == false)
+                    result = "ЕГН " + model.EGN;
+                else if (string.IsNullOrEmpty(model.LNCh) == false)
+                    result = "ЛНЧ " + model.LNCh;
+                else if (string.IsNullOrEmpty(model.LN) == false)
+                    result = "ЛН " + model.LN;
+                else if (string.IsNullOrEmpty(model.SUID) == false)
+                    result = "Друг идентификатор " + model.SUID;
+
+                if (model.ForeignIdentifier?.Identifier != null)
+                {
+                    result += AddDelimiterToString(result, ", ") + " Чужд идентификатор " + model.ForeignIdentifier.Identifier + " " + model.ForeignIdentifier.IssuingCountry?.CountryName;
+                }
+            }
+
+            return result;
+        }
+
+        private string AddDelimiterToString(string text, string delimiter)
+        {
+            if (string.IsNullOrEmpty(text) == false)
+                return delimiter;
+            else
+                return "";
+        }
+
+        private string GetCriminalIdentificationDocumentType(IdentificationDocumentType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "Вид на документ за самоличност " + model.IdentificationDocumentType1 + ", номер " + model.IdentificationDocumentNumber + ", издаден от " + model.IdentificationDocumentIssuingAuthority +
+                         ", издаден на " + GetCriminalDate(model.IdentificationDocumentIssuingDate) +
+                         ", валиден до " + GetCriminalDate(model.IdentificationDocumentValidUntil);
+
+                if (string.IsNullOrEmpty(model.IssuingCountry?.CountryName) == false)
+                {
+                    result += ", държава издател " + model.IssuingCountry.CountryName;
+                }
+            }
+
+            return result;
+        }
+
+        private RegixCriminalRecordsReportPersonDataVM MapCriminalPersonData(PersonType fromObj)
+        {
+            RegixCriminalRecordsReportPersonDataVM result = new RegixCriminalRecordsReportPersonDataVM();
+            if (fromObj != null)
+            {
+                result.NamesBg = GetCriminalPersonNameType(fromObj.NamesBg);
+                result.NamesEn = GetCriminalPersonNameType(fromObj.NamesEn);
+
+                if (fromObj.PreviousNames != null)
+                {
+                    foreach (var item in fromObj.PreviousNames)
+                    {
+                        RegixCriminalRecordsReportPrevNameVM addPrevName = new RegixCriminalRecordsReportPrevNameVM()
+                        {
+                            Names = GetCriminalPersonNameType(item.Names),
+                            NameType = GetCriminalNameType(item.NameType.ToString()),
+                            BirthDate = item.BirthDate?.Date.ToString(FormattingConstant.NormalDateFormat),
+                            BirthPlace = GetCriminalPlaceType(item.BirthPlace),
+                            Gender = item.SexSpecified == false ? "" : GetCriminalGender(item.Sex),
+                            IdentityNumber = GetCriminalPersonIdentityNumberType(item.IdentityNumber),
+                        };
+
+                        result.PrevNames.Add(addPrevName);
+                    }
+                }
+
+                result.Gender = fromObj.SexSpecified == false ? "" : GetCriminalGender(fromObj.Sex);
+                result.IdentityNumber = GetCriminalPersonIdentityNumberType(fromObj.IdentityNumber);
+                result.BirthDate = fromObj.BirthDate?.Date.ToString(FormattingConstant.NormalDateFormat);
+                result.BirthPlace = GetCriminalPlaceType(fromObj.BirthPlace);
+                result.PersonNationality = fromObj.PersonNationality == null ? "" : string.Join(", ", fromObj.PersonNationality.Select(x => x.CountryName));
+                result.PersonIdentificationDocument = GetCriminalIdentificationDocumentType(fromObj.PersonIdentificationDocument);
+                result.MotherNames = GetCriminalPersonNameType(fromObj.MotherNames);
+                result.MotherNamesEn = GetCriminalPersonNameType(fromObj.MotherNamesEn);
+                result.FatherNames = GetCriminalPersonNameType(fromObj.FatherNames);
+                result.FatherNamesEn = GetCriminalPersonNameType(fromObj.FatherNamesEn);
+            }
+
+            return result;
+        }
+
+        private string GetCriminalBulletinType(string bulletinType)
+        {
+            string result = "";
+
+            switch (bulletinType)
+            {
+                case "ConvictionBulletin":
+                    result = "Бюлетин за съдимост";
+                    break;
+                case "Bulletin78A":
+                    result = "Бюлетин за наложени административни наказания по чл. 78а от НК";
+                    break;
+                case "Unspecified":
+                    result = "Неопределен";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+
+            return result;
+        }
+
+        private string MapCriminalDecisionActType(DecisionActType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "Данни за акта: номер " + model.FileNumber;
+
+                if (model.DecisionDateSpecified == true)
+                    result += ", дата " + model.DecisionDate.Date.ToString(FormattingConstant.NormalDateFormat);
+
+                if (model.DecisionFinalDateSpecified == true)
+                    result += ", дата на вилизане в сила " + model.DecisionFinalDate.Date.ToString(FormattingConstant.NormalDateFormat);
+
+                string authority = MapCriminalDecidingAuthorityType(model.DecidingAuthority);
+                if (string.IsNullOrEmpty(authority) == false)
+                    result += ", съд издал акта: " + authority;
+            }
+
+            return result;
+        }
+
+        private string MapCriminalDecidingAuthorityType(DecidingAuthorityType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "ЕИК " + model.DecidingAuthorityCodeEIK + ", Код " + model.DecidingAuthorityCodeEISPP + ", Наименование " +
+                         model.DecidingAuthorityName;
+            }
+
+            return result;
+        }
+
+        private string MapCriminalCriminalCaseType(CriminalCaseType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "Данни за делото: вид " + GetCriminalCaseType(model.CaseType.ToString()) + ", номер " + model.CaseNumber + ", година " +
+                         model.CaseYear;
+
+                string authority = MapCriminalDecidingAuthorityType(model.CaseAuthority);
+                if (string.IsNullOrEmpty(authority) == false)
+                    result += ", съд на делото: " + authority;
+
+            }
+
+            return result;
+        }
+
+        private string GetCriminalCaseType(string caseType)
+        {
+            string result = "";
+            switch (caseType)
+            {
+                case "sign_noxd":
+                    result = "НОХД";
+                    break;
+                case "sign_ncxd":
+                    result = "НЧХД";
+                    break;
+                case "sign_naxd":
+                    result = "НАХД";
+                    break;
+                case "sign_ncd":
+                    result = "НЧД";
+                    break;
+                case "sign_and":
+                    result = "АНД";
+                    break;
+                case "sign_null":
+                    result = "Неизвестно";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+
+            return result;
+        }
+
+        private string GetCriminalOffenceRecidivismType(string offenceRecidivismType)
+        {
+            string result = "";
+            switch (offenceRecidivismType)
+            {
+                case "common":
+                    result = "Общ";
+                    break;
+                case "special":
+                    result = "Специален";
+                    break;
+                case "dangerous":
+                    result = "Опасен";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+
+            return result;
+        }
+
+        private string GetCriminalFormOfGuiltType(string formOfGuiltType)
+        {
+            string result = "";
+            switch (formOfGuiltType)
+            {
+                case "intentionally":
+                    result = "Умишлено";
+                    break;
+                case "recklessly":
+                    result = "Непредпазливо";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+
+            return result;
+        }
+
+        private string GetCriminalOffenceType(OffenceType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "код по ЕИСПП " + model.NationalCategoryCode + ", категория " + model.NationalCategoryTitle + ", описание на деянието " + model.Remarks + ", обща категория " + model.OffenceCommonCategoryReference +
+                         ", правна квалификация " + model.OffenceApplicableLegalProvisions + ", начална дата на престъплението " + model.OffenceStartDate?.Date.ToString(FormattingConstant.NormalDateFormat) +
+                         ", крайна дата на престъплението " + model.OffenceEndDate?.Date.ToString(FormattingConstant.NormalDateFormat) + ", място на престъплението " + GetCriminalPlaceType(model.OffencePlace) +
+                         ", форма на вината " + GetCriminalFormOfGuiltType(model.FormOfGuilt.ToString()) + ", ЕИСПП номер на престъпление " + model.EisppCode +
+                         ", Вид рецидив " + (model.OffenceRecidivismTypeSpecified == true ? GetCriminalOffenceRecidivismType(model.OffenceRecidivismType.ToString()) : "");
+
+                if (model.ConvictionSanction != null)
+                {
+                    result += Environment.NewLine + "Наказание-пробация" + Environment.NewLine;
+
+                    foreach (var item in model.ConvictionSanction)
+                    {
+                        result += GetCriminalSanctionType(item);
+                        result += Environment.NewLine;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Конвертира XML период от вида P1Y2M3DT7H - > 1г 2м 3д 7ч
+        /// </summary>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        private string convertXmlPeriodToText(string period)
+        {
+            if (string.IsNullOrEmpty(period))
+            {
+                return string.Empty;
+            }
+
+            var result = period.Replace("P", "");
+
+            result = result.Replace("Y", "г. ");
+            result = result.Replace("M", "м. ");
+            result = result.Replace("D", "д. ");
+            result = result.Replace("T", " ");
+            result = result.Replace("H", "ч. ");
+
+            return result;
+        }
+
+        private string GetCriminalSanctionType(SanctionType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "код по ЕИСПП " + model.NationalCategoryCode + ", наименование " + model.NationalCategoryTitle + ", описание " + model.Remarks + ", обща категория " + model.SanctionCommonCategoryReference.SanctionText;
+
+                if (model.Fine != null && model.Fine.SanctionAmountOfIndividualFineSpecified == true)
+                    result += ", наказание от вид глоба " + model.Fine.SanctionAmountOfIndividualFine.ToString() + " " + (model.Fine.SanctionCurrencyOfFineSpecified ? model.Fine.SanctionCurrencyOfFine.ToString() : "");
+
+                if (model.Prison != null)
+                {
+                    result += Environment.NewLine + "Наказание-ЛОС" + Environment.NewLine;
+                    result += "срок на наложеното наказание " + convertXmlPeriodToText(model.Prison.SanctionSentencedPeriod) +
+                              ", освобождаването от изтърпяване на наказанието и неналагането на наказание съгласно НК " + convertXmlPeriodToText(model.Prison.SanctionSuspension) +
+                              ", приспадането и зачитането на предварителното задържане по чл. 59, ал. 1 НК " + model.Prison.DetentionDescription;
+                }
+
+                if (model.Other != null)
+                {
+                    result += Environment.NewLine + "Наказание-други" + Environment.NewLine;
+                    result += "продължителност " + convertXmlPeriodToText(model.Other.SanctionSentencedPeriodLength);
+                }
+
+                if (model.Probation != null)
+                {
+                    result += Environment.NewLine + "Наказание-пробация" + Environment.NewLine;
+
+                    string probation = string.Join(Environment.NewLine, model.Probation.Select(x => " код " + x.ProbationCategoryCode + ", наименовани " + x.ProbationCategoryTitle +
+                                                                                     ", количество на пробационна мярка " + x.ProbationValue +
+                                                                                     ", наименование на мерна единица " + x.ProbationMeasureTitle +
+                                                                                     ", продължителност " + convertXmlPeriodToText(x.SanctionSentencedPeriod)));
+
+                    result += Environment.NewLine;
+                }
+            }
+
+            return result;
+        }
+
+        private string GetCriminalDecisionChangeType(DecisionChangeType model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result += MapCriminalDecisionActType(model.Decision) + Environment.NewLine;
+                result += MapCriminalCriminalCaseType(model.Case) + Environment.NewLine;
+                result += "Извлечение от акта на съда " + model.ConvictionRemarks + ", забележки " + model.DecisionRemarks +
+                          ", дата влизане в сила " + (model.ValidFromSpecified == true ? model.ValidFrom.ToString(FormattingConstant.NormalDateFormat) : "") +
+                          ", дата на въвеждане на информация " + (model.ReceiveDateSpecified == true ? model.ReceiveDate.ToString(FormattingConstant.NormalDateFormat) : "");
+            }
+
+            return result;
+        }
+
+        private string GetCriminalIssuerData(IssuerData model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "дата на съставяне " + model.BulletinCreateDate.ToString(FormattingConstant.NormalDateFormat) + ", имена на съставил " + model.BulletinCreatorPerson +
+                          ", имена на проверил и длъжност " + model.BulletinApproverPerson +
+                          ", съд, създал бюлетина " + MapCriminalDecidingAuthorityType(model.BulletinCreatorAuthority);
+            }
+
+            return result;
+        }
+
+        private string GetCriminalRegistrationData(RegistrationData model)
+        {
+            string result = "";
+
+            if (model != null)
+            {
+                result = "номер на бюлетин " + model.RegistrationNumber + ", входящ номер на бюлетина към азбучния указател " + model.BulletinAlphabeticalIndex +
+                         ", датата на постъпване на хартиения бюлетин " + model.BulletinReceivedDate.ToString(FormattingConstant.NormalDateFormat) +
+                         ", бюро съдимост, в което се съхранява бюлетина " + model.ConvictionStatusAuthority?.Name;
+            }
+
+            return result;
+        }
+
+        private void MapCriminalRecordsReport(CriminalRecordsReportType fromObj, RegixCriminalRecordsReportResponseVM toObj)
+        {
+            if (fromObj.HasErrorSpecified == true && fromObj.HasError == true)
+            {
+                toObj.MessageError = fromObj.ErrorMessage;
+            }
+            else
+            {
+                toObj.PersonData = MapCriminalPersonData(fromObj.ReportResult.PersonData);
+
+                if (fromObj.ReportResult.BulletinsList != null && fromObj.ReportResult.BulletinsList.Bulletin != null)
+                {
+                    foreach (var item in fromObj.ReportResult.BulletinsList.Bulletin)
+                    {
+                        RegixCriminalRecordsReportBulletinTypeVM bulletin = new RegixCriminalRecordsReportBulletinTypeVM()
+                        {
+                            BulletinType = GetCriminalBulletinType(item.Type.ToString()),
+                            Person = MapCriminalPersonData(item.Person),
+                            Conviction = item.Conviction == null ? null : new RegixCriminalRecordsReportConvictionVM()
+                            {
+                                Decision = MapCriminalDecisionActType(item.Conviction.Decision),
+                                CriminalCase = MapCriminalCriminalCaseType(item.Conviction.CriminalCase),
+                                ConvictionRemarks = item.Conviction.ConvictionRemarks,
+                                ConvictionOffence = item.Conviction.ConvictionOffence?.Select(GetCriminalOffenceType).ToArray(),
+                                WithoutSanction = item.Conviction.WithoutSanctionSpecified == false || item.Conviction.WithoutSanction == false ? "НЕ" : "ДА",
+                                ConvictionSanction = item.Conviction.ConvictionSanction?.Select(GetCriminalSanctionType).ToArray(),
+                                ServingPrevSuspendedSentence = item.Conviction.ServingPrevSuspendedSentenceSpecified == false || item.Conviction.ServingPrevSuspendedSentence == false ? "НЕ" :
+                                                                    ("ДА, Номер на акта на предходната условна присъда " + item.Conviction.ServingPrevSuspendedSentenceActNumber),
+                                ConvictionDecisions = item.Conviction.ConvictionDecisions?.Select(GetCriminalDecisionChangeType).ToArray(),
+                                EisppNumber = item.Conviction.EisppNumber,
+                            },
+                            IssuerData = GetCriminalIssuerData(item.IssuerData),
+                            RegistrationData = GetCriminalRegistrationData(item.RegistrationData),
+                        };
+
+                        toObj.BulletinTypes.Add(bulletin);
+                    }
+                }
+
+                toObj.RegistrationNumber = fromObj.ReportResult.RegistrationNumber;
+                toObj.ValidFrom = GetCriminalDateTime(fromObj.ReportResult.ValidFrom);
+                toObj.ValidTo = GetCriminalDateTime(fromObj.ReportResult.ValidTo);
+            }
+        }
+
+        private string GetCriminalDate(DateType date)
+        {
+            string result = "";
+            if (date != null && date.DateSpecified == true)
+            {
+                result = date.Date.ToString(FormattingConstant.NormalDateFormat);
+            }
+
+            return result;
+        }
+
+        private string GetCriminalDateTime(DateTime date)
+        {
+            string result = "";
+            if (date.Year > 1)
+            {
+                result = date.ToString(FormattingConstant.NormalDateFormat);
+            }
+
+            return result;
         }
     }
 }

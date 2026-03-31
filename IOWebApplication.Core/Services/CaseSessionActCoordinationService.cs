@@ -7,11 +7,14 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -32,32 +35,41 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="CaseSessionActId"></param>
         /// <returns></returns>
-        public IQueryable<CaseSessionActCoordinationVM> CaseSessionActCoordination_Select(int CaseSessionActId)
+        public IQueryable<CaseSessionActCoordinationVM> CaseSessionActCoordination_Select(int CaseSessionActId, int? CaseSessionActCoordinationId = null, int coordinationType = NomenclatureConstants.CoordinationTypes.Act)
         {
+            Expression<Func<CaseSessionActCoordination, bool>> whereSelect = x => x.CaseSessionActId == CaseSessionActId;
+            if (CaseSessionActCoordinationId > 0)
+            {
+                whereSelect = x => x.Id == CaseSessionActCoordinationId;
+            }
+            Expression<Func<CaseSessionActCoordination, bool>> whereCoordinations = x => x.CoordinationType == coordinationType;
+            if (coordinationType == NomenclatureConstants.NullVal)
+            {
+                whereCoordinations = x => true;
+            }
+
             bool isGlobal = userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator);
             return repo.AllReadonly<CaseSessionActCoordination>()
-                .Include(x => x.CaseSessionAct)
-                .ThenInclude(x => x.ActType)
-                .Include(x => x.CaseLawUnit)
-                .ThenInclude(x => x.LawUnit)
-                .Include(x => x.CaseLawUnit)
-                .ThenInclude(x => x.JudgeRole)
-                .Include(x => x.ActCoordinationType)
-                .Where(x => x.CaseSessionActId == CaseSessionActId)
+                .Where(whereSelect)
+                .Where(whereCoordinations)
                 .Select(x => new CaseSessionActCoordinationVM()
                 {
                     Id = x.Id,
+                    CaseId = x.CaseId ?? 0,
                     CaseSessionActId = x.CaseSessionActId,
                     LawUnitId = x.CaseLawUnit.LawUnitId,
-                    CaseLawUnitName = (x.CaseLawUnit.LawUnit != null) ? x.CaseLawUnit.LawUnit.FullName : string.Empty,
-                    ActCoordinationTypeLabel = (x.ActCoordinationType != null) ? x.ActCoordinationType.Label : string.Empty,
-                    JudgeRoleLabel = (x.CaseLawUnit.JudgeRole != null) ? x.CaseLawUnit.JudgeRole.Label : string.Empty,
+                    LawUnitTypeId = x.CaseLawUnit.LawUnit.LawUnitTypeId,
+                    CaseLawUnitName = x.CaseLawUnit.LawUnit.FullName,
+                    ActCoordinationTypeLabel = x.ActCoordinationType.Label,
+                    JudgeRoleLabel = x.CaseLawUnit.JudgeRole.Label,
                     Content = x.Content,
                     ActCoordinationTypeId = x.ActCoordinationTypeId,
+                    CoordinationType = x.CoordinationType,
                     ActTypeName = x.CaseSessionAct.ActType.Label,
                     ActNumber = x.CaseSessionAct.RegNumber,
                     ActDate = x.CaseSessionAct.ActDate,
-                    CanUpdate = x.CaseLawUnit.LawUnitId == userContext.LawUnitId || isGlobal
+                    CoordinationDeclaredDate = x.CoordinationDeclaredDate,
+                    CanUpdate = x.CaseSessionAct.ActDeclaredDate == null && (x.CaseLawUnit.LawUnitId == userContext.LawUnitId || isGlobal)
                 }).AsQueryable();
         }
 
@@ -79,11 +91,16 @@ namespace IOWebApplication.Core.Services
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
 
-                    repo.Update(saved);
+                    int taskType = WorkTaskConstants.Types.CaseSessionAct_Coordinate;
+                    if (saved.CoordinationType == NomenclatureConstants.CoordinationTypes.Motive)
+                    {
+                        taskType = WorkTaskConstants.Types.CaseSessionAct_MotiveCoordinate;
+                    }
 
-                    var coordinationTasks = repo.AllReadonly<WorkTask>()
+
+                    var coordinationTasks = repo.All<WorkTask>()
                                                     .Where(x => x.SourceType == SourceTypeSelectVM.CaseSessionAct && x.SourceId == model.CaseSessionActId)
-                                                    .Where(x => x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_Coordinate)
+                                                    .Where(x => x.TaskTypeId == taskType)
                                                     .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
                                                     .Where(x => x.UserId == userContext.UserId)
                                                     .ToList();
@@ -91,25 +108,41 @@ namespace IOWebApplication.Core.Services
                     {
                         _task.TaskStateId = WorkTaskConstants.States.Completed;
                         _task.DateCompleted = DateTime.Now;
-                        repo.Update(_task);
                     }
                     repo.SaveChanges();
                     return true;
                 }
-                else
-                {
-                    model.DateWrt = DateTime.Now;
-                    model.UserId = userContext.UserId;
-                    repo.Add<CaseSessionActCoordination>(model);
-                    repo.SaveChanges();
-                    return true;
-                }
+                return false;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на съгласуване Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на съгласуване Id={model.Id}");
             }
             return false;
+        }
+
+        public async Task<IEnumerable<CoordinationDepersonalizeVM>> GetDepersonalizationInfo(int actId)
+        {
+            return await repo.AllReadonly<CaseSessionActCoordination>()
+                        .Where(x => x.CaseSessionActId == actId)
+                        .Where(x => NomenclatureConstants.ActCoordinationTypes.WithOpinion.Contains(x.ActCoordinationTypeId))
+                        .Select(x => new CoordinationDepersonalizeVM
+                        {
+                            Id = x.Id,
+                            JudgeName = x.CaseLawUnit.LawUnit.FullName,
+                            JudgeRole = x.CaseLawUnit.JudgeRole.Label,
+                            HasPublicFile = x.DepersonalizeEndDate.HasValue,
+                            HasSignedPrivateFile = x.CoordinationDeclaredDate.HasValue
+                        }).ToListAsync().ConfigureAwait(false);
+        }
+
+        public bool RemoveDepersonalizationInfo(int id)
+        {
+            var model = repo.GetById<CaseSessionActCoordination>(id);
+            model.DepersonalizeUserId = null;
+            model.DepersonalizeEndDate = null;
+            repo.SaveChanges();
+            return true;
         }
     }
 }

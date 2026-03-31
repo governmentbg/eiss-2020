@@ -23,6 +23,7 @@
     <div class="col-lg-4">@Html.EditorFor(m => m.UserId, "SelectUser")</div>
     <div class="col-lg-2">@Html.EditorFor(m => m.PosDeviceTid, "GenericDropDownString")</div>
     <div class="col-lg-2">@Html.EditorFor(m => m.CaseRegNumber)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PaymentNumber)</div>
 </div>
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.ActivePayment, "Boolean")</div>
@@ -77,7 +78,8 @@
                             UserId: $("#UserId").val(),
                             PosDeviceTid: $("#PosDeviceTid").val(),
                             CaseRegNumber: $("#CaseRegNumber").val(),
-                            ActivePayment: $("#ActivePayment").is(":checked")
+                            ActivePayment: $("#ActivePayment").is(":checked"),
+                            PaymentNumber: $("#PaymentNumber").val()
                         };
                     }
 
@@ -171,8 +173,8 @@
                         name: 'caseNumbers',
                         data: 'caseNumbers',
                         title: 'Номер на дело',
-                        sortable: true,
-                        searchable: true
+                        sortable: false,
+                        searchable: false
                     },
                     {
                         name: 'isAvans',

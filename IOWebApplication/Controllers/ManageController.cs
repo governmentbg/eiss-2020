@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Core.Models;
+﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -15,9 +16,13 @@ namespace IOWebApplication.Controllers
     {
 
         private readonly ICdnService cdnService;
-        public ManageController(ICdnService _cdnService)
+        private readonly ITransactionService transactionService;
+        public ManageController(
+            ICdnService _cdnService,
+            ITransactionService _transactionService)
         {
             cdnService = _cdnService;
+            transactionService = _transactionService;
         }
         public IActionResult ExpiredInfo(int id, long longId, string stringId, string fileContainer, string submitUrl, string returnUrl, bool otherBool, int? OtherId)
         {
@@ -32,13 +37,14 @@ namespace IOWebApplication.Controllers
                 OtherBool = otherBool,
                 OtherId = OtherId
             };
+            SetSourceKey(SourceTypeSelectVM.ExpireObject, model.KeyString, $"ExpInfo{userContext?.UserId}");
             return PartialView(model);
         }
 
         public async Task<IActionResult> TestSign()
         {
             var html = $"<br/><br/><br/><br/><br/><br/><br/><h3>Тестов документ за подписване</h3><h4>{userContext.FullName}; Създадено на: {DateTime.Now}</h4>";
-            byte[] pdfBytes = await (new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true).GetByte(this.ControllerContext));
+            byte[] pdfBytes = await (new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true, GetFooterInfoUrl(userContext.CourtId)).GetByte(this.ControllerContext));
 
             var pdfRequest = new CdnUploadRequest()
             {
@@ -76,7 +82,7 @@ namespace IOWebApplication.Controllers
                 return RedirectToAction(nameof(TestSignResult), new { isOk = false });
             }
         }
-        public async Task<IActionResult> Sign()
+        public IActionResult Sign()
         {
 
 
@@ -104,6 +110,20 @@ namespace IOWebApplication.Controllers
                 ViewBag.error = (string)TempData["signError"];
             }
             return View(isOk);
+        }
+
+        public async Task<IActionResult> TakeMainGroup(int sourceType)
+        {
+            var takeResult = await transactionService.TakeForOperation(sourceType);
+            if (takeResult.Result)
+            {
+                return LocalRedirect(transactionService.GetOperationUrl(sourceType, (long)takeResult.ObjectId));
+            }
+            else
+            {
+                SetErrorMessage("Данните са междувременно актуализирани.");
+                return LocalRedirect(transactionService.GetOperationFailUrl(sourceType));
+            }
         }
     }
 }

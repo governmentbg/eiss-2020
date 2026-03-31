@@ -4,7 +4,7 @@
     } else {
         $('#messageContainer').delay(8000).fadeOut(2000);
     }
-    setInterval(CheckCertificate, 60000);
+    setInterval(CheckCertificate, 600000);
 });
 
 function JsonBGdate(value) {
@@ -21,6 +21,15 @@ function JsonBGdateTime(value) {
 
     return moment(value).format("DD.MM.YYYY HH:mm");
 }
+
+function JsonBGYesNo(value) {
+    if (value == true) {
+        return 'Да';
+    }
+
+    return 'Не';
+}
+
 //Преобразува handlebars template, който е съдържание в контейнер с подадено име
 function TemplateToHtml(countainer, data) {
     var source = $(countainer).html();
@@ -75,6 +84,13 @@ Handlebars.registerHelper("dateTimeMin", function (date) {
     return moment(dateValue).format("DD.MM.YYYY HH:mm");
 });
 
+Handlebars.registerHelper("decode", function (text) {
+    if (text == undefined || text == '' || text == null) {
+        return '';
+    }
+    return decodeText(text);
+});
+
 Handlebars.registerHelper('numberFormat', function (value, options) {
     if (isNaN(value)) {
         return "";
@@ -114,10 +130,42 @@ function requestGET_Json(url, data, callback) {
             if (callback) {
                 callback(data);
             }
+        },
+        error: function (xhr) {
+            if (xhr.status == 401) {
+                console.log('Not authorized');
+                swalOk("Вашата потребителска сесия е изтекла. Моля, влезте отново в профила си.", function () {
+                    document.location.href = document.location.href;
+                })
+            }
         }
     });
 }
-
+function postContentMultiPart(url, data, callback) {
+    $.ajax({
+        type: 'POST',
+        async: true,
+        cache: false,
+        enctype: 'multipart/form-data',
+        //contentType: "application/json;charset=utf-8",
+        //dataType: 'json',
+        url: url,
+        data: data,
+        success: function (data) {
+            if (callback) {
+                callback(data);
+            }
+        },
+        error: function (xhr) {
+            if (xhr.status == 401) {
+                console.log('Not authorized');
+                swalOk("Вашата потребителска сесия е изтекла. Моля, влезте отново в профила си.", function () {
+                    document.location.href = document.location.href;
+                })
+            }
+        }
+    });
+}
 function postContent(url, data, callback) {
     $.ajax({
         type: 'POST',
@@ -130,6 +178,41 @@ function postContent(url, data, callback) {
         success: function (data) {
             if (callback) {
                 callback(data);
+            }
+        },
+        error: function (xhr) {
+            if (xhr.status == 401) {
+                console.log('Not authorized');
+                swalOk("Вашата потребителска сесия е изтекла. Моля, влезте отново в профила си.", function () {
+                    document.location.href = document.location.href;
+                })
+            }
+        }
+    });
+}
+
+function postContentMP(url, data, callback) {
+    $.ajax({
+        type: 'POST',
+        async: true,
+        cache: false,
+        //contentType: "application/json;charset=utf-8",
+        //dataType: 'json',
+        url: url,
+        data: data,
+        contentType: false,
+        processData: false,
+        success: function (data) {
+            if (callback) {
+                callback(data);
+            }
+        },
+        error: function (xhr) {
+            if (xhr.status == 401) {
+                console.log('Not authorized');
+                swalOk("Вашата потребителска сесия е изтекла. Моля, влезте отново в профила си.", function () {
+                    document.location.href = document.location.href;
+                })
             }
         }
     });
@@ -165,7 +248,28 @@ function requestContentOk(url, data, callback) {
         }
     });
 }
+
+function requestModal(title, url, data, wide, callback) {
+    requestContent(url, data, function (html) {
+        ShowModalDialog(title, html, wide);
+        if (callback) {
+            callback();
+        }
+    });
+}
+function decodeText(text) {
+    return $('<div/>').html(text).text();
+}
+function decodeItems(items) {
+    if (items) {
+        for (var i = 0; i < items.length; i++) {
+            items[i].text = decodeText(items[i].text);
+        }
+    }
+    return items;
+}
 function fillCombo(items, combo, selected) {
+    items = decodeItems(items);
     var tmlp = '{{#each this}}<option value="{{value}}" {{#if selected}}selected="selected"{{/if}}>{{text}}</option>{{/each}}';
     $(combo).html(HandlebarsToHtml(tmlp, setSetSelected(items, selected)));
 }
@@ -196,6 +300,7 @@ function requestComboMulti(url, data, combo, selectedIds, callback) {
     });
 }
 function fillComboMulti(items, combo) {
+    items = decodeItems(items);
     var tmlp = '{{#each this}}<option value="{{value}}" {{#if selected}}selected="selected"{{/if}}>{{text}}</option>{{/each}}';
     $(combo).html(HandlebarsToHtml(tmlp, () => items));
 }
@@ -236,7 +341,6 @@ var messageHelper = (function () {
         setTimeout(function () {
             singleClickSubmitEnable();
         }, 500);
-
     }
 
     function ShowSuccessMessage(message, container) {
@@ -250,10 +354,19 @@ var messageHelper = (function () {
         }, 500);
     }
 
+    function ShowResult(res) {
+        if (res.result) {
+            ShowSuccessMessage(res.errorMessage);
+        } else {
+            ShowErrorMessage(res.errorMessage);
+        }
+    }
+
     return {
         ShowErrorMessage: ShowErrorMessage,
         ShowSuccessMessage: ShowSuccessMessage,
-        ShowWarning: ShowWarning
+        ShowWarning: ShowWarning,
+        ShowResult: ShowResult
     };
 })();
 
@@ -325,25 +438,54 @@ $.widget('custom.autocomplete_custom', $.ui.autocomplete, {
 
 function initDynamicForms(addCallback) {
     $('div.dynamic-form').each(function (i, form) {
-        $(form).on('click', 'a.add-item', function () {
+        $(form).on('click', '.add-item', function () {
+
             let addItem = this;
+            if ($(addItem).data('clicked')) {
+                return;
+            }
+            $(addItem).data('clicked', 'true');
+
             requestContent($(this).data('url'), { index: $(this).data('index') }, function (html) {
                 let index = parseInt($(addItem).data('index')) + 1;
                 $(addItem).data('index', index);
+                $(addItem).removeData('clicked');
                 let container = $(document.getElementById($(addItem).data('container')));
                 $(html).hide().appendTo(container).slideDown();
                 if (addCallback) {
                     addCallback();
                 }
+                if ($(form).data('addcallback')) {
+                    try {
+                        window[$(form).data('addcallback')]();
+                    } catch (e) { }
+                }
+
+                return false;
             });
             return false;
         });
-        $(form).on('click', 'a.remove-item', function () {
+        $(form).on('click', '.remove-item', function () {
             let removeLink = this;
             if ($(removeLink).data('alert')) {
                 swalConfirm($(removeLink).data('alert'), function () {
-                    $(removeLink).parents('.item-template:first').hide('normal').remove();
-                    return false;
+                    let item = $(removeLink).parents('.item-template:first');
+                    let formContainer = $(item).parents('.dynamic-form:first');
+                    let itemId = $(item).data('itemid');
+                    if (itemId) {
+                        $(item).parents('.dynamic-form:first').find(`.item-template[data-itemid="${itemId}"]`).hide('normal').remove();
+                    } else {
+                        $(item).hide('normal').remove();
+                    }
+                    let itemIndex = $(item).find('input[id$="_Index"').val();
+                    if ($(form).data('removecallback')) {
+                        try {
+                            window[$(form).data('removecallback')](itemIndex, item);
+                        } catch (e) { }
+                    }
+                    if ($(formContainer).data('reindex')) {
+                        reorderFormIndexes(formContainer, '.item-template');
+                    }
                 });
             } else {
                 $(this).parents('.item-template:first').hide('normal').remove();
@@ -351,6 +493,52 @@ function initDynamicForms(addCallback) {
             }
         });
     });
+}
+
+/*
+ * Пренарежда индексите на елементите в динамична форма при премахване на ред
+ * @param {any} containerSelector - контейнера на .dynamic-form
+ * @param {any} itemSelector - селектор .item-template
+ * @returns
+ */
+function reorderFormIndexes(containerSelector, itemSelector) {
+
+    const container = $(containerSelector);
+    if (!container) return;
+
+    const items = $(container).find(itemSelector);
+
+    $(items).each((index, item) => {
+        // Find all inputs, selects, textareas in the item row
+        item.querySelectorAll("input[name], select[name], textarea[name]").forEach(el => {
+            // Replace [oldIndex] with [newIndex] in name attribute
+            if (el.name) {
+                el.name = el.name.replace(/\[\d+\]/, `[${index}]`);
+            }
+            // If you also use id attributes for labels/validation
+            if (el.id) {
+                el.id = el.id.replace(/\_\d+\_/, `_${index}_`);
+            }
+        });
+        // Update labels (for attr points to id)
+        item.querySelectorAll("label[for]").forEach(label => {
+            label.htmlFor = label.htmlFor.replace(/\_\d+\_/, `_${index}_`);
+        });
+
+        // Update validation spans
+        item.querySelectorAll("span[data-valmsg-for]").forEach(span => {
+            span.setAttribute(
+                "data-valmsg-for",
+                span.getAttribute("data-valmsg-for").replace(/\[\d+\]/, `[${index}]`)
+            );
+        });
+
+        $(item).find('input.item-index').val(index);
+
+        // If your row has a data-index attribute
+        item.setAttribute("data-index", index);
+    });
+    $(container).find('.add-item').data('index', $(items).length);
 }
 
 function attachAjaxForm(form, completeCallback, errorCallback, beforeSendCallback) {
@@ -424,7 +612,12 @@ function checkFilterFormHasData(filterContainer, minFilledCount) {
     return filledCount >= minFilledCount;
 }
 
-
+function isEmpty(val) {
+    if (val && val.length > 0 && val != '0') {
+        return false;
+    }
+    return true;
+}
 
 // зарежда dropdown-и по зададени параметри и 'ActionUrl'
 function loadDropDownData(parameters, actionUrl, changeElementName, calbackFunction, callBackPars) {
@@ -478,7 +671,22 @@ function swalOk(text, callback) {
     })
         .then((result) => {
             if (result) {
-                callback();
+                if (callback)
+                    callback();
+            } else {
+                return false;
+            }
+        });
+}
+function swalError(text, callback) {
+    swal({
+        text: text,
+        icon: "error"
+    })
+        .then((result) => {
+            if (result) {
+                if (callback)
+                    callback();
             } else {
                 return false;
             }
@@ -513,6 +721,34 @@ function swalConfirm(text, callback, cancelCallback, danger) {
     swal({
         title: title,
         text: text,
+        icon: icon,
+        buttons: ["Отказ", "Потвърди"],
+        dangerMode: dangerMode
+    })
+        .then((result) => {
+            if (result) {
+                callback();
+            } else if (cancelCallback) {
+                cancelCallback();
+            } else {
+                return false;
+            }
+        });
+}
+
+function swalHtmlConfirm(text, callback, cancelCallback, danger) {
+    let icon = "warning";
+    let dangerMode = false;
+    let title = 'Потвърди';
+    if (danger) {
+        title = 'Внимание!';
+        icon = "error";
+        dangerMode = true;
+    }
+
+    swal({
+        title: title,
+        html: text,
         icon: icon,
         buttons: ["Отказ", "Потвърди"],
         dangerMode: dangerMode
@@ -782,15 +1018,17 @@ function SubmitSingleClick(sender) {
 }
 
 function singleClickSubmitDisable(sender) {
-    var disabled = $(sender).is(':disabled') || $(sender).attr('disabled');
+    var disabled = $(sender).is(':disabled') || $(sender).attr('disabled') || $(sender).attr('data-clicked');
 
     if (!disabled) {
         $(sender).attr('disabled', 'disabled');
+        $(sender).attr('data-clicked', 'clicked');
         $(sender).parents('form:first').trigger('submit');
     }
 }
 function singleClickSubmitEnable() {
     $('.single-click-submit').removeAttr("disabled");
+    $('.single-click-submit').removeAttr("data-clicked");
 }
 
 function singleClickButton(sender) {
@@ -881,3 +1119,84 @@ function getDataTablesVisibleColumns(tbl) {
     return colVis;
 }
 
+function getSelect2Vals(selector) {
+    var str = '';
+    if ($(selector).val() !== null && $(selector).val().length > 0) {
+        str = $(selector).val().join(',');
+    }
+    return str;
+}
+
+
+function showHideOnCheckbox(checkbox, container, triggerChange) {
+    $(checkbox).change(function () {
+        if ($(this).is(':checked')) {
+            $(container).show();
+        } else {
+            $(container).hide();
+        }
+    });
+    if (triggerChange == true) {
+        $(checkbox).trigger('change');
+    }
+}
+function showHideOnRadio(radio, visibleValue, container, triggerChange) {
+    $(radio).click(function () {
+        if ($(this).is(':checked') && $(this).val() == visibleValue) {
+            $(container).show();
+        } else {
+            $(container).hide();
+        }
+    });
+    if (triggerChange == true) {
+        $(radio).trigger('change');
+    }
+}
+
+function previewPdf(url, containerId, pdfHeight) {
+    let container = document.getElementById(containerId);
+    let _objElement = document.getElementById('objPreviewPdf');
+    if (container && _objElement) {
+        if (_objElement.data.includes(url)) {
+            console.log('same file');
+            return false;
+        }
+        container.removeChild(_objElement);
+    }
+
+    let obj = document.createElement('object');
+    obj.id = 'objPreviewPdf';
+    obj.setAttribute('type', 'application/pdf');
+    obj.setAttribute('width', '100%');
+    obj.setAttribute('data', url);
+    obj.style.height = pdfHeight;
+
+    let embed = document.createElement('embed');
+    embed.setAttribute('type', 'application/pdf');
+    embed.setAttribute('width', '100%');
+    embed.setAttribute('src', url);
+    embed.style.height = pdfHeight;
+
+    obj.appendChild(embed);
+
+    //container.innerHTML = '';
+    container.appendChild(obj);
+}
+
+function printNotificationRaw(id) {
+    window.open('/CaseNotification/PrintPdf/' + id, '_blank');
+}
+
+function printNotificationDocumentRaw(id) {
+    window.open('/CaseNotification/PrintPdfNotification/' + id, '_blank');
+}
+
+function printMediationNotificationRaw(id) {
+    window.open('/MediationNotification/PrintPdf/' + id, '_blank');
+}
+
+function decodeHtml(html) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}

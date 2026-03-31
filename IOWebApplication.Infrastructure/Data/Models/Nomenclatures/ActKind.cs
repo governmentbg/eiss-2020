@@ -20,6 +20,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("process_type")]
         public string ProcessType { get; set; }
 
+        [Column("is_fast_process")]
+        public bool? IsFastProcess { get; set; }
+
         [ForeignKey(nameof(ActTypeId))]
         public virtual ActType ActType { get; set; }
     }

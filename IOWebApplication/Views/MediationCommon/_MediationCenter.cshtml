@@ -1,0 +1,133 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation
+@model MediationCenterFilterVM
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="MediationCommon" asp-action="AddMediationCenter" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+
+<form name="formFilter" id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-6">@Html.EditorFor(x => x.CenterName)</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataMediationCenter")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            CenterName: $("#CenterName").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        className: 'col-md-3',
+                        name: 'name',
+                        data: 'name',
+                        title: 'Име на центъра',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'addressText',
+                        data: 'addressText',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'contactDetails',
+                        data: 'contactDetails',
+                        title: 'Контактни данни',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: "text-center",
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: "text-center",
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (item, type, row, meta) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditMediationCenter", "MediationCommon")?id={{this.id}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script>
+    $(document).ready(function () {
+        LoadTable();
+    });
+</script>
+

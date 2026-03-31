@@ -36,6 +36,7 @@
                     <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonId, "GenericDropDown")</div>
                     <div class="col-lg-6">@Html.EditorFor(m => m.SpecifiedLawyerLawUnitId, "LawUnit", null, new { lawUnitTypes = "7" })</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.AssignedLawyerId, "GenericDropDown")</div>
+                    <div class="col-lg-12">@Html.EditorFor(x => x.CasePersonAddressId, "GenericDropDown")</div>
                 </fieldset>
             </div>
 
@@ -62,6 +63,15 @@
     <script>
         $(function () {
             initLawUnit();
+            CasePersonIdChange();
         });
+
+        $('#CasePersonId').change(function () {
+            CasePersonIdChange();
+        });
+
+        function CasePersonIdChange() {
+            requestCombo('@Url.Action("GetDDL_CasePersonAddress", "CaseLawyerHelp")', { CasePersonId: $('#CasePersonId').val() }, '#CasePersonAddressId', @Model.CasePersonId, function () { $('#CasePersonAddressId').trigger('change') });
+        }
     </script>
 }

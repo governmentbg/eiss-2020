@@ -33,6 +33,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Display(Name = "Изготвяне на мотив")]
         public bool? IsCreateMotive { get; set; }
 
+        [Column("is_special_opinion")]
+        [Display(Name = "Особено мнение")]
+        public bool? IsSpecialOpinion { get; set; }
+
         [Column("is_create_case")]
         [Display(Name = "Образуване на дело")]
         public bool? IsCreateCase { get; set; }

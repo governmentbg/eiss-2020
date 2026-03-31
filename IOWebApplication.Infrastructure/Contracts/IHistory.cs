@@ -3,12 +3,13 @@ using System;
 
 namespace IOWebApplication.Infrastructure.Contracts
 {
-    public interface IHistory : IUserDateWRT
+    public interface IHistory : IUserDateWRT, IHaveId
     {
-        int Id { get; set; }
 
         int HistoryId { get; set; }
 
         DateTime? HistoryDateExpire { get; set; }
+
+        void ClearForeignKeys();
     }
 }

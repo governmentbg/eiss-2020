@@ -37,6 +37,7 @@ namespace IOWebApplication.Controllers
         /// Страница с бланки на документи
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult Index(int? htmlTemplateTypeId)
         {
             HtmlTemplateFilterVM model = new HtmlTemplateFilterVM() { HtmlTemplateTypeId = (htmlTemplateTypeId ?? -1) };
@@ -83,7 +84,7 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplateParam(id).DeleteOrDisableLast();
             return View();
         }
-        
+
         private void SetViewbagIndex(int id, [AllowHtml] string filterJson)
         {
             var html = service.GetById<HtmlTemplate>(id);
@@ -206,9 +207,9 @@ namespace IOWebApplication.Controllers
             var currentId = model.Id;
             if (service.HtmlTemplate_SaveData(files, model))
             {
-                this.SaveLogOperation(currentId == 0, model.Id);
+                this.SaveLogOperation(currentId == 0, model.Id, null, nameof(Edit));
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id, filterJson } );
+                return RedirectToAction(nameof(Edit), new { id = model.Id, filterJson });
             }
             else
             {
@@ -387,7 +388,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Preview(int id)
         {
-            if(id == 0)
+            if (id == 0)
             {
                 return null;
             }
@@ -489,7 +490,7 @@ namespace IOWebApplication.Controllers
             ViewBag.filterJson = filterJson;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplatePreview(sourceId).DeleteOrDisableLast();
 
-            var model = service.GetById<HtmlTemplate>(sourceId);
+            var model = await service.GetByIdAsync<HtmlTemplate>(sourceId);
             var htmlModel = printDocumentService.ConvertToTinyMCVM(model, model.HaveSessionAct == true);
 
             htmlModel.SourceId = sourceId;

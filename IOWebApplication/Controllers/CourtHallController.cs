@@ -85,7 +85,7 @@ namespace IOWebApplication.Controllers
             if (string.IsNullOrEmpty(model.Name))
                 return "Въведете име";
 
-            if (model.DateFrom == null)
+            if (model.DateFrom.Year < 2000)
                 return "Въведете дата от";
 
             return string.Empty;

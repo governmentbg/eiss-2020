@@ -1,0 +1,37 @@
+﻿@model WorkNotificationSetIsReadVM
+
+@{
+    var canSave = !string.IsNullOrEmpty(Model.NotificationIds);
+}
+
+@using (Html.BeginForm(FormMethod.Post, new { onsubmit = "validationCheck(event);" }))
+{
+    @Html.HiddenFor(x => x.NotificationIds)
+    
+    @Html.EditorFor(x => x.Description, "textarea")
+
+    <div class="form-group">
+         <input type="submit" value="Запис" class="btn btn-success submit single-click-submit" />
+    </div>
+}
+
+<script>
+    $(function () {
+        
+    });
+    
+    function validationCheck(e) {
+        if ($('#Description').val().length < 5) {
+            swal({
+                title: 'Грешка',
+                text: 'Моля, въведете Основание',
+                icon: "warning"
+            });
+            e.preventDefault();
+            $(e.target).find('input[type="submit"]').removeAttr('disabled');
+            return false;
+        }
+
+        return true;
+    }
+</script>

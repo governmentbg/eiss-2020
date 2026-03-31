@@ -8,5 +8,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
     {
         public int CaseId { get; set; }
         public string Info { get; set; }
+        public bool Declared { get; set; }
     }
 }

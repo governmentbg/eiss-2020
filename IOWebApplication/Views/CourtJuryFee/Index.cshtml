@@ -51,9 +51,37 @@
                     },
                     {
                         className: "text-right",
+                        name: 'hourFeeEUR',
+                        data: 'hourFeeEUR',
+                        title: 'Възнаграждение на час в евро',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: "text-right",
                         name: 'minDayFee',
                         data: 'minDayFee',
                         title: 'Минимална сума на ден',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: "text-right",
+                        name: 'minDayFeeEUR',
+                        data: 'minDayFeeEUR',
+                        title: 'Минимална сума на ден в евро',
                         sortable: true,
                         searchable: true,
                         "render": function (value) {

@@ -1,0 +1,35 @@
+﻿@model MainTransactionVM
+@if (Model.WaitingCount > 0 || Model.ContinueSourceId > 0)
+{
+    <li class="dropdown tasks-menu">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="@Model.Title">
+            <i class="fa fa-inbox"></i>
+            @if (Model.WaitingCount > 0)
+            {
+                var spanClass = "label-success";
+                if (Model.ContinueSourceId > 0)
+                {
+                    spanClass = "label-danger";
+                }
+                <span class="label @spanClass">@Model.WaitingCount</span>
+            }
+        </a>
+        <ul class="dropdown-menu">
+            @if (Model.ContinueSourceId > 0)
+            {
+                <li class="header">Нови: <b>@Model.WaitingCount</b> бр.</li>
+                <li class="footer">
+                    <a href="@Html.Raw(Model.ContinueUrl)" class="text-danger"><b>Продължи обработката</b></a>
+                </li>
+            }
+            else
+            {
+                <li class="header">Нови: <b>@Model.WaitingCount</b> бр.</li>
+                <li class="footer">
+                    <a href="@Url.Action("TakeMainGroup","Manage",new{sourceType= Model.SourceType})" class="text-success"><b>Вземи за обработка</b></a>
+                </li>
+            }
+        </ul>
+    </li>
+
+}

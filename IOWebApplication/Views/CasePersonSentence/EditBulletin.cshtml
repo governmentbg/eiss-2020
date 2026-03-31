@@ -1,6 +1,8 @@
 ﻿@model CasePersonSentenceBulletinEditVM
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
 @using IOWebApplication.Infrastructure.Constants
+@inject IUserContext userContext
 
 @{
     if (Model.Id > 0)
@@ -11,8 +13,12 @@
     {
         ViewData["Title"] = "Добавяне";
     }
+
+    bool is92024 = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request9_2024);
+    DateTime? dateRegisteredInCais = (DateTime?)ViewBag.DateRegisteredInCais;
 }
-@section breadcrumb{
+
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -20,7 +26,7 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
         <form asp-action="EditBulletin" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CourtId)
@@ -31,42 +37,132 @@
 
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+                <div class="row">
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
 
-                @Html.EditorFor(x => x.FamilyMarriage)
-                @Html.EditorFor(x => x.BirthDayPlace)
-                @Html.EditorFor(x => x.BirthDay)
-                @Html.EditorFor(x => x.Nationality)
-                @Html.EditorFor(x => x.FatherName)
-                @Html.EditorFor(x => x.MotherName)
+                        @if (is92024)
+                        {
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.OtherUic)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.OtherUicIssuingCountryId, "GenericSelect2")</div>
+                                <div class="col-lg-6">@Html.EditorFor(m => m.OtherUicPlaceCityId, "GenericSelect2")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.IssuingCountryId, "GenericSelect2")</div>
+                            </div>
+                        }
 
-                @if (Model.CaseTypeId == NomenclatureConstants.CaseTypes.NOHD || Model.CaseTypeId == NomenclatureConstants.CaseTypes.AND)
-                {
-                    @Html.EditorFor(x => x.IsAdministrativePunishment)
-                }
+                        @if (is92024)
+                        {
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.BirthDayPlaceCountryId, "GenericSelect2")</div>
+                                <div class="col-lg-6">@Html.EditorFor(m => m.BirthDayPlaceCityId, "GenericSelect2")</div>
+                            </div>
+                            <div class="row" id="divBirthDayPlaceCityText">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.BirthDayPlaceCityText)</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.BirthDayPlaceDescriptionLat)</div>
+                            </div>
+                        }
+                        else
+                        {
+                            @Html.EditorFor(x => x.BirthDayPlace)
+                        }
 
-                @Html.EditorFor(x => x.IsConvicted)
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @Html.EditorFor(x => x.BirthDay)
+                            </div>
+                        </div>
+                        @if (is92024)
+                        {
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.NationalityCountryOneId, "GenericSelect2")</div>
+                                <div class="col-lg-6">@Html.EditorFor(m => m.NationalityCountryTwoId, "GenericSelect2")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.FatherName)</div>
+                                <div class="col-lg-6">@Html.EditorFor(m => m.FatherNameLatin)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.MotherName)</div>
+                                <div class="col-lg-6">@Html.EditorFor(m => m.MotherNameLatin)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(m => m.NumberAFIS)</div>
+                            </div>
+                        }
+                        else
+                        {
+                            @Html.EditorFor(x => x.Nationality)
+                            @Html.EditorFor(x => x.FatherName)
+                            @Html.EditorFor(x => x.MotherName)
+                        }
 
-                @Html.EditorFor(x => x.SentenceDescription, "Textarea", new { @class = "tinymce" })
+                        @if (Model.CaseTypeId == NomenclatureConstants.CaseTypes.NOHD || Model.CaseTypeId == NomenclatureConstants.CaseTypes.AND || Model.CaseTypeId == NomenclatureConstants.CaseTypes.NChHD)
+                        {
+                            @Html.EditorFor(x => x.IsAdministrativePunishment)
+                        }
+                        <div class="row">
+                            <div class="col-lg-6">
+                                @Html.EditorFor(x => x.IsConvicted)
+                                @if (is92024)
+                                {
+                                    @Html.HiddenFor(x => x.SentenceDescription)
+                                }
+                                else
+                                {
+                                    @Html.EditorFor(x => x.SentenceDescription, "Textarea", new { @class = "tinymce" })
+                                }
 
-                @if (@Model.Id > 0)
-                {
-                    <div class="cdn-files" data-label="Файлове" data-sourcetype="@SourceTypeSelectVM.CasePersonBulletin" data-sourceid="@Model.Id" data-editmode="none"></div>
-                }
-            </div>
+                            </div>
+                            <div class="col-lg-6">
+                                @if (dateRegisteredInCais != null)
+                                {
+                                    @Html.DisplayFor(x => dateRegisteredInCais, "objVal", null, new { label = "Дата на последна регистрация в ЦАИС Съдебен статус", value = dateRegisteredInCais.Value.ToString("dd.MM.yyyy HH:mm") })
+                                }
+                            </div>
+                        </div>
 
-            <div class="form-group">
-                <input type="submit" value="Запис" class="btn btn-success" />
-                <a asp-action="Index" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
-                @if (Model.Id > 0)
-                {
-                    <a href="@Url.Action("Index", "DocumentTemplate",new { sourceType=SourceTypeSelectVM.CasePersonBulletin, sourceId=Model.Id})" class="btn btn-def" title="Създаване на писмо"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Създаване на писмо</span></a>
+                        <div class="form-group">
+                            <input type="submit" value="Запис" class="btn btn-success" />
+                            <a asp-action="Index" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+                            @if (Model.Id > 0)
+                            {
+                                <a href="@Url.Action("Index", "DocumentTemplate",new { sourceType=SourceTypeSelectVM.CasePersonBulletin, sourceId=Model.Id})" class="btn btn-def" title="Създаване на писмо"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Създаване на писмо</span></a>
 
-                    <div class="pull-right">
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                                <div class="pull-right">
+                                    <a asp-action="PreviewBulletin" asp-route-id="@Model.Id" class="btn btn-info" title="Преглед на бюлетин" target="_blank">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                    <span>&nbsp;</span>
+                                    <partial name="MqInfo" model="@(new SourceTypeSelectVM() {  SourceType = SourceTypeSelectVM.CasePersonBulletin, SourceId = Model.Id })" />
+                                    <span>&nbsp;</span>
+
+
+                                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                                </div>
+                            }
+                        </div>
                     </div>
-                }
+                    <div class="col-lg-6">
+                        @if (@Model.Id > 0)
+                        {
+                            <div class="cdn-files" data-label="Файлове" data-sourcetype="@SourceTypeSelectVM.CasePersonBulletin" data-sourceid="@Model.Id" data-editmode="none"></div>
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">
+                                    Задачи
+                                </legend>
+                                <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.CasePersonBulletin, Model.Id) { TaskRequired=true})" />
+                            </fieldset>
+                        }
+                    </div>
+                </div>
             </div>
+
+
         </form>
     </div>
 </div>
@@ -75,6 +171,37 @@
 
 <script>
     $(function () {
+        $('#IssuingCountryId').select2({ language: "bg" });
+        $('#BirthDayPlaceCountryId').select2({ language: "bg" });
+        $('#BirthDayPlaceCityId').select2({ language: "bg" });
+        $('#NationalityCountryOneId').select2({ language: "bg" });
+        $('#NationalityCountryTwoId').select2({ language: "bg" });
+        $('#OtherUicIssuingCountryId').select2({ language: "bg" });
+        $('#OtherUicPlaceCityId').select2({ language: "bg" });
         initLawUnit();
+        BirthDayPlaceCountryIdChange();
+        OtherUicIssuingCountryIdChange();
     });
+
+    $('#BirthDayPlaceCountryId').change(function () {
+        BirthDayPlaceCountryIdChange();
+    });
+
+    function BirthDayPlaceCountryIdChange() {
+        $('#divBirthDayPlaceCityText').hide();
+        let idCountry = $("#BirthDayPlaceCountryId").val();
+        if ((idCountry != 24) && ('@is92024' == 'True')) {
+            $('#divBirthDayPlaceCityText').show();
+        }
+
+        requestCombo('@Url.Action("GetDDL_EkatteSobr", "Ajax")', { countryId: $('#BirthDayPlaceCountryId').val() }, '#BirthDayPlaceCityId', @(Model.BirthDayPlaceCityId ?? -1), function () { $('#BirthDayPlaceCityId').trigger('change') });
+    }
+
+    $('#OtherUicIssuingCountryId').change(function () {
+        OtherUicIssuingCountryIdChange();
+    });
+
+    function OtherUicIssuingCountryIdChange() {
+        requestCombo('@Url.Action("GetDDL_EkatteSobr", "Ajax")', { countryId: $('#OtherUicIssuingCountryId').val() }, '#OtherUicPlaceCityId', @(Model.OtherUicPlaceCityId ?? -1), function () { $('#OtherUicPlaceCityId').trigger('change') });
+    }
 </script>

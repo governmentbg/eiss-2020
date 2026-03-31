@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -26,7 +22,7 @@ namespace IOWebApplication.Controllers
         }
         public IActionResult AddBarcodeTying(string userId)
         {
-           (string addr, string barcode64) = deliveryAccountService.GenerateBarcodeTying(userId);
+            (string addr, string barcode64) = deliveryAccountService.GenerateBarcodeTying(userId);
             ViewBag.addr = addr;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_AccountMobileTokenRegister(userId).DeleteOrDisableLast();
             return View(nameof(BarcodeTying), barcode64);
@@ -45,12 +41,14 @@ namespace IOWebApplication.Controllers
             var data = deliveryAccountService.GetDeliveryTokenForUser(userId);
             return request.GetResponse(data);
         }
+
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult Index(string userId)
         {
             ViewBag.newCount = deliveryAccountService.TokenForUserNewCount(userId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_AccountMobileToken(userId).DeleteOrDisableLast();
-            var user = deliveryAccountService.GetById<ApplicationUser>(userId);
-            ViewBag.userName = user?.Email;
+            var userEmail = deliveryAccountService.GetPropById<ApplicationUser, string>(x => x.Id == userId, x => x.Email);
+            ViewBag.userName = userEmail;
             return View(nameof(Index), userId);
         }
         [HttpPost]
@@ -60,7 +58,7 @@ namespace IOWebApplication.Controllers
             {
                 SetSuccessMessage(MessageConstant.Values.DeliveryAccountExpireOK);
                 var account = deliveryAccountService.GetById<DeliveryAccount>(model.ReturnUrl);
-                return Json(new { result = true, redirectUrl = Url.Action("Index", new { userId = account.MobileUserId }) }); 
+                return Json(new { result = true, redirectUrl = Url.Action("Index", new { userId = account.MobileUserId }) });
             }
             else
             {

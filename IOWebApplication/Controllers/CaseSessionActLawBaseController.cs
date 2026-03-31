@@ -1,22 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
-using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -53,13 +43,13 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult Add(int caseSessionActId)
+        public async Task<IActionResult> Add(int caseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActLawBase, null, AuditConstants.Operations.Append, caseSessionActId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActLawBase, null, AuditConstants.Operations.Append, caseSessionActId))
             {
                 return Redirect_Denied();
             }
-            var act = service.GetById<CaseSessionAct>(caseSessionActId);
+            var act = await service.GetReadonlyAsync<CaseSessionAct>(caseSessionActId);
             SetViewbag(caseSessionActId, act.CaseId ?? 0);
             var model = new CaseSessionActLawBase()
             {
@@ -70,13 +60,13 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActLawBase, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActLawBase, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CaseSessionActLawBase>(id);
+            var model = await service.GetByIdAsync<CaseSessionActLawBase>(id);
             SetViewbag(model.CaseSessionActId, model.CaseId ?? 0);
             return View(nameof(Edit), model);
         }

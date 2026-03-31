@@ -39,14 +39,14 @@
                     name: 'dismisalTypeLabel',
                     data: 'dismisalTypeLabel',
                     title: 'Тип',
-                    sortable: true,
+                    sortable: false,
                     searchable: true
                 },
                 {
                     name: 'caseLawUnitAkt',
                     data: 'caseLawUnitAkt',
                     title: 'Акт',
-                    sortable: true,
+                    sortable: false,
                     searchable: true
                 },
                 {
@@ -79,6 +79,7 @@
                 }
             ]
         });
+        table.order([4, 'desc']);
     });
 </script>
 

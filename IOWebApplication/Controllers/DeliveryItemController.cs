@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -14,6 +10,7 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using Microsoft.AspNetCore.Http;
@@ -22,11 +19,14 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Data.OData;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Nest;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -41,7 +41,7 @@ namespace IOWebApplication.Controllers
         private readonly ICourtLawUnitService courtLawUnitService;
         private readonly ICaseNotificationService notificationService;
         private readonly ICdnService cdnService;
-
+        private readonly ICourtDepartmentService courtDepartmentService;
         public DeliveryItemController(
             IDeliveryItemService _deliveryItemService,
             ICommonService _commonService,
@@ -51,7 +51,8 @@ namespace IOWebApplication.Controllers
             IDeliveryAreaAddressService _deliveryAreaAddressService,
             ICourtLawUnitService _courtLawUnitService,
             ICaseNotificationService _notificationService,
-            ICdnService _cdnService
+            ICdnService _cdnService,
+            ICourtDepartmentService _courtDepartmentService
             )
         {
             service = _deliveryItemService;
@@ -63,6 +64,7 @@ namespace IOWebApplication.Controllers
             courtLawUnitService = _courtLawUnitService;
             notificationService = _notificationService;
             cdnService = _cdnService;
+            courtDepartmentService = _courtDepartmentService;
         }
 
         private void SetHelpFileByFilterType(int filterType)
@@ -74,6 +76,7 @@ namespace IOWebApplication.Controllers
             else if (filterType == NomenclatureConstants.DeliveryItemFilterType.ToOther)
                 SetHelpFile(HelpFileValues.Summons3);
         }
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
 
         public IActionResult Index(int? filterType)
         {
@@ -93,12 +96,13 @@ namespace IOWebApplication.Controllers
                 model = new DeliveryItemFilterVM();
             if ((model.FilterType <= 0) || (model.FilterType > NomenclatureConstants.DeliveryItemFilterType.ToOther))
                 model.FilterType = NomenclatureConstants.DeliveryItemFilterType.Inner;
-            SetViewbag(userContext.CourtId);
+            SetViewbag(userContext.CourtId, model.FilterType);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItems(model.FilterType).DeleteOrDisableLast();
             return View(nameof(Index), model);
         }
 
         [HttpPost]
+        [DisableAudit]
         public IActionResult Index([AllowHtml] string filterJson)
         {
             DeliveryItemFilterVM model = null;
@@ -110,10 +114,13 @@ namespace IOWebApplication.Controllers
             return LoadIndex(model);
         }
 
-
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexTrans(int toNotificationStateId)
         {
-            DeliveryItemTransFilterVM model = new DeliveryItemTransFilterVM();
+            var model = new DeliveryItemTransFilterVM
+            {
+                NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons
+            };
             model.ToNotificationStateId = toNotificationStateId;
             model.initNotificationStateId();
             model.NewCourtId = userContext.CourtId;
@@ -130,6 +137,8 @@ namespace IOWebApplication.Controllers
 
             return View(nameof(IndexTrans), model);
         }
+
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult ChangeLawUnit()
         {
             DeliveryItemChangeLawUnitVM model = new DeliveryItemChangeLawUnitVM();
@@ -148,7 +157,10 @@ namespace IOWebApplication.Controllers
             ViewBag.filterJson = filterJson;
             SetViewbagArea(userContext.CourtId);
             SetViewbag(-1);
-            var model = service.getDeliveryItem(id);
+            var model = service.getDeliveryItemWithNotification(id);
+
+            AddAuditInfoDelivery(model, AuditConstants.Operations.View, NomenclatureConstants.DeliveryItemAuditLog.ChangeRaion, true);
+
             ModelState.Clear();
             int filterType = getFilterTypeFromJson(filterJson);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemEditRaion(filterType, id).DeleteOrDisableLast();
@@ -168,8 +180,18 @@ namespace IOWebApplication.Controllers
             SetViewbag(-1);
 
             var currentId = model.Id;
-            if (service.DeliveryItemSaveArea(model.Id, model.CourtId, model.DeliveryAreaId, model.LawUnitId))
+            var logVM = new DeliveryLogVM()
             {
+                Action = new DeliveryItemFilterVM() { FilterType = filterType }.getDeliveryTypeName(),
+                PageLabel = "Смяна на район и призовкар",
+                PageUrl = "EditPost"
+            };
+            if (service.DeliveryItemSaveArea(model.Id, model.CourtId, model.DeliveryAreaId, model.LawUnitId, logVM))
+            {
+                // Журнал
+                var deliveryItem = service.getDeliveryItemWithNotification(model.Id);
+                AddAuditInfoDelivery(deliveryItem, AuditConstants.Operations.Update, NomenclatureConstants.DeliveryItemAuditLog.ChangeRaion);
+
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id, filterJson });
@@ -181,6 +203,31 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
+        private void AddAuditInfoDelivery(DeliveryItem deliveryItem, string operation, string addInfo, bool setUrl = false)
+        {
+            try
+            {
+                if (deliveryItem.CaseNotificationId == null)
+                {
+                    AddAuditInfo(operation,
+                                 deliveryItem.CaseInfo,
+                                 $"{deliveryItem.RegNumber} {addInfo}",
+                                 SourceTypeSelectVM.CaseNotification,
+                                 setUrl);
+                    return;
+                }
+                var context = service.GetCurrentContext(SourceTypeSelectVM.CaseNotification, deliveryItem.CaseNotificationId, AuditConstants.Operations.Append, deliveryItem.CaseNotification?.CaseId);
+                AddAuditInfo(operation,
+                             context?.Info?.BaseObject,
+                             $"{context?.Info?.ObjectInfo} {addInfo}",
+                             SourceTypeSelectVM.CaseNotification,
+                             setUrl);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         [HttpPost]
         public IActionResult CheckReceived(string filterJson)
         {
@@ -190,18 +237,23 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult CheckReceivedEdit(string regNumber)
+        public async Task<JsonResult> CheckReceivedEdit(string regNumber)
         {
             bool saveIfErr = false;
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Чекиране",
+                PageLabel = "Приемане на призовки/писма",
+                PageUrl = "CheckReceivedEdit"
+            };
             SetViewbagArea(userContext.CourtId);
-            string messageErr = "";
-            DeliveryItemRecieveVM delivery = service.SaveRecieved(regNumber, saveIfErr, out messageErr);
+            (DeliveryItemRecieveVM delivery, string messageErr) = await service.SaveRecieved(regNumber, saveIfErr, logVM);
             if (delivery == null)
                 return Json(new { messageErr = messageErr });
             else
                 return Json(new { delivery = delivery });
         }
-
+        [DisableAudit]
         public IActionResult AddReceived(string filterJson)
         {
             ViewBag.filterJson = filterJson;
@@ -227,6 +279,7 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
+        [DisableAudit]
         public async Task<JsonResult> AddReceivedEdit(DeliveryItem model, string guidForSave)
         {
             SetViewbag(userContext.CourtId);
@@ -254,7 +307,13 @@ namespace IOWebApplication.Controllers
             {
                 model.CaseNotificationId = null;
                 model.NotificationStateId = NomenclatureConstants.NotificationState.Received;
-                if (service.DeliveryItemSaveDataAddReceived(model))
+                var logVM = new DeliveryLogVM()
+                {
+                    Action = "Добавяне",
+                    PageLabel = "Призовки/съобщения изготвени в друг съд",
+                    PageUrl = "AddReceivedEdit"
+                };
+                if (await service.DeliveryItemSaveDataAddReceived(model, logVM))
                 {
                     isOk = true;
 
@@ -268,6 +327,7 @@ namespace IOWebApplication.Controllers
                     ViewBag.showButtons = false;
                     ViewBag.conteinerId = Guid.NewGuid();
                     viewSaved = await RenderPartialViewToString("_AddReceived", model);
+                    AddAuditInfo(AuditConstants.Operations.Append, model.CaseInfo, model.RegNumber, SourceTypeSelectVM.DeliveryItem);
                 }
                 else
                 {
@@ -324,19 +384,19 @@ namespace IOWebApplication.Controllers
                 lawUnitId = deliveryAreaFind.LawUnitId
             });
         }
-        
+
         [HttpPost]
         public JsonResult GetDeliveryAreaIdEditFromIndex(int deliveryItemId)
         {
             DeliveryItem model = service.getDeliveryItem(deliveryItemId);
             var deliveryAreaFind = deliveryAreaAddressService.DeliveryAreaAddressFind(model?.Address, model?.FromCourtId ?? 0);
-            if (deliveryAreaFind.DeliveryAreaId <= 0 && deliveryAreaFind.DeliveryAreaList.Any(x => x.CourtId == model.CourtId))
-            {
-                var delivaryArea = deliveryAreaFind.DeliveryAreaList.Where(x => x.CourtId == model.CourtId).First();
-                deliveryAreaFind.ToCourtId = delivaryArea.CourtId;
-                deliveryAreaFind.DeliveryAreaId = delivaryArea.Id;
-                deliveryAreaFind.LawUnitId = delivaryArea.LawUnitId ?? -1;
-            }
+            //if (deliveryAreaFind.DeliveryAreaId <= 0 && deliveryAreaFind.DeliveryAreaList.Any(x => x.CourtId == model.CourtId))
+            //{
+            //    var delivaryArea = deliveryAreaFind.DeliveryAreaList.Where(x => x.CourtId == model.CourtId).First();
+            //    deliveryAreaFind.ToCourtId = delivaryArea.CourtId;
+            //    deliveryAreaFind.DeliveryAreaId = delivaryArea.Id;
+            //    deliveryAreaFind.LawUnitId = delivaryArea.LawUnitId ?? -1;
+            //}
             return Json(new
             {
                 toCourtId = deliveryAreaFind.ToCourtId,
@@ -362,6 +422,51 @@ namespace IOWebApplication.Controllers
             });
         }
         [HttpPost]
+        public JsonResult GetDeliveryAreaAndCourtDocument(int notificationPersonType, int documentPersonAddressId, int lawUnitAddressId)
+        {
+            DeliveryAreaFindVM deliveryAreaFind;
+            if (notificationPersonType == 2)
+                deliveryAreaFind = deliveryAreaAddressService.DeliveryAreaAddressIdFind(lawUnitAddressId, userContext.CourtId);
+            else
+                deliveryAreaFind = deliveryAreaAddressService.DeliveryAreaDocumentPersonAddressIdFind(documentPersonAddressId, userContext.CourtId);
+            return Json(new
+            {
+                toCourtId = deliveryAreaFind.ToCourtId,
+                deliveryAreaId = deliveryAreaFind.DeliveryAreaId,
+                lawUnitId = deliveryAreaFind.LawUnitId,
+                deliveryAreaDDL2 = areaService.DeliveryAreaListToDdlSelect2(deliveryAreaFind.DeliveryAreaList),
+                toCourtDDL2 = service.GetCourtsSelect2(deliveryAreaFind.DeliveryAreaList),
+            });
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetDeliveryAreaAndCourtGroup(int notificationPersonType, int addressId, bool allCourtDdl)
+        {
+            var deliveryAreaFind = (notificationPersonType == 2) ?
+                                   deliveryAreaAddressService.DeliveryAreaAddressIdFind(addressId, userContext.CourtId) :
+                                   deliveryAreaAddressService.DeliveryAreaCasePersonAddressIdFind(addressId, userContext.CourtId);
+            var deliveryAreaName = (await service.GetByIdAsync<DeliveryArea>(deliveryAreaFind.DeliveryAreaId))?.Description;
+            var lawUnitName = (await service.GetByIdAsync<LawUnit>(deliveryAreaFind.LawUnitId))?.FullName;
+            var toCourtName = (await service.GetByIdAsync<Court>(deliveryAreaFind.ToCourtId))?.Label;
+            return Json(new
+            {
+                toCourtId = deliveryAreaFind.ToCourtId,
+                toCourtName,
+                deliveryAreaId = deliveryAreaFind.DeliveryAreaId,
+                deliveryAreaName,
+                lawUnitId = deliveryAreaFind.LawUnitId,
+                lawUnitName,
+                deliveryAreaDDL2 = areaService.DeliveryAreaListToDdlSelect2(deliveryAreaFind.DeliveryAreaList),
+                toCourtDDL2 = service.GetCourtsSelect2(deliveryAreaFind.DeliveryAreaList),
+            });
+        }
+
+        public IActionResult GetNotificationGroupDeliveryArea()
+        {
+            NotificationItemVM model = new();
+            return PartialView("_NotificationGroupDeliveryArea", model);
+        }
+
+        [HttpPost]
         public JsonResult GetDeliveryAreaAndCourtForAddReceived(DeliveryItem deliveryItem)
         {
             var deliveryAreaFind = deliveryAreaAddressService.DeliveryAreaAddressFind(deliveryItem.Address, deliveryItem.FromCourtId);
@@ -381,9 +486,21 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult SaveTrans(int[] deliveryItemIdsJson, DeliveryItemTransFilterVM filterData)
+        [DisableAudit]
+        public async Task<JsonResult> SaveTrans(int[] deliveryItemIdsJson, DeliveryItemTransFilterVM filterData)
         {
-            bool result = service.SaveTrans(deliveryItemIdsJson, filterData.ToNotificationStateId, filterData.ToNotificationStateId);
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Трансфер",
+                PageLabel = DeliveryItemTransFilterVM.GetTitle(filterData.ToNotificationStateId),
+                PageUrl = "SaveTrans"
+            };
+
+            bool result = await service.SaveTrans(deliveryItemIdsJson, filterData.ToNotificationStateId, filterData.ToNotificationStateId, logVM);
+            if (result)
+            {
+                AddAuditInfo(AuditConstants.Operations.Update, $"{DeliveryItemTransFilterVM.GetTitle(filterData.ToNotificationStateId)}", $"{deliveryItemIdsJson.Length} бр. уведомления", SourceTypeSelectVM.CaseNotification);
+            }
             return Json(new
             {
                 result = result,
@@ -391,9 +508,20 @@ namespace IOWebApplication.Controllers
             });
         }
         [HttpPost]
-        public JsonResult SaveChangeLawUnit(int[] deliveryItemIdsJson, DeliveryItemChangeLawUnitVM filterData)
+        public async Task<JsonResult> SaveChangeLawUnit(int[] deliveryItemIdsJson, DeliveryItemChangeLawUnitVM filterData)
         {
-            bool result = service.SaveChangeLawUnit(deliveryItemIdsJson, filterData);
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Смяна на призовкар",
+                PageLabel = filterData.ToNotificationStateId > 0 ? DeliveryItemTransFilterVM.GetTitle(filterData.ToNotificationStateId) : "Смяна на призовкар",
+                PageUrl = "SaveChangeLawUnitm"
+            };
+            bool result = await service.SaveChangeLawUnit(deliveryItemIdsJson, filterData, logVM);
+            if (result)
+            {
+                var changeInfo = service.ChangeLawUnitAuditInfo(filterData);
+                AddAuditInfo(AuditConstants.Operations.Update, $"Смяна на призовкар на {deliveryItemIdsJson.Length} бр. уведомления", changeInfo, SourceTypeSelectVM.CaseNotification);
+            }
             return Json(new
             {
                 result = result
@@ -401,9 +529,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult LoadForId_DDL(DeliveryItemTransFilterVM filterData)
+        public async Task<JsonResult> LoadForId_DDL(DeliveryItemTransFilterVM filterData)
         {
-            var items = service.DeliveryItemTransForIdDDL(filterData);
+            var items = await service.DeliveryItemTransForIdDDL(filterData);
             return Json(new { forId_ddl = items });
         }
 
@@ -442,10 +570,11 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult ListDataTrans(IDataTablesRequest request, DeliveryItemTransFilterVM filterData)
+        public async Task<JsonResult> ListDataTrans(IDataTablesRequest request, DeliveryItemTransFilterVM filterData)
         {
-            var data = service.DeliveryItemTransSelect(filterData, false);
-            return Json(data.ToList());
+            var data = service.DeliveryItemTransSelect(filterData);
+            //var list = data.ToList();
+            return Json(await data.ToListAsync());
         }
 
         [HttpPost]
@@ -470,6 +599,10 @@ namespace IOWebApplication.Controllers
                 filterJson = TempData["filterJson"].ToString();
             ViewBag.filterJson = filterJson;
             var model = service.GetDeliveryItemReturn(deliveryItemId);
+
+            var deliveryItem = service.getDeliveryItemWithNotification(deliveryItemId);
+            AddAuditInfoDelivery(deliveryItem, AuditConstants.Operations.View, NomenclatureConstants.DeliveryItemAuditLog.EditReturn, true);
+
             SetViewbag(-1);
             ModelState.Clear();
 
@@ -483,13 +616,16 @@ namespace IOWebApplication.Controllers
             ViewBag.filterJson = null;
             var model = service.GetDeliveryItemReturnByNotification(notificationId);
 
+            var deliveryItem = service.getDeliveryItemWithNotification(model.Id);
+            AddAuditInfoDelivery(deliveryItem, AuditConstants.Operations.View, NomenclatureConstants.DeliveryItemAuditLog.EditReturn, true);
+
             SetViewbag(-1);
             ModelState.Clear();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEditReturn(notificationId).DeleteOrDisableLast();
 
             return View(nameof(EditReturn), model);
         }
-        public IActionResult NotificatiionEditReturnDocument(int notificationId)
+        public IActionResult NotificationEditReturnDocument(int notificationId)
         {
             ViewBag.filterJson = null;
             var model = service.GetDeliveryItemReturnByDocumentNotification(notificationId);
@@ -512,26 +648,46 @@ namespace IOWebApplication.Controllers
             var currentId = model.Id;
             bool saveResult = false;
             int notificationId = 0;
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Редакция",
+                PageLabel = model.DocumentNotificationId > 0 ? "Върнат отрязък към документ" : "Върнат отрязък",
+                PageUrl = " EditReturnPost"
+            };
+            int? caseId = null;
             if (model.DocumentNotificationId > 0)
             {
-                (saveResult, notificationId) = await notificationService.DeliveryItemSaveReturnDocument(model, returnFiles);
-            } 
-            else 
-            {
-                (saveResult, notificationId) = await notificationService.DeliveryItemSaveReturn(model, returnFiles);
+                (saveResult, notificationId) = await notificationService.DeliveryItemSaveReturnDocument(model, returnFiles, logVM);
             }
+            else
+            {
+                (saveResult, notificationId) = await notificationService.DeliveryItemSaveReturn(model, returnFiles, logVM);
+                if (saveResult)
+                {
+                    var deliveryItem = service.getDeliveryItemWithNotification(model.Id);
+                    AddAuditInfoDelivery(deliveryItem, AuditConstants.Operations.Update, NomenclatureConstants.DeliveryItemAuditLog.EditReturn);
+                    caseId = deliveryItem.CaseId;
+                }
+            }
+
             if (saveResult)
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 if (filterJson == null)
                 {
+
                     if (model.DocumentNotificationId > 0)
                     {
                         return RedirectToAction("Edit", "DocumentNotification", new { id = notificationId });
                     }
                     else
                     {
+                        if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, null, AuditConstants.Operations.View, caseId))
+                        {
+                            ModelState.Clear();
+                            return Index(string.Empty);
+                        }
                         return RedirectToAction("Edit", "CaseNotification", new { id = notificationId });
                     }
                 }
@@ -579,10 +735,14 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditStatePost(DeliveryItem model, string filterJson)
+        public async Task<IActionResult> EditStatePost(DeliveryItem model, string filterJson)
         {
             ViewBag.filterJson = filterJson;
             var notification = notificationService.GetById<CaseNotification>(model.CaseNotificationId);
+            if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+            {
+                ModelState.AddModelError(nameof(model.NotificationStateId), $"Не може да променяте призовки подадени през ЕПЕП");
+            }
             if (model.DeliveryDateCC < model.RegDate?.Date)
             {
                 ModelState.AddModelError(nameof(model.DeliveryDateCC), $"{MessageConstant.ValidationErrors.DeliveryDateBeforeRegDate} {model.RegDate?.ToString(FormattingConstant.NormalDateFormat)}");
@@ -591,27 +751,34 @@ namespace IOWebApplication.Controllers
             {
                 ModelState.AddModelError(nameof(model.DeliveryDateCC), MessageConstant.ValidationErrors.DeliveryDateFuture);
             }
+            int filterType = getFilterTypeFromJson(filterJson);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemEditReturn(filterType, model.Id).DeleteOrDisableLast();
             if (!ModelState.IsValid)
             {
                 SetViewbagState(notification?.NotificationDeliveryGroupId ?? -1);
                 return View(nameof(EditState), model);
             }
-
-            if (service.DeliveryItemSaveState(model.Id, model.NotificationStateId, model.DeliveryDateCC, model.DeliveryInfo))
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Редакция",
+                PageLabel = "Промяна на статус при разнасяне с куриер/кметство",
+                PageUrl = " EditStatePost"
+            };
+            if (await service.DeliveryItemSaveState(model.Id, model.NotificationStateId, model.DeliveryDateCC, model.DeliveryInfo, logVM))
             {
                 this.SaveLogOperation(false, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditState), new { id = model.Id, filterJson });
             }
             else
             {
-                int filterType = getFilterTypeFromJson(filterJson);
-                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemEditReturn(filterType, model.Id).DeleteOrDisableLast();
                 SetViewbagState(notification?.NotificationDeliveryGroupId ?? -1);
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
                 return View(nameof(EditState), model);
             }
         }
         #region Out/ResultList
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult OutList()
         {
             DeliveryItemListVM model = new DeliveryItemListVM()
@@ -632,6 +799,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult ResultList()
         {
             DeliveryItemListVM model = new DeliveryItemListVM()
@@ -693,7 +861,7 @@ namespace IOWebApplication.Controllers
             }
             return "";
         }
-        void SetViewbag(int courtId)
+        void SetViewbag(int courtId, int filterType = 0)
         {
             ViewBag.showButtons = true;
             ViewBag.FromCourtId_ddl = commonService.CourtForDelivery_SelectDDL(courtId);
@@ -703,12 +871,17 @@ namespace IOWebApplication.Controllers
             ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(
                 NomenclatureConstants.NotificationDeliveryGroup.WithSummons, -1
             );
-            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupSelect();
+            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupSelect(filterType);
             ViewBag.NotificationTypeId_ddl = nomService.GetDropDownList<NotificationType>();
             ViewBag.LawUnitId_ddl = courtLawUnitService.LawUnitForCourt_SelectDDL(NomenclatureConstants.LawUnitTypes.MessageDeliverer, userContext.CourtId);
+            ViewBag.PreparedById_ddl = courtLawUnitService.LawUnitForCourt_SelectDDL(NomenclatureConstants.LawUnitTypes.OtherEmployee, userContext.CourtId);
+            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            ViewBag.IsGenerated_ddl = nomService.GetDDL_IsGenerated();
+            ViewBag.IsFastProcess_ddl = nomService.GetDDL_IsGenerated();
         }
         void SetViewbagState(int notificationDeliveryGroupId)
         {
+            ViewBag.NotificationDeliveryGroupId = notificationDeliveryGroupId;
             ViewBag.showButtons = true;
             ViewBag.FromCourtId_ddl = commonService.CourtForDelivery_SelectDDL(-1);
             ViewBag.CourtId_ddl = ViewBag.FromCourtId_ddl;
@@ -717,7 +890,7 @@ namespace IOWebApplication.Controllers
             ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(
                 notificationDeliveryGroupId, -1
             );
-            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupSelect();
+            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupSelect(0);
             SetHelpFile(HelpFileValues.Summons);
         }
         void SetViewbagArea(int forCourtId)
@@ -740,7 +913,7 @@ namespace IOWebApplication.Controllers
                     Text = "Всички Статуси",
                     Value = NomenclatureConstants.NotificationState.AllForReceived.ToString()
                 });
-                
+
             }
             ViewBag.NotificationStateId_ddl = states;
             ViewBag.NotificationTypeId_ddl = nomService.GetDropDownList<NotificationType>();
@@ -751,6 +924,8 @@ namespace IOWebApplication.Controllers
             ViewBag.NewCourtId_ddl = commonService.CourtForDelivery_SelectDDL(-1);
             ViewBag.DeliveryAreaId_ddl = areaService.DeliveryAreaSelectDDL(forCourtId, true);
             ViewBag.NewDeliveryAreaId_ddl = areaService.RemoveSelectAddNoChange(areaService.DeliveryAreaSelectDDL(forCourtId, false));
+            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupSelect(NomenclatureConstants.DeliveryItemFilterType.Inner);
+            ViewBag.IsFastProcess_ddl = nomService.GetDDL_IsGenerated();
         }
 
 
@@ -763,10 +938,14 @@ namespace IOWebApplication.Controllers
             ViewBag.NewLawUnitId_ddl = areaService.RemoveSelectAddNoChange(lawUnits);
             ViewBag.LawUnitId_ddl = service.LawUnitForCourt_SelectDdlAllInDeliveryItem(forCourtId, lawUnits);
             ViewBag.NewCourtId_ddl = commonService.CourtForDelivery_SelectDDL(-1);
-            ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(
+            var states = nomService.GetDDL_NotificationStateFromDeliveryGroup(
                 NomenclatureConstants.NotificationDeliveryGroup.WithSummons,
                 NomenclatureConstants.NotificationState.Visited
             );
+            var endStates = NomenclatureConstants.NotificationState.NotificationEndState().Select(x => x.ToString());
+            states = states.Where(x => !endStates.Any(e => x.Value == e)).ToList();
+            ViewBag.NotificationStateId_ddl = states;
+
             ViewBag.DeliveryAreaId_ddl = areaService.DeliveryAreaSelectDDL(forCourtId, true);
             ViewBag.NewDeliveryAreaId_ddl = areaService.RemoveSelectAddNoChange(areaService.DeliveryAreaSelectDDL(forCourtId, false));
             ViewBag.NotificationTypeId_ddl = nomService.GetDropDownList<NotificationType>();
@@ -791,9 +970,9 @@ namespace IOWebApplication.Controllers
             return RedirectToAction("Edit", "CaseNotification", new { id = deliveryItem.CaseNotificationId });
         }
         [HttpPost]
-        public IActionResult  DeliveryItem_ExpiredInfo(ExpiredInfoVM model)
+        public IActionResult DeliveryItem_ExpiredInfo(ExpiredInfoVM model)
         {
-             if (service.SaveExpireInfo<DeliveryItem>(model))
+            if (service.SaveExpireInfo<DeliveryItem>(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CaseNotification, model.Id);
                 SetSuccessMessage(MessageConstant.Values.CaseNotificationExpireOK);
@@ -804,5 +983,60 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
             }
         }
+
+        public IActionResult IndexHistory(int deliveryItemId, [AllowHtml] string filterJson)
+        {
+            ViewBag.filterJson = filterJson;
+            int filterType = getFilterTypeFromJson(filterJson);
+
+            var deliveryItem = service.getDeliveryItemWithNotification(deliveryItemId);
+
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemHistoryOpers(filterType, deliveryItemId).DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Summons);
+
+            return View(new DeliveryItemOperLogVM()
+            { DeliveryItemId = deliveryItemId }
+            );
+        }
+        public JsonResult ListDataHistory(int deliveryItemId)
+        {
+            return Json(service.SelectLog(deliveryItemId));
+        }
+        public async Task<JsonResult> GetLawUnitName(int? deliveryAreaId)
+        {
+            var name = string.Empty;
+            int? lawUnitId = -1;
+            if (deliveryAreaId > 0)
+            {
+                var deliveryArea = await service.GetByIdAsync<DeliveryArea>(deliveryAreaId);
+                if (deliveryArea != null)
+                {
+                    name = (await service.GetByIdAsync<LawUnit>(deliveryArea.LawUnitId))?.FullName;
+                    lawUnitId = deliveryArea.LawUnitId;
+                }
+            }
+            return Json(new { name, lawUnitId });
+        }
+        [HttpGet]
+        public IActionResult GetToCourtAllDdl()
+        {
+            var ddl = nomService.GetCourts()
+                                .Select(x => new Select2ItemVM
+                                {
+                                    Id = x.Value.ToInt(),
+                                    Text = x.Text
+                                })
+                                .ToList();
+            return Json(ddl);
+        }
+
+        //[HttpGet]
+        //public async Task<IActionResult> TestMobile()
+        //{
+        //    var data = service.GetDeliveryItemMobileVM(userContext.CourtId, userContext.LawUnitId, DateTime.Now.AddDays(-1600), DateTime.Now.AddDays(1));
+        //    return Json(data);
+        //}
+
+
     }
 }

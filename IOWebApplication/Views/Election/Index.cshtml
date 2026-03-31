@@ -1,0 +1,131 @@
+﻿@{
+
+    ViewData["Title"] = "Сесии за избор";
+
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="Election" asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="electionlMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#electionlMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "Election")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) { }
+
+                },
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'dateWrt',
+                        data: 'dateWrt',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: true
+                    }
+                    ,
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'electionType',
+                        data: 'electionType',
+                        title: 'Тип сесия',
+                        sortable: true,
+                        searchable: true
+
+                    },
+                    {
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Документ',
+                        sortable: true,
+                        searchable: true,
+                                 "render": function (a,b,row,c) {
+                            return row.documentNumber;
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#ElectionGroupTemplateEdit', value);
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#ElectionPersons', value);
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#SessionHistory', value);
+                        }
+                    }
+
+                ]
+            });
+
+            table.order([0, 'desc']);
+        });
+    </script>
+
+    <script id="ElectionGroupTemplateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit", "Election")?id={{this}}" class="btn btn-info btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+    </script>
+    <script id="ElectionPersons" type="text/x-handlebars-template">
+        <a href="@Url.Action("ElectionPersons", "Election")?id={{this}}" class="btn btn-primary btn-sm" title="Преглед"><i class="fa fa-random"></i><span class="hidden-sm hidden-xs"> Избор</span></a>
+    </script>
+    <script id="SessionHistory" type="text/x-handlebars-template">
+        <a href="@Url.Action("SessionHistory", "Election")?id={{this}}" class="btn btn-warning btn-sm" title="Преглед"><i class="fa fa-history"></i><span class="hidden-sm hidden-xs"> История</span></a>
+    </script>
+}

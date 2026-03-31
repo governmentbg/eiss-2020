@@ -7,7 +7,7 @@
     ViewData["Title"] = "Пренасочване на задача при обективна невъзможност";
 }
 
-@section breadcrumb{
+@section breadcrumb {
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
         <li><a href="@Url.Action("Index")">Регистър обективна невъзможност</a></li>
@@ -61,7 +61,7 @@
     });
 
     function caseSelect() {
-        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#CaseId').val(), declaredOnly:false }, '#CaseSessionActId', '0', function (e) { $(e).trigger('change'); });
+        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#CaseId').val(), notRegistered: true, declaredOnly: false }, '#CaseSessionActId', '0', function (e) { $(e).trigger('change'); });
     }
 
 </script>

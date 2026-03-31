@@ -23,7 +23,7 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <form asp-action="Edit" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CourtId)
@@ -34,10 +34,11 @@
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
                 <div class="row">
-                    <div class="col-lg-7">@Html.EditorFor(x => x.LawBaseId, "GenericSelect2")</div>
+                    @*<div class="col-lg-7">@Html.EditorFor(x => x.LawBaseId, "GenericSelect2")</div>*@
+                    <div class="col-lg-7">@Html.EditorFor(x => x.LawBaseId, "SelectActLawBase", null, new { caseId = Model.CaseId })</div>
                     @if (access.CanChangeFull)
                     {
-                        <div class="col-lg-5" style="position:relative;left:15px;top:26px;"><a asp-action="IndexLawBase" asp-controller="Nomenclature" aps-co asp-route-CaseId="@Model.CaseId" target="_blank" class="btn btn-def btn-sm btn-block"><i class="fa fa-wrench"></i> Номенклатура за нормативни текстове</a></div>
+                        <div class="col-lg-5" style="position:relative;left:15px;top:26px;"><a asp-action="IndexLawBase" asp-controller="Nomenclature" aps-co asp-route-CaseId="@Model.CaseId" target="_blank" class="btn btn-def btn-sm btn-block"><i class="fa fa-wrench"></i> Номенклатура</a></div>
                     }
                 </div>
                 @*@Html.EditorFor(x => x.LawBaseId, "SelectActLawBase")*@
@@ -63,6 +64,6 @@
 <script>
     $(function () {
         initActLawBaseAutoComplete();
-        $('.select2').select2();
+        //$('.select2').select2();
     })
 </script>

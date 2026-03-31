@@ -1,18 +1,21 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Common;
-using System;
-using System.Collections.Generic;
+﻿using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
-using System.Linq;
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Account;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
+using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels.Report;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using IOWebApplication.Infrastructure.Constants;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -22,9 +25,7 @@ namespace IOWebApplication.Core.Contracts
         bool Institution_SaveData(Institution model);
         string Institution_Validate(Institution model);
         string LawUnit_Validate(LawUnit model);
-        IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId, bool showFree);
-        IQueryable<LawUnitVM> LawUnitForDate_Select(int lawUnitType, DateTime? date);
-        List<SelectListItem> LawUnitForDate_SelectDDL(int lawUnitType, DateTime? date);
+        IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId, bool showFree, int? courtId);
         bool LawUnit_SaveData(LawUnit model);
         bool IsExistLawUnit_ByUicUicType(string uic, int? id = null);
         Person Person_FindByUic(string uic, int uicType);
@@ -63,7 +64,7 @@ namespace IOWebApplication.Core.Contracts
 
         IQueryable<UserProfileVM> Users_Select(UserFilterVM filter, bool forList = false);
 
-        string Users_GetByLawUnitUIC(string uic);
+        Task<string> Users_GetByLawUnitUIC(string uic);
         string Users_GetUserIdByLawunit(int lawUnitId);
         bool Users_CheckUserByLawUnit(string userId, int lawUnitId);
         bool Users_CheckUserByEmail(string userId, string emailAddress);
@@ -71,11 +72,10 @@ namespace IOWebApplication.Core.Contracts
         string Users_ValidateEmailLawUnit(string email, int lawUnitId);
 
         Task<bool> Users_UpdateSetting(string setting, string value);
-        bool Users_UpdateSetting(UserSettingsModel model);
+        Task<bool> Users_UpdateSetting(UserSettingsModel model);
         bool Users_GenerateEissId(string userId);
 
         #region "WorkingDays"
-
 
         /// <summary>
         /// Връща
@@ -86,16 +86,12 @@ namespace IOWebApplication.Core.Contracts
         /// <returns></returns>
         IQueryable<WorkingDaysVM> WorkingDay_GetList(DateTime? dateFrom, DateTime? dateTo, int dayType = 0);
 
-
-
         /// <summary>
         /// Записва/Променя данните за работен ден
         /// </summary>
         /// <param name="model">Модел as WorkingDays</param>
-        /// <returns> >0 - Успешен запис/промяна; <=0 - Неуспешен запис/редакция</returns>
+        /// <returns> >0 - Успешен запис/промяна; &lt;=0 - Неуспешен запис/редакция</returns>
         int WorkingDay_SaveData(WorkingDay model);
-
-
 
         /// <summary>
         /// Изтрива работен ден
@@ -103,7 +99,6 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="Id">Идентификатор as int</param>
         /// <returns>True - Успешно изтриване; False - НЕУСПЕШНО изтриване</returns>
         bool WorkingDay_Delete(int Id);
-
 
         /// <summary>
         /// Проверка за съществуващ запис за Работен ден
@@ -114,11 +109,32 @@ namespace IOWebApplication.Core.Contracts
         /// <returns>True-Съществува, False-НЕ Съществува</returns>
         bool WorkingDay_IsExist(DateTime Day, int Id, int? CourtId);
 
+        /// <summary>
+        /// Метод връщащ работен ден от дата
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="workingDaysDayOff">Списък с почивни дни</param>
+        /// <returns></returns>
+        Task<DateTime> GetWorkDayFromDate(DateTime date, IEnumerable<WorkingDay> workingDaysDayOff = null);
 
+        /// <summary>
+        /// Метод връщащ месеци между 2 дати за актовете
+        /// </summary>
+        /// <param name="dateFrom">От дата</param>
+        /// <param name="dateTo">До дата</param>
+        /// <returns></returns>
+        Task<int> GetMonthsBetweenTwoDatesForActs(DateTime dateFrom, DateTime dateTo, IEnumerable<WorkingDay> workingDaysDayOff = null);
+
+        /// <summary>
+        /// Пакетно сетване на срок в който е постановен акта
+        /// </summary>
+        /// <param name="takeRow">Брой записи които да вземе</param>
+        /// <returns></returns>
+        Task<bool> SetDeclaredMonthCountForActs(int takeRow);
 
         #endregion
 
-        List<SelectListItem> GetDropDownList_CourtHall(int courtId, bool addDefaultElement = true, bool addAllElement = false);
+        Task<List<SelectListItem>> GetDropDownList_CourtHall(int courtId, bool addDefaultElement = true, bool addAllElement = false);
 
         CheckListViewVM LawUnitSpeciality_SelectForCheck(int lawUnitId);
 
@@ -137,6 +153,8 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="courtId"></param>
         List<SelectListItem> CourtForDelivery_SelectDDL(int courtId);
 
+        Task<List<SelectListItem>> CourtForDelivery_SelectDDLAsync(int courtId);
+
         IQueryable<CourtBankAccountVM> CourtBankAccount_Select(int courtId);
 
         bool CourtBankAccount_SaveData(CourtBankAccount model);
@@ -149,6 +167,8 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<Address> SelectEntity_SelectAddress(int personSourceType, long personSourceId);
 
         List<SelectListItem> LawUnitAddress_SelectDDL_ByCaseLawUnitId(int caseLawUnitId, bool addDefaultElement = true, bool addAllElement = false);
+
+        Task<List<SelectListItem>> LawUnitAddress_SelectDDL_ByCaseLawUnitIdAsync(int caseLawUnitId, bool addDefaultElement = true, bool addAllElement = false);
 
         IQueryable<CourtVM> CourtsByType(int courtTypeId);
         bool CourtSaveData(Court model);
@@ -183,7 +203,7 @@ namespace IOWebApplication.Core.Contracts
 
         bool CourtPosDevice_SaveData(CourtPosDevice model);
 
-        List<SelectListItem> CourtPosDevice_SelectDDL(int courtId, bool addDefaultElement = false, bool addAllElement = false);
+        Task<List<SelectListItem>> CourtPosDevice_SelectDDL(int courtId, bool addDefaultElement = false, bool addAllElement = false);
 
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseSelectionProtokol(int CaseId);
 
@@ -247,6 +267,26 @@ namespace IOWebApplication.Core.Contracts
         List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnit(int periodTypeId, int lawUnitTypeId);
         List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitAdd(int periodTypeId, int lawUnitTypeId);
         List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitEdit(int periodTypeId, int lawUnitTypeId, int id);
+
+        /// <summary>
+        /// Breadcrumbs за редактиране на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="periodTypeId">Тип на периода</param>
+        /// <param name="lawUnitTypeId">Тип на служител</param>
+        /// <param name="courtLawUnitId">Идентификатор на служител</param>
+        /// <returns></returns>
+        List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitAssistantAdd(int periodTypeId, int lawUnitTypeId, int courtLawUnitId);
+
+        /// <summary>
+        /// Breadcrumbs за редактиране на асистент/помощник/секретар
+        /// </summary>
+        /// <param name="periodTypeId">Тип на периода</param>
+        /// <param name="lawUnitTypeId">Тип на служител</param>
+        /// <param name="courtLawUnitId">Идентификатор на служител</param>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitAssistantEdit(int periodTypeId, int lawUnitTypeId, int courtLawUnitId, int id);
+
         List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitGroup(int courtLawUnitId);
         List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitCompartment(int courtLawUnitId);
         List<BreadcrumbsVM> Breadcrumbs_ForCourtLawUnitCompartmentAdd(int courtLawUnitId);
@@ -322,7 +362,6 @@ namespace IOWebApplication.Core.Contracts
         List<BreadcrumbsVM> Breadcrumbs_CourtRegionIndexArea(int courtRegionId);
         List<BreadcrumbsVM> Breadcrumbs_CourtRegionIndexAreaEdit(int courtRegionId, int courtAreaId);
         Court Court_GetById(int id);
-        void FillCourtAddress();
         List<BreadcrumbsVM> Breadcrumbs_HtmlTemplateParamEdit(int htmlTemplateId, int id);
         List<BreadcrumbsVM> Breadcrumbs_HtmlTemplateLinkEdit(int htmlTemplateId, int id);
         List<BreadcrumbsVM> Breadcrumbs_AccountMobileToken(string userId);
@@ -354,7 +393,7 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="lawunit_id"></param>
         /// <param name="dtNow"></param>
         /// <returns></returns>
-        CourtDepartmentVM Read_LawUnitOtdelenieSystav(int lawunit_id, DateTime? dtNow = null,int ? court_id = 0);
+        CourtDepartmentVM Read_LawUnitOtdelenieSystav(int lawunit_id, DateTime? dtNow = null, int? court_id = 0);
         bool UpdateCaseJudicalCompositionOtdelenie(int CaseId);
         List<BreadcrumbsVM> Breadcrumbs_ForExecList();
         List<BreadcrumbsVM> Breadcrumbs_ForExecListEdit(int id);
@@ -374,5 +413,64 @@ namespace IOWebApplication.Core.Contracts
         List<BreadcrumbsVM> Breadcrumbs_ForVksNotificationList();
         List<BreadcrumbsVM> Breadcrumbs_ForVksNotificationPrint();
         List<BreadcrumbsVM> Breadcrumbs_ForVksNotificationListEdit();
+        IQueryable<InstitutionVM> InstitutionByName_Select(string name, int? id = null);
+        LawUnit Get_LawunitByUserId(string userId);
+        IQueryable<ExcelReportTemplateVM> ExcelReportTemplate_Select();
+        bool ExcelReportTemplate_SaveData(ICollection<IFormFile> files, ExcelReportTemplate model);
+        bool CheckCourtRestriction(int restrictionType, int courtId = 0);
+
+        /// <summary>
+        /// Извличане на данни за съдилища за падащ списък 
+        /// </summary>
+        /// <param name="typeId">Идентификатор на тип съд</param>
+        /// <param name="addDefaultElement">Флаг дали да се добави елемент "Избери"</param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> GetDDL_Court(int? typeId, bool addDefaultElement = true);
+
+        IQueryable<UserProfileVM> Users_SelectForAutocomplete(UserFilterVM filter, string selectMode = "current");
+        IQueryable<LawUnit> LawUnit_JudgeAndUserByCourtDate(int court, DateTime? date);
+        SaveResultVM LawUnit_ChangeLawunitType(int id, int lawunitTypeId);
+
+        #region FilterTemplates
+
+        /// <summary>
+        /// Метод извличащ данни за шаблони за филтри за справки
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        IQueryable<FilterTemplatesListVM> GetFilterTemplates_Select(FilterTemplatesFilterVM filter);
+
+        /// <summary>
+        /// Извличане на данни за шаблон за филтър на специализирана справка
+        /// </summary>
+        /// <param name="id">Идентификатор на запис</param>
+        /// <returns></returns>
+        Task<FilterTemplatesSpecializedReportEditVM> GetFilterTemplatesSpecializedReportById(int id);
+
+        /// <summary>
+        /// Метод извличащ записаният филтър за специализирана справка
+        /// </summary>
+        /// <param name="id">Идентификатор на шаблона</param>
+        /// <returns></returns>
+        Task<SpecializedReportFilterVM> GetFilterTemplatesSpecializedReportDataById(int id);
+
+        /// <summary>
+        /// Метод за запис на шаблон за филтър за специализирана справка
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        Task<int?> SaveFilterTemplatesSpecializedReport(FilterTemplatesSpecializedReportEditVM model);
+
+        /// <summary>
+        /// Метод зареждащ шаблони за филтри за справки
+        /// </summary>
+        /// <param name="filterTemplateTypeId">Идентификатор на тип шаблон</param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> GetFilterTemplates_SelectDDL(int filterTemplateTypeId);
+        Task<List<BreadcrumbsVM>> Breadcrumbs_GetForCaseSessionActAsync(int CaseSessionActId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForMediationNotificationEdit(int mediationSessionId, int notificationId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForMediationNotificationEditTinyMCE(MediationNotification notification);
+
+        #endregion
     }
 }

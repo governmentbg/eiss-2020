@@ -5,6 +5,7 @@ using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,7 @@ namespace IOWebApplication.Controllers
         /// Страница с периоди към съд
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult Index()
         {
             SetHelpFile(HelpFileValues.Nom18);
@@ -48,6 +50,14 @@ namespace IOWebApplication.Controllers
         private void SetViewBag()
         {
             SetHelpFile(HelpFileValues.Nom18);
+        }
+
+        void auditInfoCourtLoadResetPeriod(string operation, CourtLoadResetPeriod model, string add = "")
+        {
+            if (model != null)
+            {
+                AddAuditInfo(operation, $"{model.Description} от {model.DateFrom.ToString("dd.MM.yyyy")}", add, "Периоди за нулиране на разпределени дела в група");
+            }
         }
 
         /// <summary>
@@ -75,7 +85,7 @@ namespace IOWebApplication.Controllers
         {
             var model = service.GetById<CourtLoadResetPeriod>(id);
             SetViewBag();
-
+            auditInfoCourtLoadResetPeriod(AuditConstants.Operations.View, model);
             return View(nameof(Edit), model);
         }
 
@@ -98,6 +108,7 @@ namespace IOWebApplication.Controllers
             if (courtLoadPeriodService.CourtLoadResetPeriod_SaveData(model))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                auditInfoCourtLoadResetPeriod(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }

@@ -1,84 +1,53 @@
 ﻿using IO.RegixClient;
-using IOWebApplication.Infrastructure.Models.Regix.FetchNomenclatures;
-using IOWebApplication.Infrastructure.Models.Regix.GetActualStateV3;
-using IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts;
-using IOWebApplication.Infrastructure.Models.Regix.GetPensionIncomeAmountReport;
-using IOWebApplication.Infrastructure.Models.Regix.GetPersonalIdentityV2;
-using IOWebApplication.Infrastructure.Models.Regix.GetStateOfPlay;
-using IOWebApplication.Infrastructure.Models.Regix.SearchDisabilityCompensationByPaymentPeriod;
-using IOWebApplication.Infrastructure.Models.Regix.SearchUnemploymentCompensationByPaymentPeriod;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
     public interface IRegixReportService : IBaseService
     {
-        PersonDataResponseType GetPersonalData(string egn);
+        Task<PersonDataResponseType> GetPersonalData(string egn, string remark = "");
 
-        PermanentAddressResponseType GetPermanentAddress(string egn);
+        Task<DocumentRegixVM> GetPersonalIdentity(string identityDocumentNumber, string egn, string remark = "");
 
-        TemporaryAddressResponseType GetCurrentAddress(string egn);
+        Task<bool> PersonData_SaveData(RegixPersonDataVM model);
 
-        ActualStateResponseV3 GetActualStateV3(string uic);
-
-        EmploymentContractsResponse GetEmploymentContracts(string identityId, EikTypeType eikType, ContractsFilterType contractsFilterType);
-
-        POVNVEDResponseType SearchDisabilityCompensationByPaymentPeriod(string identifier, 
-                 Infrastructure.Models.Regix.SearchDisabilityCompensationByPaymentPeriod.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo);
-
-        POBVEDResponseType SearchUnemploymentCompensationByPaymentPeriod(string identifier,
-                 Infrastructure.Models.Regix.SearchUnemploymentCompensationByPaymentPeriod.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo);
-
-        UP8ResponseType GetPensionIncomeAmountReport(string identifier,
-            Infrastructure.Models.Regix.GetPensionIncomeAmountReport.IdentifierType identifierType, DateTime dateFrom, DateTime dateTo);
-
-        DocumentRegixVM GetPersonalIdentity(string identityDocumentNumber, string egn);
-
-        PersonalIdentityInfoResponseType GetPersonalIdentityV2(string identityDocumentNumber, string egn);
-
-        StateOfPlay GetStateOfPlay(string uic);
-
-        Nomenclatures FetchNomenclatures();
-
-        bool PersonData_SaveData(RegixPersonDataVM model);
         RegixPersonDataVM GetPersonalDataById(int id);
 
 
-        bool PersonAddress_SaveData(RegixPersonAddressVM model);
+        Task<bool> PersonAddress_SaveData(RegixPersonAddressVM model);
         RegixPersonAddressVM GetPersonAddressById(int id);
 
 
-        bool EmploymentContracts_SaveData(RegixEmploymentContractsVM model);
+        Task<bool> EmploymentContracts_SaveData(RegixEmploymentContractsVM model);
         RegixEmploymentContractsVM GetEmploymentContractsById(int id);
 
 
-        bool CompensationByPaymentPeriod_SaveData(RegixCompensationByPaymentPeriodVM model);
+        Task<bool> CompensationByPaymentPeriod_SaveData(RegixCompensationByPaymentPeriodVM model);
         RegixCompensationByPaymentPeriodVM GetCompensationByPaymentPeriodById(int id);
 
 
-        bool PensionIncomeAmountReport_SaveData(RegixPensionIncomeAmountVM model);
+        Task<bool> PensionIncomeAmountReport_SaveData(RegixPensionIncomeAmountVM model);
         RegixPensionIncomeAmountVM GetPensionIncomeAmountReportById(int id);
 
 
-        bool PersonalIdentityV2_SaveData(RegixPersonalIdentityV2VM model);
+        Task<bool> PersonalIdentityV2_SaveData(RegixPersonalIdentityV2VM model);
         RegixPersonalIdentityV2VM GetPersonalIdentityV2ById(int id);
 
 
-        bool ActualStateV3_SaveData(RegixActualStateV3VM model);
+        Task<bool> ActualStateV3_SaveData(RegixActualStateV3VM model);
         (bool result, string errorMessage, RegixActualStateV3VM model) GetActualStateV3ById(int id);
 
-        IEnumerable<PersonSearchVM> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
+        Task<IEnumerable<PersonSearchVM>> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
 
 
-        RegixStateOfPlayVM GetStateOfPlayById(int id);
-        bool StateOfPlay_SaveData(RegixStateOfPlayVM model);
+        Task<RegixStateOfPlayVM> GetStateOfPlayById(int id);
+        Task<bool> StateOfPlay_SaveData(RegixStateOfPlayVM model);
 
-        bool PersonDataAddress_SaveData(RegixPersonDataAddressVM model);
+        Task<bool> PersonDataAddress_SaveData(RegixPersonDataAddressVM model);
 
         RegixPersonDataAddressVM GetPersonDataAddressById(int id);
 
@@ -86,7 +55,11 @@ namespace IOWebApplication.Core.Contracts
 
         IQueryable<RegixListVM> RegixListByCase_Select(int caseId);
 
-        PermanentAddressResponseType GetPermanentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
-        TemporaryAddressResponseType GetCurrentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
+        Task<PermanentAddressResponseType> GetPermanentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
+        Task<TemporaryAddressResponseType> GetCurrentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
+        Task<bool> RelationsSearch_SaveData(RegixRelationsSearchVM model);
+        RegixRelationsSearchVM GetRelationsSearchById(int id);
+        Task<bool> CriminalRecordsReport_SaveData(RegixCriminalRecordsReportVM model);
+        RegixCriminalRecordsReportVM GetCriminalRecordsReportById(int id);
     }
 }

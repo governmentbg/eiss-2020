@@ -1,0 +1,169 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSelectionChangeFilterVM
+
+@{
+    ViewData["Title"] = "Ново преразпределение на съдия член на състав";
+}
+
+@section breadcrumb{
+<ol class="breadcrumb">
+    <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    <li><a href="@Url.Action("IndexJudge")" title="Начало">Масово преразпределение на съдия член на състав</a></li>
+    <li class="active">@ViewData["Title"]</li>
+</ol>
+}
+<div class="filter-form">
+    @Html.HiddenFor(m => m.ChangeTypeId)
+    @*@Html.HiddenFor(m => m.CaseGroupIds_text)*@
+    @Html.HiddenFor(m => m.CaseList)
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.DateFrom, "DateTime")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.DateTo, "DateTime")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.FromLawunitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">@Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.ToLawunitId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.ToLawunitDepartmentId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.Description)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Зареди дела
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <button type="button" class="btn btn-danger" onclick="saveData(); return false;" value="Преразпредели" title="Преразпредели">
+                Преразпредели
+                <i class="fa fa-random" title="Преразпредели"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<partial name="_Cases" model="@("ReplaceJudgeJudge_ListData")" />
+
+
+@section scripts {
+<script>
+    $(document).ready(function () {
+
+        $('#CourtGroupId').change(function () {
+            requestCombo('@Url.Action("Get_LawunitsByCourtGroup")', { courtGroupId: $(this).val() }, '#ToLawunitId', null, function () {
+                $('#ToLawunitId').trigger('change');
+            });
+        });
+
+        $('#ToLawunitId').change(function () {
+            requestCombo('@Url.Action("Get_DepartmentsByLawunit")', { lawunitId: $(this).val(),noChange:true }, '#ToLawunitDepartmentId');
+        });
+
+
+    });
+
+    function getFilter(d) {
+        d.filter = {
+            DateFrom: $("#DateFrom").val(),
+            DateTo: $("#DateTo").val(),
+            FromLawunitId: $("#FromLawunitId").val(),
+            CourtGroupId: $('#CourtGroupId').val(),
+            ToLawunitId: $("#ToLawunitId").val(),
+            ToLawunitDepartmentId: $("#ToLawunitDepartmentId").val(),
+            //CaseGroupIds_text: $('#CaseGroupIds_text').val(),
+            ChangeTypeId: $('#ChangeTypeId').val(),
+            //CaseList: $('#CaseList').val(),
+            Description: $('#Description').val()
+        };
+    }
+
+
+
+</script>
+
+}
+
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+
+    function saveData() {
+        //TODO checks
+
+
+        //$('#CaseList').val();
+        let model = {};
+        getFilter(model);        
+
+        if(lastFilter != JSON.stringify(model.filter)){
+            swalOk("Параметрите на търсене са презаредени!",function(){
+            LoadTable();
+            });
+            return false;
+        }
+        model.filter.CaseList = getCaseIds();
+
+        if (!validateModel(model.filter)) {
+            return;
+        }
+
+
+        postContent('@Url.Action("ReplaceJudge_SaveData")', { filter: model.filter }, function (res) {
+            let data = JSON.parse(res);
+            if (data.result == true) {
+                document.location.href = '@Url.Action("SendForSign")/' + data.objectId;
+                messageHelper.ShowSuccessMessage('Протоколът беше записан успешно!');
+            } else {
+                messageHelper.ShowErrorMessage('Проблем при запис на данните');
+            }
+        });
+    }
+
+    function validateModel(filter) {
+        if (!filter.CaseList || filter.CaseList.length <= 0) {
+            swal('Изберете поне едно дело за преразпределение!');
+            return false;
+        }
+
+        let caseArr = filter.CaseList.split(',');
+        if (caseArr.length > 20) {
+            swal('Максималният брой дела за преразпределение е 20!');
+            return false;
+        }
+
+        if (!filter.FromLawunitId || filter.FromLawunitId == '0' ) {
+            swal('Изберете съдия!');
+            return false;
+        }
+
+        if (!filter.ToLawunitId) {
+            swal('Изберете нов съдия!');
+            return false;
+        }
+
+        if (filter.FromLawunitId == filter.ToLawunitId ) {
+            swal('Изберете различен нов съдия!');
+            return false;
+        }
+
+        if (!filter.Description) {
+            swal('Въведете основание за преразпределението!');
+            return false;
+        }
+        return true;
+    }
+</script>

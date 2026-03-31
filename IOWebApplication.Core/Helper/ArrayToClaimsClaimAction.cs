@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.OAuth.Claims;
+﻿/*using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Newtonsoft.Json.Linq;
 using System.Security.Claims;
 
@@ -49,3 +49,4 @@ namespace IOWebApplication.Core.Helper
         }
     }
 }
+*/

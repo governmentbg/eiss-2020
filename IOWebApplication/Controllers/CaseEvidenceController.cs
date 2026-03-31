@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -14,6 +9,8 @@ using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -42,8 +39,13 @@ namespace IOWebApplication.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, null, AuditConstants.Operations.View))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран Доказателства");
             CaseEvidenceFilterVM filter = new CaseEvidenceFilterVM()
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
@@ -103,14 +105,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId)
+        public async Task<IActionResult> Add(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseEvidence, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseEvidence, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
             SetViewbag(caseId);
-            var caseCase = service.GetById<Case>(caseId);
+            var caseCase = await service.GetByIdAsync<Case>(caseId);
             var model = new CaseEvidence()
             {
                 CaseId = caseId,
@@ -126,14 +128,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.GetById<CaseEvidence>(id);
+            var model = await service.GetByIdAsync<CaseEvidence>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас доказателство не е намерено и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас доказателство не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseEvidence, id, AuditConstants.Operations.Update, model.CaseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseEvidence, id, AuditConstants.Operations.Update, model.CaseId))
             {
                 return Redirect_Denied();
             }
@@ -152,8 +154,8 @@ namespace IOWebApplication.Controllers
             if (model.EvidenceTypeId < 1)
                 return "Изберете тип доказателство";
 
-            if (model.DateAccept == null)
-                return "Въведете дата на регистрация";
+            //if (model.DateAccept == null)
+            //    return "Въведете дата на регистрация";
 
             if (model.EvidenceStateId < 1)
                 return "Изберете статус";
@@ -218,9 +220,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult CaseEvidence_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseEvidence_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseEvidence, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseEvidence, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
@@ -230,7 +232,7 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = "Има движение по това веществено доказателство." });
             }
 
-            var expireObject = service.GetById<CaseEvidence>(model.Id);
+            var expireObject = await service.GetByIdAsync<CaseEvidence>(model.Id);
             if (service.SaveExpireInfo<CaseEvidence>(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CaseEvidence, model.Id);
@@ -261,9 +263,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseEvidenceId"></param>
         /// <returns></returns>
-        public IActionResult AddMovement(int caseEvidenceId)
+        public async Task<IActionResult> AddMovement(int caseEvidenceId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseEvidenceMovement, null, AuditConstants.Operations.Append, caseEvidenceId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseEvidenceMovement, null, AuditConstants.Operations.Append, caseEvidenceId))
             {
                 return Redirect_Denied();
             }
@@ -284,14 +286,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditMovement(int id)
+        public async Task<IActionResult> EditMovement(int id)
         {
-            var model = service.GetById<CaseEvidenceMovement>(id);
+            var model = await service.GetByIdAsync<CaseEvidenceMovement>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас доказателство не е намерено и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас доказателство не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseEvidenceMovement, id, AuditConstants.Operations.Append, model.CaseEvidenceId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseEvidenceMovement, id, AuditConstants.Operations.Append, model.CaseEvidenceId))
             {
                 return Redirect_Denied();
             }
@@ -368,6 +370,7 @@ namespace IOWebApplication.Controllers
         /// Справка за доказателства
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult CaseEvidenceSpr()
         {
             var model = new CaseEvidenceSprFilterVM();

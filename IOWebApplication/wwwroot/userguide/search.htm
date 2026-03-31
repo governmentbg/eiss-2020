@@ -1,0 +1,562 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: SimSun;
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "\@SimSun";
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			line-height: 115%;
+			font-size: 11.0pt;
+			font-family: "Calibri",sans-serif;
+		}
+
+		h2 {
+			mso-style-name: "Heading 2\,h2\,Major\,heading 2\,2\,sub-sect\,Subhead A\,ClassHeading\,H2\,Heading 2 Hidden\,Heading 2rh\,2nd level\,Titre3\,h2 main heading\,Attribute Heading 2\,B\.2 Heading 2\,A\.1 Heading 2\,Header 2\,Reset numbering\,Module Name\,Chapter\,1\.Seite\,H21\,HeadB\,HD2\,l2\,x2\,x21";
+			mso-style-link: "Heading 2 Char\,h2 Char\,Major Char\,heading 2 Char\,2 Char\,sub-sect Char\,Subhead A Char\,ClassHeading Char\,H2 Char\,Heading 2 Hidden Char\,Heading 2rh Char\,2nd level Char\,Titre3 Char\,h2 main heading Char\,Attribute Heading 2 Char\,B\.2 Heading 2 Char\,H21 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Arial",sans-serif;
+			font-weight: normal;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 8.0pt;
+			margin-left: 71.45pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 71.45pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 71.45pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 8.0pt;
+			margin-left: 71.45pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char\,h2 Char\,Major Char\,heading 2 Char\,2 Char\,sub-sect Char\,Subhead A Char\,ClassHeading Char\,H2 Char\,Heading 2 Hidden Char\,Heading 2rh Char\,2nd level Char\,Titre3 Char\,h2 main heading Char\,Attribute Heading 2 Char\,B\.2 Heading 2 Char\,H21 Char";
+			mso-style-link: "Heading 2\,h2\,Major\,heading 2\,2\,sub-sect\,Subhead A\,ClassHeading\,H2\,Heading 2 Hidden\,Heading 2rh\,2nd level\,Titre3\,h2 main heading\,Attribute Heading 2\,B\.2 Heading 2\,A\.1 Heading 2\,Header 2\,Reset numbering\,Module Name\,Chapter\,1\.Seite\,H21\,HeadB\,HD2\,l2\,x2\,x21";
+			font-family: "Arial",sans-serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 8.0pt;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 8.0pt;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoPapDefault {
+			line-height: 12.0pt;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG style='word-wrap:break-word'>
+
+	<div class=WordSection1>
+
+		<h2 style='margin-top:2.0pt;margin-right:0cm;margin-bottom:0cm;margin-left:
+54.95pt;text-align:justify;page-break-after:avoid'>
+			<a name="_Toc147497467">
+				<span lang=X-NONE style='font-family:"Times New Roman",serif'>Разширено търсене </span>
+			</a>
+		</h2>
+
+		<p class=EISSStyle5>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Инструмент Разширено търсене.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;text-indent:35.4pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Разширено
+				търсене предоставя възможност да се търси по конкретни критерии в два различни
+				режима:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<span style='font-size:12.0pt;
+line-height:115%;font-family:"Times New Roman",serif'>
+				Разширено търсене или търсене
+				на дела, в резултат на което се връщат всички дела отговарящи на зададените
+				критерии.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-left:71.4pt;text-align:justify;text-indent:
+-36.0pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				I.<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Режим
+				Разширено търсене предоставя в възможност за търсене на дела под различни
+				критерии. Екранът е организиран в няколко секции:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-left:89.4pt;text-align:justify;text-indent:
+-18.0pt'>
+			<span lang=EN-US style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Секция Дела
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:6.0pt;text-align:justify'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Има
+				реализирана възможност за търсене на дела под различни критерии.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt;
+margin-left:89.3pt;text-align:justify;text-indent:-17.85pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Секция
+				Заседание
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=67 id="Picture 19"
+				 src="search_files/image001.png">
+		</p>
+
+		<p class=MsoNormal style='margin-left:89.4pt;text-align:justify;text-indent:
+-18.0pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Секция
+				Актове
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=EN-US>
+				<img width=605 height=70 id="Picture 30"
+					 src="search_files/image002.png">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt;
+margin-left:89.3pt;text-align:justify;text-indent:-17.85pt'>
+			<span lang=EN-US
+				  style='font-size:12.0pt;line-height:115%;font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Секция
+				Свързани дела
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt;
+margin-left:89.3pt;text-align:justify;text-indent:-17.85pt'>
+			<span lang=EN-US
+				  style='font-size:12.0pt;line-height:115%;font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Секция
+				Входящи/изходящи документи
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt;
+margin-left:89.3pt;text-align:justify;text-indent:-17.85pt'>
+			<span lang=EN-US
+				  style='font-size:12.0pt;line-height:115%;font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Страни
+				по дело
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:6.0pt;
+margin-left:89.3pt;text-align:justify;text-indent:-17.85pt'>
+			<span lang=EN-US
+				  style='font-size:12.0pt;line-height:115%;font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Съдебен
+				състав
+			</span>
+
+			<table cellpadding=0 cellspacing=0>
+				<tr>
+					<td width=86 height=0></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><img width=473 height=94 src="search_files/image003.png"></td>
+				</tr>
+			</table>
+
+			<br clear=ALL>
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=17 id="Picture 143105"
+				 src="search_files/image004.png">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;text-align:justify;text-indent:
+35.4pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				При
+				първоначално влизане в разширеното търсене, списъчния екран е в режим на
+				търсене на дела, за да се премине към режим търсене на актове се натискане на
+				бутон
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				<img width=89 height=25 id="Picture 143104" src="search_files/image005.png">
+			</span><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'> .</span>
+		</p>
+
+		<p class=MsoNormal style='text-align:justify;text-indent:35.4pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Търсене
+				на съдебни актове по съдържание или търсене на актове, в резултат на което се
+				връщат всички актове, отговарящи на зададените критерии.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;text-align:justify;text-indent:
+21.6pt'><span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>&nbsp;</span></p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%;font-family:"Arial Narrow",sans-serif'>
+				<img width=605 height=133 id="Picture 143106" src="search_files/image006.png">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;text-indent:18.0pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				Секция
+				Разширено търсене на актове  дава възможност за извършване на търсене,
+				посредством допълнителни критерии, като:
+			</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Основен вид дело
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Точен вид дело
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Отделение
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Състав
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Вид акт
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Постановен от –Постановен до
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Съдия-докладчик
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Чек бокс “Финализиращ акт“
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Текст за търсене
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:36.0pt'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span><b><span style='line-height:107%;color:red'>Забележка:</span></b><span style='line-height:107%;color:red'> </span>В поле „Текст за търсене“ при
+			въведена дума се извършва търсене в обезличения акт по точно съвпадение на
+			търсената дума. При изписване на символ * и част дума и отново символ *, в
+			обезличения акт се търси къде в текста се съдържа тази част от думата, без
+			значение от представките и наставките. Т.е. символът * замества неограничен
+			брой символи преди и/или след думата.
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:18.0pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:
+"Times New Roman",serif'>Пример</span>: <span style='font-size:12.0pt;
+line-height:115%;font-family:"Times New Roman",serif'>
+				При въвеждане на критерии
+				„убийство“, като резултат системата ще изведе актове, където навсякъде се
+				съдържа 100% съвпадение с думата „убийство“
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;text-indent:18.0pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				При
+				въвеждане на критерии „убийств*“, като резултат системата ще изведе актове,
+				където се срещат думи като „убийство“, „убийства“, „убийството“, „убийствата“ и
+				др. производни.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;text-indent:18.0pt'>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif'>
+				След
+				натискане на бутон Филтриране <img width=61 height=15 id="Picture 143107"
+												   src="search_files/image007.png"> резултатите се извеждат в долната половина на
+				екрана в табличен вид, по отношение на делото в което се намира акта отговарящ
+				на критериите за търсене. През хиперлинка на номера на акта, може да се
+				прегледа съдържанието на обезличения акт:
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%;font-family:"Arial Narrow",sans-serif'>
+				<img width=556 height=173 id="Picture 143108" src="search_files/image008.png">
+			</span>
+		</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

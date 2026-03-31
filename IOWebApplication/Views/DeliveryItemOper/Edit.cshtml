@@ -6,7 +6,7 @@
     ViewData["Title"] = "Въвеждане доставка на призовка/съобщение от призовкар";
     var filterJson = ViewBag.filterJson;
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -84,7 +84,7 @@
             <div class="form-group">
                 <input id="buttonSave" type="button" value="Запис" onclick="submitWithAlert()" class="btn btn-success" />
                 @await Html.PartialAsync("_ButtonClose")
-                @if (Model.Id > 0 && deliveryItemService.NotificationStateEnd().Contains(Model.NotificationStateId))
+                @if (Model.Id > 0 && NomenclatureConstants.NotificationState.NotificationEndState().Contains(Model.NotificationStateId))
                 {
                     <a onclick="DeliveryItemEditReturn()" class="btn btn-def">Върнат отрязък</a>
                 }
@@ -155,7 +155,6 @@
         function submitWithAlert() {
             $('#buttonSave').attr('disabled',  true);
             let model = getFormData($('#formEdit'));
-            console.log(model);
             $.ajax({
                 type: "POST",
                 url: "@Url.Action("CheckDeliveryDate")",
@@ -165,16 +164,11 @@
                     model: model
                 },
                 success: function (response) {
-                    if (response == 'OK' || response == 'NOT_VALID') {
+                    if (response.result == 'OK' || response.result == 'NOT_VALID') {
                         $("#formEdit").submit();
                         $('#buttonSave').attr('disabled', false);
                     } else {
-                        swalConfirm(response, function () {
-                            $("#formEdit").submit();
-                        },
-                        function() {
-                            $('#buttonSave').attr('disabled', false);
-                        });
+                        submitWithAlertDialog(response.errors, 0)
                     }
                 },
                 error: log_ajax_err,
@@ -182,8 +176,25 @@
                     $('#buttonSave').attr('disabled', false);
                 }
             });
-            
+
         };
+
+        function submitWithAlertDialog(errors, index){
+             if (errors.length <= index) {
+                 $("#formEdit").submit();
+                 return;
+             };
+             swalConfirm(
+                  errors[index],
+                  function () {
+                     index++
+                     submitWithAlertDialog(errors, index);
+                  },
+                  function() {
+                     $('#buttonSave').attr('disabled', false);
+                  }
+             );
+        }
     </script>
 }
 

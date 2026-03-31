@@ -18,5 +18,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public string HtmlTemplateLabel { get; set; }
         public int? NotificationNumber { get; set; }
         public DateTime RegDate { get; set; }
-    }
+        public string NotificationDeliveryGroupLabel { get; set; }
+}
 }

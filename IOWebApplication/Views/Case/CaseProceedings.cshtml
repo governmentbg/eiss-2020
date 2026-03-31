@@ -1,220 +1,262 @@
 ﻿@model CaseProceedingsVM
+@using IOWebApplication.Infrastructure.Constants;
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
 @{
-    Layout = null;
+    if (!Model.IsViewBtn)
+    {
+        Layout = null;
+    }
+
+    ViewData["Title"] = "Ход на дело";
+    var isSpecialAccess = Model.CaseClassifications.Any(c => c.ClassificationId == NomenclatureConstants.CaseClassifications.SpecialAccess);
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
 }
 
 <style>
     div.just {
         text-align: justify;
         text-justify: inter-word;
+        text-rendering: geometricPrecision;
     }
 </style>
 
-<div style="font-family: 'Times New Roman'">
-    <center>
-        <b>Дело @Model.RegNumber / @Model.RegDate.ToString("dd.MM.yyyy")</b>
-    </center>
-    <br />
-    <br />
-    <b>Основен вид дело:</b> @Model.CaseGroupLabel
-    <br />
-    <b>Точен вид дело:</b> @Model.CaseTypeLabel
-    <br />
-    <b>Шифър:</b> @Model.CaseCodeLabel
-    <br />
-    <b>Статус:</b> @Model.CaseStateLabel
-    <br />
+<div class="row">
+    <div class="col-lg-12 col-md-12" style="font-family: 'Times New Roman'">
+        <center>
+            <b>Дело @Model.RegNumberText</b>
+        </center>
+        <br />
+        <br />
+        <b>Основен вид дело:</b> @Model.CaseGroupLabel
+        <br />
+        <b>Точен вид дело:</b> @Model.CaseTypeLabel
+        <br />
+        <b>Шифър:</b> @Model.CaseCodeLabel
+        <br />
+        <b>Статус:</b> @Model.CaseStateLabel
+        <br />
 
-    @if (Model.CaseInforcedDate != null)
-    {
-        <b>Дата на влизане в законна сила:</b> @((Model.CaseInforcedDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
-        <br />
-    }
-
-    @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
-    {
-        <b>Основание за образуване:</b> @Model.CaseReasonLabel
-        <br />
-    }
-
-    @if (!string.IsNullOrEmpty(Model.CaseStateDescription))
-    {
-        <b>Основание:</b> @Model.CaseStateDescription
-        <br />
-    }
-
-    @if (Model.JudgeRapporteur != string.Empty)
-    {
-        <b>Съдия докладчик:</b> @Model.JudgeRapporteur
-        <br />
-    }
-
-    @if (Model.DocumentLabel != string.Empty)
-    {
-        <b>Иницииращ документ:</b> @Model.DocumentLabel
-        <br />
-    }
-
-    @if (Model.CaseMigrations.Count() > 0)
-    {
-        <br />
-        <b>Свързани дела от ЕИСС</b>
-        <br />
-        @foreach (var caseMigration in Model.CaseMigrations)
+        @if (Model.CaseInforcedDate != null)
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
-                }
-                <div class='just'>
-                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
-                </div>
-            </div>
+            <b>Дата на влизане в законна сила:</b> @((Model.CaseInforcedDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+            <br />
         }
-    }
 
-    @if (Model.DocumentCaseInfos.Count() > 0)
-    {
-        <br />
-        <b>Свързани дела от външни системи</b>
-        <br />
-        @foreach (var documentCaseInfo in Model.DocumentCaseInfos)
+        @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = "Дело: " + documentCaseInfo.CaseRegNumber + "/" + documentCaseInfo.CaseYear + " - " + documentCaseInfo.Description;
-                }
-                <div class='just'>
-                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
-                </div>
-            </div>
+            <b>Основание за образуване:</b> @Model.CaseReasonLabel
+            <br />
         }
-    }
 
-    @if (Model.DocumentInstitutionCaseInfos.Count() > 0)
-    {
-        <br />
-        <b>Свързани дела на външни институции:</b>
-        <br />
-        @foreach (var documentInstitutionCaseInfo in Model.DocumentInstitutionCaseInfos)
+        @if (!string.IsNullOrEmpty(Model.CaseStateDescription))
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = documentInstitutionCaseInfo.Institution.FullName + " - " + ((documentInstitutionCaseInfo.InstitutionCaseType != null) ? documentInstitutionCaseInfo.InstitutionCaseType.Label + " - " : string.Empty) + documentInstitutionCaseInfo.CaseNumber + "/" + documentInstitutionCaseInfo.CaseYear;
-                }
-                <div>
-                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
-                </div>
-            </div>
+            <b>Основание:</b> @Model.CaseStateDescription
+            <br />
         }
-    }
 
-    @if (!string.IsNullOrEmpty(Model.ArchRegNumber))
-    {
-        <br />
-        <b>Архивиране:</b> @(Model.ArchRegNumber + "/" + (Model.ArchRegDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
-        <br />
-    }
-
-    @if (Model.LastMigration != string.Empty)
-    {
-        <br />
-        <b>Изпратено до:</b> @Model.LastMigration
-        <br />
-    }
-
-    @if (Model.CaseClassifications.Count() > 0)
-    {
-        <br />
-        <b>Индикатори:</b>
-        <br />
-        @foreach (var caseClassification in Model.CaseClassifications)
+        @if (Model.JudgeRapporteur != string.Empty)
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = "   - " + caseClassification.Classification.Label;
-                }
-                <div>
-                    @Html.Raw(_row)
-                </div>
-            </div>
+            <b>Съдия докладчик:</b> @Model.JudgeRapporteur
+            <br />
         }
-    }
 
-    @if (Model.CasePersons.Count() > 0)
-    {
-        <br />
-        <b>Списък на страните</b>
-        <br />
-        @foreach (var casePerson in Model.CasePersons)
+        @if (Model.DocumentLabel != string.Empty)
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = casePerson.FullName + " (" + casePerson.RoleName + ")";
-                }
-                <div class='just'>
-                    @Html.Raw("<i class='fa fa-user'></i> " + _row)
-                </div>
-            </div>
+            <b>Иницииращ документ:</b> @Model.DocumentLabel
+            <br />
         }
-    }
 
-    @if (Model.CaseLawUnits.Count() > 0)
-    {
-        <br />
-        <b>Състав по делото</b>
-        <br />
-        @foreach (var caseLawUnit in Model.CaseLawUnits.OrderBy(x => x.DateFrom).ThenBy(x => x.DateTo))
+        @if (!string.IsNullOrEmpty(Model.DocumentDescription))
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = caseLawUnit.RowLabelFull;
-                }
-                <div class='just'>
-                    @Html.Raw("<i class='fa fa-user'></i> " + _row)
-                </div>
-            </div>
+            <b>Описание:</b> @Model.DocumentDescription
+            <br />
         }
-    }
 
-    @if (Model.CaseProceedingsObjects.Count() > 0)
-    {
-        <br />
-        <b>Хронология</b>
-
-        @foreach (var caseProceedings in Model.CaseProceedingsObjects.Where(x => x.ParentId == null).OrderBy(x => x.Date))
+        @if (Model.CaseMigrations.Count() > 0)
         {
-            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                @{
-                    var _row = caseProceedings.Label;
-                }
-                <div class='just'>
-                    <br />
-                    @Html.Raw(_row)
-                    <br />
-                </div>
-                @foreach (var caseProceedingsObjects in Model.CaseProceedingsObjects.Where(x => x.ParentId == caseProceedings.Id).OrderBy(x => x.Date))
-                {
-                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                        @{
-                            var _rowOther = caseProceedingsObjects.Label;
-                            var _des = caseProceedingsObjects.Description;
-                        }
-                        <div class='just'>
-                            <br />
-                            @Html.Raw(_rowOther)
-                            @if (!string.IsNullOrEmpty(caseProceedingsObjects.Description))
-                            {
-                                <br />
-                                @Html.Raw(_des)
-                            }
-
-                        </div>
+            <br />
+            <b>Свързани дела от ЕИСС</b>
+            <br />
+            @foreach (var caseMigration in Model.CaseMigrations)
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
+                    }
+                    <div class='just'>
+                        @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
                     </div>
-                }
+                </div>
+            }
+        }
+
+        @if (Model.DocumentCaseInfos.Count() > 0)
+        {
+            <br />
+            <b>Свързани дела от външни системи</b>
+            <br />
+            @foreach (var documentCaseInfo in Model.DocumentCaseInfos)
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var _row = "Дело: " + documentCaseInfo.CaseRegNumber + "/" + documentCaseInfo.CaseYear + " - " + documentCaseInfo.Description;
+                    }
+                    <div class='just'>
+                        @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                    </div>
+                </div>
+            }
+        }
+
+        @if (Model.DocumentInstitutionCaseInfos.Count() > 0)
+        {
+            <br />
+            <b>Свързани дела на външни институции:</b>
+            <br />
+            @foreach (var documentInstitutionCaseInfo in Model.DocumentInstitutionCaseInfos)
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var _row = documentInstitutionCaseInfo.Institution.FullName + " - " + ((documentInstitutionCaseInfo.InstitutionCaseType != null) ? documentInstitutionCaseInfo.InstitutionCaseType.Label + " - " : string.Empty) + documentInstitutionCaseInfo.CaseNumber + "/" + documentInstitutionCaseInfo.CaseYear;
+                    }
+                    <div>
+                        @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                    </div>
+                </div>
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ArchRegNumber))
+        {
+            <br />
+            <b>Архивиране:</b> @(Model.ArchRegNumber + "/" + (Model.ArchRegDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+            <br />
+        }
+
+        @if (Model.LastMigration != string.Empty)
+        {
+            <br />
+            <b>Изпратено до:</b> @Model.LastMigration
+            <br />
+        }
+
+        @if (Model.CaseClassifications.Count() > 0)
+        {
+            <br />
+            <b>Индикатори:</b>
+            <br />
+            @foreach (var caseClassification in Model.CaseClassifications)
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var _row = "   - " + caseClassification.Classification.Label;
+                    }
+                    <div>
+                        @Html.Raw(_row)
+                    </div>
+                </div>
+            }
+        }
+
+        @if (Model.CasePersons.Count() > 0)
+        {
+            <br />
+            <b>Списък на страните</b>
+            <br />
+            @foreach (var casePerson in Model.CasePersons)
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var _row = casePerson.FullName + " (" + casePerson.RoleName + ")";
+                        if (isSpecialAccess && casePerson.IsPerson)
+                        {
+                            _row = casePerson.FullName_Initials + " (" + casePerson.RoleName + ")";
+                        }
+                    }
+                    <div class='just'>
+                        @Html.Raw("<i class='fa fa-user'></i> " + _row)
+                    </div>
+                </div>
+            }
+        }
+
+        @if (Model.CaseLawUnits.Count() > 0)
+        {
+            <br />
+            <b>Състав по делото</b>
+            <br />
+            @foreach (var caseLawUnit in Model.CaseLawUnits.OrderBy(x => x.DateFrom).ThenBy(x => x.DateTo))
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var _row = caseLawUnit.RowLabelFull;
+                    }
+                    <div class='just'>
+                        @Html.Raw("<i class='fa fa-user'></i> " + _row)
+                    </div>
+                </div>
+            }
+        }
+
+        @if (Model.CaseProceedingsObjects.Count() > 0)
+        {
+            <br />
+            <b>Хронология</b>
+
+            @foreach (var caseProceedings in Model.CaseProceedingsObjects.Where(x => x.ParentId == null).OrderBy(x => x.Date))
+            {
+                <div style="margin-bottom: 5px;">
+                    @{
+                        var _row = caseProceedings.Label;
+                        var _des = caseProceedings.Description;
+                    }
+                    <div class='just'>
+                        <br />
+                        @Html.Raw(_row)
+                        @if (!string.IsNullOrEmpty(_des))
+                        {
+                            <br />
+                            @Html.Raw(_des)
+                        }
+                        <br />
+                    </div>
+                    @foreach (var caseProceedingsObjects in Model.CaseProceedingsObjects.Where(x => x.ParentId == caseProceedings.Id).OrderBy(x => x.Date))
+                    {
+                        <div style="margin-bottom: 5px;">
+                            @{
+                                var _rowOther = caseProceedingsObjects.Label;
+                                var _desOther = caseProceedingsObjects.Description;
+                            }
+                            <div class='just'>
+                                <br />
+                                @Html.Raw(_rowOther)
+                                @if (!string.IsNullOrEmpty(caseProceedingsObjects.Description))
+                                {
+                                    <br />
+                                    @Html.Raw(_desOther)
+                                }
+
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @if (Model.IsViewBtn)
+        {
+            <div class="row">
+                <br />
+                <br />
+                <a href="@Url.Action("CaseProceedings")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Ход на дело"><i class="fa fa-calendar"></i><span class="hidden-sm hidden-xs"> Pdf файл</span></a>
+                <br />
             </div>
         }
-    }
-
+    </div>
 </div>

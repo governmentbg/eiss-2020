@@ -1,29 +1,56 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+﻿// Copyright (C) Information Services. All Rights Reserved.
+// Licensed under the Apache License, Version 2.0
+
+using IOWebApplicationApi.Extensions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
 
-namespace IOWebApplicationApi
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("hosting.json", true, true).AddEnvironmentVariables("ASPNETCORE_");
+
+// Add services to the container.
+
+builder.Services.AddControllers(options =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            BuildWebHost(args).Run();
-        }
+    options.RespectBrowserAcceptHeader = true;
+})
+    .AddXmlSerializerFormatters()
+    .AddXmlDataContractSerializerFormatters();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks();
 
-        public static IWebHost BuildWebHost(string[] args)
-        {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                //.AddJsonFile("hosting.json", optional: true)
-                .AddCommandLine(args)
-                .Build();
+builder.Services.ConfigureServices(builder.Configuration);
 
-            return WebHost.CreateDefaultBuilder(args)
-                .UseConfiguration(config)
-                .UseStartup<Startup>()
-                .Build();
-        }
-    }
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+app.Use(next => context =>
+{
+    context.Request.EnableBuffering();
+    return next(context);
+});
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+app.UseHealthChecks("/health");
+
+app.MapControllers();
+
+app.Run();

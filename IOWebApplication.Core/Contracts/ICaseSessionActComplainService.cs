@@ -6,14 +6,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
-    public interface ICaseSessionActComplainService: IBaseService
+    public interface ICaseSessionActComplainService : IBaseService
     {
         #region CaseSessionActComplain
         IQueryable<CaseSessionActComplainVM> CaseSessionActComplain_Select(int CaseSessionActId);
-        IQueryable<CaseSessionActComplainSprVM> CaseSessionActComplainSpr_Select(DateTime DateFrom, DateTime DateTo, DateTime? DateFromActReturn, DateTime? DateToActReturn, DateTime? DateFromSendDocument, DateTime? DateToSendDocument, int CaseGroupId, int CaseTypeId, string CaseRegNumber, string ActRegNumber, int CaseRegNumFrom, int CaseRegNumTo, int ActComplainIndexId, int ActResultId, int JudgeReporterId);
+
+        /// <summary>
+        /// Извличане на данни за справка за обжалване
+        /// </summary>
+        /// <param name="filter">Филтър</param>
+        /// <returns></returns>
+        IQueryable<CaseSessionActComplainSprVM> CaseSessionActComplainSpr_Select(CaseSessionActComplainFilterVM filter);
+
         /// <summary>
         /// Проверка по текущото дело, дали има обжалване с този съпровождащ документ
         /// </summary>
@@ -21,7 +29,7 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="ComplainDocumentId">ИД на съпровождащ документ</param>
         /// <returns></returns>
         bool IsExistComplain(int CaseId, long ComplainDocumentId);
-        bool CaseSessionActComplain_SaveData(CaseSessionActComplain model);
+        Task<bool> CaseSessionActComplain_SaveData(CaseSessionActComplain model);
         bool CaseSessionActComplain_CreateFromDocument(long DocumentId);
         List<SelectListItem> GetDropDownList_GetDocumentCaseInfo(int CaseSessionId, bool addDefaultElement = true, bool addAllElement = false);
         List<CheckListVM> GetCheckListCaseSessionActComplains(int CaseSessionActComplainId, int CaseSessionActId);
@@ -40,7 +48,7 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseSessionActComplainPersonVM> CaseSessionActComplainPerson_Select(int CaseSessionActComplainId);
         bool CaseSessionActComplainPerson_SaveData(CheckListViewVM model);
         CheckListViewVM CheckListViewVM_FillCasePerson(int CaseSessionActComplainId);
-        List<SelectListItem> GetDropDownListForAct(int caseId, int caseSessionActId, int htmlTemplateId, bool addDefaultElement = true, bool addAllElement = false);
+        List<SelectListItem> GetDropDownListForAct(int caseId, int[] caseSessionActIds, int htmlTemplateId, bool addDefaultElement = true, bool addAllElement = false);
         #endregion
     }
 }

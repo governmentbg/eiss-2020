@@ -33,6 +33,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public int NotificationStateId { get; set; }
         [Display(Name = "Тип на документа")]
         public int NotificationTypeId { get; set; }
-
+        public int ToNotificationStateId { get; set; }
     }
 }

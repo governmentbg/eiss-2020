@@ -1,6 +1,8 @@
 ﻿@model LawUnit
-@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@inject IUserContext userContext;
 
 @{
     if (Model.Id > 0)
@@ -13,9 +15,11 @@
     }
 
     bool readonlyEgn = (Model.Id > 0) && string.IsNullOrEmpty(Model.Uic);
+
+    bool hasTypeChange = NomenclatureConstants.LawUnitTypes.ChangeableTypes.Contains(Model.LawUnitTypeId) && userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator);
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -50,7 +54,16 @@
                     <a asp-action="Index" asp-route-lawUnitType="@Model.LawUnitTypeId" class="btn btn-danger">Назад</a>
                     @if (Model.Id > 0)
                     {
+                        @if (hasTypeChange)
+                        {
+                            <div style="display:inline-block;padding-left:15px;">
+                                
+                                <a href="#" class="ct-toggle text-muted">Покажи повече</a>
+                                <a asp-action="TypeChange" asp-route-id="@Model.Id" title="Промяна на типа на лицето" class="ct-link btn btn-warning" style="display:none;">Смяна на тип</a>
+                            </div>
+                        }
                         <div class="pull-right">
+
                             @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                         </div>
                     }
@@ -78,6 +91,11 @@
 @section scripts {
     <script>
         $(function () {
+            $('.ct-toggle').click(function () {
+                $('.ct-link').show();
+                $('.ct-toggle').hide();
+                return false;
+            });
             var table = $('#mainTable').DataTable({
                 ajax: {
                     "url": "@Url.Action("ListDataLawUnitAddress")",
@@ -88,7 +106,7 @@
                     }
 
                 },
-                dom:'rt',
+                dom: 'rt',
                 columns: [
                     {
                         name: 'addressTypeName',

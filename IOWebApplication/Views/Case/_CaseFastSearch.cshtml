@@ -1,0 +1,87 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Nomenclatures
+@using IOWebApplication.Infrastructure.Extensions
+
+@model CaseFastSearchVM
+
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@inject IOWebApplication.Core.Contracts.INomenclatureService nomService;
+
+@{
+    var caseGroupsText = nomService.GetPropById<CourtType, string>(x => x.Id == userContext.CourtTypeId, x => x.CaseGroupList);
+    var caseGroups = caseGroupsText.ToIntArray();
+}
+<div class="box box-primary">
+    <div class="box-header with-border">
+        <h3 class="box-title">Бързо търсене на дело</h3>
+    </div>
+    <div class="box-body">
+        <form method="post" action="@Url.Action("CaseFastSearch","Case")" id="formCaseSearch">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Вид дело</label>
+                        <br />
+                        @foreach (var item in caseGroups.OrderBy(x => x))
+                        {
+                            <label>
+                                @Html.RadioButtonFor(x => x.CaseGroupId, item)
+                                @switch (item)
+                                {
+                                    case NomenclatureConstants.CaseGroups.GrajdanskoDelo:
+                                        <text>ГД</text>
+                                        break;
+                                    case NomenclatureConstants.CaseGroups.NakazatelnoDelo:
+                                        <text>НД</text>
+                                        break;
+                                    case NomenclatureConstants.CaseGroups.Trade:
+                                        <text>ТД</text>
+                                        break;
+                                    case NomenclatureConstants.CaseGroups.Company:
+                                        <text>ФД</text>
+                                        break;
+                                    case NomenclatureConstants.CaseGroups.Administrative:
+                                        <text>АД</text>
+                                        break;
+                                }
+                            </label>
+                            <text>&nbsp;</text>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    @Html.EditorFor(x => x.RegNumber)
+                </div>
+                <div class="col-lg-2">
+                    @Html.EditorFor(x => x.CaseYear, "DateTimeYear")
+                </div>
+                <div class="col-lg-2">
+                    <label class="control-label">&nbsp;</label>
+                    <br />
+                    <input type="submit" class="btn btn-primary" value="Търсене" id="btnCaseSearch" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#CaseGroupId:first').attr('checked', 'checked');
+        $('form#formCaseSearch').ajaxForm({
+                                    beforeSend: function (formData, jqForm, options) {
+                                            $('#btnCaseSearch').hide();
+                                    },
+                                    complete: function (xhr) {
+                                        $('#btnCaseSearch').show();
+                                        if (xhr.responseJSON.found) {
+                                            document.location.href = '@Url.Action("CasePreview","Case")/' + xhr.responseJSON.id +'#tabMainData';
+                                        } else {
+                                            swalOk(xhr.responseJSON.error);
+                                        }
+                                    }
+                                });
+    });
+</script>
